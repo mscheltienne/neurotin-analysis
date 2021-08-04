@@ -1,6 +1,14 @@
 import mne
 
 
+EVENTS = {
+    'rest': 1,
+    'blink': 2,
+    'resting-state': 3,
+    'audio': 4,
+    'regulation': 5,
+    'non-regulation': 6
+    }
 EVENTS_MAPPING = {
     1: 'rest',
     2: 'blink',
