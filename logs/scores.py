@@ -2,33 +2,11 @@
 The scores are logged with pandas in a .csv file with the syntax:
     [[participant, session, model_idx, online_idx, int(transfer_run)] + scores]
 """
-from pathlib import Path
-
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-
-def read_csv(csv):
-    """
-    Read the CSV file and returns the stored pandas dataframe.
-
-    Parameters
-    ----------
-    csv : str | pathlib.Path
-        Path to the csv file to read. Must be in .csv format.
-
-    Returns
-    -------
-    df : pandas.DataFrame
-    """
-    csv = Path(csv)
-    if csv.suffix != '.csv':
-        raise IOError('Provided file is not a CSV file.')
-    if not csv.exists():
-        raise IOError('Provided file does not exists.')
-    df = pd.read_csv(csv)
-    return df
+from utils import read_csv, _check_participants
 
 
 def _check_scores_idx(scores):
@@ -55,7 +33,7 @@ def plot_score_evolution_per_participant(
         Path to the csv file to read. Must be in .csv format.
     participant : int
         Participant ID.
-    scores : int | list, optional
+    scores : int | list of int, optional
         Score ID or list of scores IDs to plot.
         IDs are defined between 0 and 10. The default is 10.
     datapoints : bool, optional
@@ -82,7 +60,7 @@ def plot_score_evolution_per_participant(
     f, ax = plt.subplots(1, 1, figsize=tuple(figsize))
     sns.boxplot(
         x='Session', y='Score', hue='Score ID', data=df,
-        palette='muted')
+        palette='muted', ax=ax)
     if datapoints:
         sns.swarmplot(
             x='Session', y='Score', hue='Score ID', data=df,
@@ -94,7 +72,7 @@ def plot_score_evolution_per_participant(
 
 
 def plot_score_across_participants(
-        csv, scores=10, datapoints=False, figsize=(10, 5)):
+        csv, participants, scores=10, datapoints=False, figsize=(10, 5)):
     """
     Plot as boxplots the score in all session across participants. Multiple
     score IDs can be plotted simultaneously.
@@ -103,7 +81,9 @@ def plot_score_across_participants(
     ----------
     csv : str | pathlib.Path
         Path to the csv file to read. Must be in .csv format.
-    scores : int | list, optional
+    participants : list of int
+        List of participants ID (int) to include.
+    scores : int | list of int, optional
         Score ID or list of scores IDs to plot.
         IDs are defined between 0 and 10. The default is 10.
     datapoints : bool, optional
@@ -118,18 +98,20 @@ def plot_score_across_participants(
     ax : axes.Axes
     """
     scores = _check_scores_idx(scores)
+    participants = _check_participants(participants)
 
     # Select data
     df = read_csv(csv)
     df = pd.melt(
         df, id_vars='Participant', value_vars=[f'Score {k}' for k in scores],
         var_name='Score ID', value_name='Score')
+    df = df[df['Participant'].isin(participants)]
 
     # Plot
     f, ax = plt.subplots(1, 1, figsize=tuple(figsize))
     sns.boxplot(
         x='Participant', y='Score', hue='Score ID', data=df,
-        palette='muted')
+        palette='muted', ax=ax)
     if datapoints:
         sns.swarmplot(
             x='Participant', y='Score', hue='Score ID', data=df,
@@ -144,5 +126,7 @@ def plot_score_across_participants(
 if __name__ == '__main__':
     csv = r'/Volumes/NeuroTin-EEG/Data/scores_logs.csv'
     participant = 61
-    plot_score_evolution_per_participant(csv, participant, scores=(1, 5, 10))
-    plot_score_across_participants(csv, scores=10, datapoints=True)
+    plot_score_evolution_per_participant(
+        csv, participant, scores=(1, 5, 10))
+    plot_score_across_participants(
+        csv, participants=(60, 61, 65), scores=10, datapoints=True)
