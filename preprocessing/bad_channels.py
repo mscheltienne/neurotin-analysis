@@ -32,16 +32,16 @@ def RANSAC_bads_suggestion(raw):
         list of bad channels across all events
     """
     events = mne.find_events(raw, stim_channel='TRIGGER')
-    unique_events = set(event[2] for event in events)
+    unique_events = list(set(event[2] for event in events))
 
     bads = dict()
     for event in unique_events:
         tmin, tmax = EVENTS_EPOCH_TIMINGS[EVENTS_MAPPING[event]]
-
+        baseline = (None, 0) if tmin < 0 else None
         epochs = mne.Epochs(
             raw, events, event_id=event, picks='eeg', tmin=tmin, tmax=tmax,
             reject=None, verbose=False, detrend=None, proj=True,
-            baseline=(None, 0), preload=True)
+            baseline=baseline, preload=True)
 
         ransac = Ransac(verbose=False, picks='eeg', n_jobs=1)
         ransac.fit(epochs)
