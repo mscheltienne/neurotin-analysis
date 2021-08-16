@@ -13,7 +13,7 @@ def _check_bandpass(bandpass):
 
 def apply_filter(raw, car, bandpass, notch):
     """
-    Apply filters:
+    Apply filters in-place:
         - CAR
         - Bandpass
         - Notch
@@ -31,10 +31,6 @@ def apply_filter(raw, car, bandpass, notch):
     notch : bool
         If True, a notch filter at (50, 100, 150) Hz is applied on EEG, EOG
         and ECG channels.
-
-    Returns
-    -------
-    raw : Raw
     """
     _check_bandpass(bandpass)
 
@@ -44,11 +40,14 @@ def apply_filter(raw, car, bandpass, notch):
             ref_channels='average', ch_type='eeg', projection=True)
 
     # Bandpass filter
-    raw.filter(
-        l_freq=bandpass[0], h_freq=bandpass[1], picks=['ecg', 'eog', 'eeg'],
-        method='iir', iir_params=dict(order=4, ftype='butter', output='sos'))
+    if not all(bp is None for bp in bandpass):
+        raw.filter(
+            l_freq=bandpass[0], h_freq=bandpass[1],
+            picks=['ecg', 'eog', 'eeg'], method='iir',
+            iir_params=dict(order=4, ftype='butter', output='sos'))
 
     # Notch filters
-    raw.notch_filter(np.arange(50, 151, 50), picks=['eeg', 'ecg', 'eog'])
-
-    return raw
+    if notch and car:
+        raw.notch_filter(np.arange(50, 151, 50), picks=['ecg', 'eog'])
+    elif notch and not car:
+        raw.notch_filter(np.arange(50, 151, 50), picks=['eeg', 'ecg', 'eog'])
