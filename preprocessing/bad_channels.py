@@ -1,17 +1,8 @@
 import mne
+import numpy as np
 from autoreject import Ransac
 
-from annotations import EVENTS_MAPPING
-
-
-EVENTS_EPOCH_TIMINGS = {
-    'rest': (0, 1),
-    'blink': (0, 60),
-    'resting-state': (0, 120),
-    'audio': (-0.2, 0.8),
-    'regulation': (0, 16),
-    'non-regulation': (0, 8)
-    }
+from annotations import EVENTS
 
 
 def RANSAC_bads_suggestion(raw):
@@ -34,17 +25,35 @@ def RANSAC_bads_suggestion(raw):
     events = mne.find_events(raw, stim_channel='TRIGGER')
     unique_events = list(set(event[2] for event in events))
 
-    bads = dict()
-    for event in unique_events:
-        tmin, tmax = EVENTS_EPOCH_TIMINGS[EVENTS_MAPPING[event]]
-        baseline = (None, 0) if tmin < 0 else None
-        epochs = mne.Epochs(
-            raw, events, event_id=event, picks='eeg', tmin=tmin, tmax=tmax,
-            reject=None, verbose=False, detrend=None, proj=True,
-            baseline=baseline, preload=True)
+    # Calibration
+    if EVENTS['audio'] in unique_events:
+        sample_min, _, _ = \
+            events[np.where([ev[2]==EVENTS['rest'] for ev in events])][0]
+        tmin = sample_min / raw.info['sfreq']
+        sample_max, _, _ = \
+            events[np.where([ev[2]==EVENTS['audio'] for ev in events])][-1]
+        tmax = sample_max / raw.info['sfreq'] + 0.8
+    # Resting-State
+    elif EVENTS['resting-state'] in unique_events:
+        sample_min, _, _ = events[np.where(
+            [ev[2]==EVENTS['resting-state'] for ev in events])][0]
+        tmin = sample_min / raw.info['sfreq']
+        tmax = tmin + 120
+    # Online Run
+    elif EVENTS['regulation'] in unique_events:
+        sample_min, _, _ = events[np.where(
+            [ev[2]==EVENTS['non-regulation'] for ev in events])][0]
+        tmin = sample_min / raw.info['sfreq']
+        sample_max, _, _ = events[np.where(
+            [ev[2]==EVENTS['regulation'] for ev in events])][-1]
+        tmax = sample_max / raw.info['sfreq'] + 16
 
-        ransac = Ransac(verbose=False, picks='eeg', n_jobs=1)
-        ransac.fit(epochs)
-        bads[event] = ransac.bad_chs_
+    raw.crop(tmin, tmax, include_tmax=True)
+    raw.set_montage('standard_1020')
+    epochs = mne.make_fixed_length_epochs(
+        raw, duration=1.0, preload=True, reject_by_annotation=True)
+    picks = mne.pick_types(raw.info, eeg=True)
+    ransac = Ransac(verbose=False, picks=picks, n_jobs=1)
+    ransac.fit(epochs)
 
-    return bads, list(set(bads.values()))
+    return ransac.bad_chs_
