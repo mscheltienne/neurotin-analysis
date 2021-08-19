@@ -34,8 +34,4 @@ def read_raw_fif(fname):
         except:
             pass
 
-    # Add montage
-    mne.add_reference_channels(raw, ref_channels=['CPz'], copy=False)
-    raw.set_montage('standard_1020')
-
     return raw

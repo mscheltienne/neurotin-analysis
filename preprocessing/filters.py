@@ -28,9 +28,9 @@ def apply_filter(raw, car, bandpass, notch):
         A 2-length tuple (highpass, lowpass), e.g. (1., 40.).
         The lowpass of highpass filter can be disabled by using None.
         The filter is applied on EEG, EOG and ECG channels.
-    notch : bool
-        If True, a notch filter at (50, 100, 150) Hz is applied on EEG, EOG
-        and ECG channels.
+    notch : str | list
+        Channel type or list of channel types on which the notch filter at
+        (50, 100, 150) Hz  is applied. If None, notch filtering is disabled.
     """
     _check_bandpass(bandpass)
 
@@ -47,7 +47,7 @@ def apply_filter(raw, car, bandpass, notch):
             iir_params=dict(order=4, ftype='butter', output='sos'))
 
     # Notch filters
-    if notch and car:
-        raw.notch_filter(np.arange(50, 151, 50), picks=['ecg', 'eog'])
-    elif notch and not car:
-        raw.notch_filter(np.arange(50, 151, 50), picks=['eeg', 'ecg', 'eog'])
+    if notch is not None:
+        raw.notch_filter(np.arange(50, 151, 50), picks=notch)
+
+    return raw
