@@ -1,5 +1,3 @@
-import mne
-
 from utils import read_raw_fif
 from filters import apply_filter
 from annotations import add_annotations_from_events
@@ -33,8 +31,3 @@ def preprocessing_pipeline(fname):
     raw.interpolate_bads(reset_bads=False, mode='accurate', method='spline')
 
     return raw
-
-
-if __name__ == '__main__':
-    fname = r'/Volumes/NeuroTin-EEG/Data/Participants/061/Session 14/Calibration/1-calibration-eegoSports 000479-raw.fif'
-    raw = preprocessing_pipeline(fname)
