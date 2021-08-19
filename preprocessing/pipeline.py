@@ -4,6 +4,16 @@ from annotations import add_annotations_from_events
 
 
 def preprocessing_pipeline(fname):
+    """
+    Preprocessing pipeline to annotate bad segments of data, to annotate bad
+    channels, to annotate events, to add the reference and the montage, to
+    clean the data and to interpolate the bad channels.
+
+    Parameters
+    ----------
+    fname : str | Path
+        Path to the '-raw.fif' file to preprocess.
+    """
     # Load
     raw = read_raw_fif(fname)
 

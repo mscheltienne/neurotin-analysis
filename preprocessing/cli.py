@@ -48,6 +48,11 @@ def list_raw_fif(directory):
     ----------
     directory : str | Path
         Path to the directory.
+
+    Returns
+    -------
+    fifs : list
+        List of found raw fif files.
     """
     directory = Path(directory)
     fifs = list()
