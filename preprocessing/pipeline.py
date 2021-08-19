@@ -22,7 +22,7 @@ def preprocessing_pipeline(fname):
     raw_.plot(block=True)
     raw.info['bads'] = raw_.info['bads']
 
-    # Filter
+    # Reference and filter
     raw.add_reference_channels(ref_channels='CPz')
     raw.set_montage('standard_1020')
     raw = apply_filter(raw, car=True, bandpass=(1., 40.), notch=['eog', 'ecg'])

@@ -4,7 +4,7 @@ import mne
 def read_raw_fif(fname):
     """
     Load a RAW instance from a .fif file. Renames the channel to match the
-    standard 1020 convention. Rename the AUX channels to ECG and EOG. Add the
+    standard 10/20 convention. Rename the AUX channels to ECG and EOG. Add the
     reference channel 'CPz' and add the standard 1020 Dig montage.
 
     Parameters
