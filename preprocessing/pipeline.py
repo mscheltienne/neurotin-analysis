@@ -1,5 +1,6 @@
 from utils import read_raw_fif
 from filters import apply_filter
+from bad_channels import RANSAC_bads_suggestion
 from annotations import add_annotations_from_events
 
 
@@ -28,6 +29,8 @@ def preprocessing_pipeline(fname):
     raw, _ = add_annotations_from_events(raw)
 
     # Mark bad channels
+    bads = RANSAC_bads_suggestion(raw_)
+    print ('Suggested bads:', bads)
     raw_.plot_psd(fmin=1, fmax=40, picks='eeg', reject_by_annotation=True)
     raw_.plot(block=True)
     raw.info['bads'] = raw_.info['bads']
