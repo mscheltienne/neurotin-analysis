@@ -23,16 +23,15 @@ def input_participant():
     """
     def _check_participant(participant):
         participant = int(participant)
-        if participant <= 0:
-            raise ValueError
-        if str(participant).zfill(3) not in os.listdir(FOLDER_IN):
-            raise ValueError
+        assert 0 < participant
+        assert str(participant).zfill(3) in os.listdir(FOLDER_IN)
+        return participant
 
     for _ in range(RETRIES):
         try:
             participant = _check_participant(input('[IN] Participant ID: '))
             break
-        except ValueError:
+        except AssertionError:
             pass
     else:
         raise ValueError
@@ -69,10 +68,9 @@ def main():
     Main preprocessing pipeline, called once per participant.
     """
     _, participant_folder = input_participant()
-    dirname_in = FOLDER_OUT / participant_folder
+    dirname_in = FOLDER_IN / participant_folder
     dirname_out = FOLDER_OUT / participant_folder
-    if not dirname_in.exists():
-        raise ValueError
+    assert dirname_in.exists()
     if not dirname_out.exists():
         os.makedirs(dirname_out)
 
@@ -81,6 +79,8 @@ def main():
         fif_out = dirname_out / fif_in.relative_to(dirname_in)
         if fif_out.exists():
             continue
+        if not fif_out.parent.exists():
+            os.makedirs(fif_out.parent)
         print ('-------------------------------------------------------------')
         print (f'Preprocesing {fif_in.relative_to(dirname_in)}')
         raw = preprocessing_pipeline(fif_in)

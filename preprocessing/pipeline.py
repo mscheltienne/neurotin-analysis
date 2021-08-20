@@ -41,6 +41,6 @@ def preprocessing_pipeline(fname):
     raw = apply_filter(raw, car=True, bandpass=(1., 40.), notch=['eog', 'ecg'])
 
     # Interpolate bad channels
-    raw.interpolate_bads(reset_bads=False, mode='accurate', method='spline')
+    raw.interpolate_bads(reset_bads=False, mode='accurate')
 
     return raw
