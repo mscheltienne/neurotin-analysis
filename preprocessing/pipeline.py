@@ -27,6 +27,7 @@ def preprocessing_pipeline(fname):
 
     # Add event annotations
     raw, _ = add_annotations_from_events(raw)
+    raw_, _ = add_annotations_from_events(raw_)
 
     # Mark bad channels
     bads = RANSAC_bads_suggestion(raw_)

@@ -7,7 +7,7 @@ from annotations import EVENTS
 
 def RANSAC_bads_suggestion(raw):
     """
-    Create epochs around each found events and apply a RANSAC algorithm to
+    Create epochs around each found paradigm and apply a RANSAC algorithm to
     detect bad channels.
 
     Parameters
@@ -22,6 +22,8 @@ def RANSAC_bads_suggestion(raw):
     unique_bads : list
         list of bad channels across all events
     """
+    raw = raw.copy()
+
     events = mne.find_events(raw, stim_channel='TRIGGER')
     unique_events = list(set(event[2] for event in events))
 
