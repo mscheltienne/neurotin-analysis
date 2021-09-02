@@ -4,9 +4,9 @@ from pathlib import Path
 from pipeline import preprocessing_pipeline
 
 
-FOLDER_IN = Path(r'/Volumes/NeuroTin-EEG/Data/Participants')
-FOLDER_OUT = Path(r'/Volumes/NeuroTin-EEG/Data preprocessed/')
-RETRIES=3
+FOLDER_IN = Path(r"/Volumes/NeuroTin-EEG/Data/Participants")
+FOLDER_OUT = Path(r"/Volumes/NeuroTin-EEG/Data preprocessed/")
+RETRIES = 3
 
 
 def input_participant():
@@ -21,6 +21,7 @@ def input_participant():
         Folder of the participant. The name is created from the participant ID
         with str(participant).zfill(3).
     """
+
     def _check_participant(participant):
         participant = int(participant)
         assert 0 < participant
@@ -29,7 +30,7 @@ def input_participant():
 
     for _ in range(RETRIES):
         try:
-            participant = _check_participant(input('[IN] Participant ID: '))
+            participant = _check_participant(input("[IN] Participant ID: "))
             break
         except AssertionError:
             pass
@@ -57,8 +58,8 @@ def list_raw_fif(directory):
     fifs = list()
     for elt in directory.iterdir():
         if elt.is_dir():
-            fifs.extend(list_raw_fif(directory/elt))
-        elif elt.name.endswith('-raw.fif'):
+            fifs.extend(list_raw_fif(directory / elt))
+        elif elt.name.endswith("-raw.fif"):
             fifs.append(elt)
     return fifs
 
@@ -81,11 +82,11 @@ def main():
             continue
         if not fif_out.parent.exists():
             os.makedirs(fif_out.parent)
-        print ('-------------------------------------------------------------')
-        print (f'Preprocesing {fif_in.relative_to(dirname_in)}')
+        print("-------------------------------------------------------------")
+        print(f"Preprocesing {fif_in.relative_to(dirname_in)}")
         raw = preprocessing_pipeline(fif_in)
-        raw.save(fif_out, fmt='double')
+        raw.save(fif_out, fmt="double")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

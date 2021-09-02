@@ -21,15 +21,23 @@ def read_raw_fif(fname):
 
     # Rename channels
     try:
-        mne.rename_channels(raw.info, {'AUX7': 'EOG', 'AUX8': 'ECG'})
+        mne.rename_channels(raw.info, {"AUX7": "EOG", "AUX8": "ECG"})
     except:
-        mne.rename_channels(raw.info, {'AUX19': 'EOG', 'AUX20': 'ECG'})
-    raw.set_channel_types(mapping={'ECG': 'ecg', 'EOG': 'eog'})
+        mne.rename_channels(raw.info, {"AUX19": "EOG", "AUX20": "ECG"})
+    raw.set_channel_types(mapping={"ECG": "ecg", "EOG": "eog"})
 
     # Old eego LSL plugin has upper case channel names
     mapping = {
-        'FP1': 'Fp1', 'FPZ': 'Fpz', 'FP2': 'Fp2', 'FZ': 'Fz', 'CZ': 'Cz',
-        'PZ': 'Pz', 'POZ': 'POz', 'FCZ': 'FCz', 'OZ': 'Oz', 'FPz': 'Fpz'
+        "FP1": "Fp1",
+        "FPZ": "Fpz",
+        "FP2": "Fp2",
+        "FZ": "Fz",
+        "CZ": "Cz",
+        "PZ": "Pz",
+        "POZ": "POz",
+        "FCZ": "FCz",
+        "OZ": "Oz",
+        "FPz": "Fpz",
     }
     for key, value in mapping.items():
         try:

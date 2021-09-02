@@ -46,9 +46,12 @@ def apply_filter(raw, car, bandpass, notch):
     # Bandpass filter
     if not all(bp is None for bp in bandpass):
         raw.filter(
-            l_freq=bandpass[0], h_freq=bandpass[1],
-            picks=['ecg', 'eog', 'eeg'], method='iir',
-            iir_params=dict(order=4, ftype='butter', output='sos'))
+            l_freq=bandpass[0],
+            h_freq=bandpass[1],
+            picks=["ecg", "eog", "eeg"],
+            method="iir",
+            iir_params=dict(order=4, ftype="butter", output="sos"),
+        )
 
     # Notch filters
     if notch is not None:
