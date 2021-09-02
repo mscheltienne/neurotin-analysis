@@ -1,7 +1,7 @@
 from utils import read_raw_fif
 from filters import apply_filter
 from bad_channels import RANSAC_bads_suggestion
-from annotations import add_annotations_from_events
+from events import add_annotations_from_events
 
 
 def preprocessing_pipeline(fname):
@@ -14,6 +14,10 @@ def preprocessing_pipeline(fname):
     ----------
     fname : str | Path
         Path to the '-raw.fif' file to preprocess.
+
+    Returns
+    -------
+    raw : Raw instance.
     """
     # Load
     raw = read_raw_fif(fname)

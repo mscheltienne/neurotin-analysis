@@ -21,7 +21,7 @@ def apply_filter(raw, car, bandpass, notch):
     Parameters
     ----------
     raw : Raw
-        Raw instance modified.
+        Raw instance to modify.
     car : bool
         If True, a CAR projector is added for the EEG channels.
     bandpass : tuple
@@ -31,6 +31,10 @@ def apply_filter(raw, car, bandpass, notch):
     notch : str | list
         Channel type or list of channel types on which the notch filter at
         (50, 100, 150) Hz  is applied. If None, notch filtering is disabled.
+
+    Returns
+    -------
+    raw : Raw instance modified in-place.
     """
     _check_bandpass(bandpass)
 

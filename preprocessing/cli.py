@@ -51,7 +51,7 @@ def list_raw_fif(directory):
     Returns
     -------
     fifs : list
-        List of found raw fif files.
+        Found raw fif files.
     """
     directory = Path(directory)
     fifs = list()

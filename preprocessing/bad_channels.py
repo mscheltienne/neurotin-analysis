@@ -2,7 +2,7 @@ import mne
 import numpy as np
 from autoreject import Ransac
 
-from annotations import EVENTS
+from events import EVENTS
 
 
 def RANSAC_bads_suggestion(raw):
@@ -13,14 +13,12 @@ def RANSAC_bads_suggestion(raw):
     Parameters
     ----------
     raw : Raw
-        Raw instance modified.
+        Raw instance.
 
     Returns
     -------
-    bads : dict
-        event: list of bad channels
-    unique_bads : list
-        list of bad channels across all events
+    bads : list
+        Bad channels.
     """
     raw = raw.copy()
 

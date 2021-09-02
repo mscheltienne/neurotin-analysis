@@ -34,11 +34,11 @@ def add_annotations_from_events(raw):
     Parameters
     ----------
     raw : Raw
-        Raw instance modified.
+        Raw instance to modify.
 
     Returns
     -------
-    raw : Raw
+    raw : Raw instance modified in-place.
     annotations : Annotations
     """
     previous_annotations = raw.annotations
@@ -51,3 +51,23 @@ def add_annotations_from_events(raw):
     raw.set_annotations(annotations + previous_annotations)
 
     return raw, annotations
+
+
+def replace_event_value(raw, old_value, new_value):
+    """
+    Replace the an event value on the trigger channel.
+
+    Parameters
+    ----------
+    raw : Raw
+        Raw instance to modify.
+    old_value : int
+        Event value to replace.
+    new_value : int
+        Event value replacing the old one.
+
+    Returns
+    -------
+    raw : Raw instance modified in-place
+    """
+    pass
