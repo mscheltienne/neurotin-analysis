@@ -1,4 +1,7 @@
 import mne
+import numpy as np
+
+from bsl.utils import find_event_channel
 
 
 EVENTS = {
@@ -70,4 +73,18 @@ def replace_event_value(raw, old_value, new_value):
     -------
     raw : Raw instance modified in-place
     """
-    pass
+    tch = find_event_channel(inst=raw)
+    raw.apply_function(
+        _replace_event_values_arr,
+        event_value_old=old_value,
+        event_value_new=new_value,
+        picks=raw.ch_names[tch], channel_wise=True)
+    return raw
+
+
+def _replace_event_values_arr(timearr, old_value, new_value):
+    """
+    Replace the values 'old_value' with 'new_value' for the array timearr.
+    """
+    timearr[np.where(timearr == old_value)] = new_value
+    return timearr
