@@ -20,7 +20,10 @@ def read_raw_fif(fname):
     raw = mne.io.read_raw_fif(fname, preload=True)
 
     # Rename channels
-    mne.rename_channels(raw.info, {'AUX7': 'EOG', 'AUX8': 'ECG'})
+    try:
+        mne.rename_channels(raw.info, {'AUX7': 'EOG', 'AUX8': 'ECG'})
+    except:
+        mne.rename_channels(raw.info, {'AUX19': 'EOG', 'AUX20': 'ECG'})
     raw.set_channel_types(mapping={'ECG': 'ecg', 'EOG': 'eog'})
 
     # Old eego LSL plugin has upper case channel names
