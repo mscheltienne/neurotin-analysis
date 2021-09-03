@@ -78,20 +78,22 @@ def ICA_pipeline(raw):
     -------
     raw : Raw instance modified in-place.
     """
+    # Reset bads, bug described in #9716
+    bads = raw.info['bads']
+    raw.info['bads'] = list()
+
     ica = mne.preprocessing.ICA(n_components=0.99, max_iter='auto')
-    ica.fit(raw)
-    # ica.plot_sources(raw)
-    # ica.plot_components(inst=raw)
+    ica.fit(raw, picks='eeg', reject_by_annotation=True)
     eog_indices, eog_scores = ica.find_bads_eog(raw)
     ecg_indices, ecg_scores = ica.find_bads_ecg(raw)
     ica.plot_scores(eog_scores)
     ica.plot_scores(ecg_scores)
-
-    assert query_yes_no('Remove EOG components?')
-    exclude_ecg = query_yes_no('Remove ECG components?')
-
-    ica.exclude = eog_indices if not exclude_ecg else eog_indices+ecg_indices
+    ica.plot_sources(raw, block=True)
+    # ica.plot_components(inst=raw)
+    assert len(ica.exclude) != 0
     ica.apply(raw)
+
+    raw.info['bads'] = bads # bug described in #9716
     return raw
 
 
