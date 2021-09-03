@@ -4,7 +4,7 @@ from pathlib import Path
 import mne
 
 from filters import apply_filter
-from cli import input_participant, query_yes_no
+from cli import input_participant
 from bad_channels import RANSAC_bads_suggestion
 from events import add_annotations_from_events, check_events
 from utils import read_raw_fif, read_exclusion, write_exclusion, list_raw_fif
