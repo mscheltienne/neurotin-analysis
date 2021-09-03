@@ -1,7 +1,7 @@
 from utils import read_raw_fif
 from filters import apply_filter
 from bad_channels import RANSAC_bads_suggestion
-from events import add_annotations_from_events
+from events import add_annotations_from_events, check_events
 
 
 def preprocessing_pipeline(fname):
@@ -21,6 +21,10 @@ def preprocessing_pipeline(fname):
     """
     # Load
     raw = read_raw_fif(fname)
+
+    # Check events
+    recording_type = fname.stem.split('-')[1]
+    check_events(raw, recording_type)
 
     # Annotate bad segments of data
     raw_ = apply_filter(

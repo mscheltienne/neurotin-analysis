@@ -79,7 +79,7 @@ def check_events(raw, recording_type):
     raw : Raw
         Raw instance to modify.
     recording_type : str
-        One of 'calibration', 'resting-state', 'neurofeedback'.
+        One of 'calibration', 'rs', 'online'.
 
     Returns
     -------
@@ -91,10 +91,10 @@ def check_events(raw, recording_type):
     if recording_type.lower() == "calibration":
         _check_events_calibration(raw, events)
 
-    elif recording_type.lower() == "resting-state":
+    elif recording_type.lower() == "rs":
         _check_events_resting_state(raw, events)
 
-    elif recording_type.lower() == "neurofeedback":
+    elif recording_type.lower() == "online":
         _check_events_neurofeedback(raw, events)
 
     else:
