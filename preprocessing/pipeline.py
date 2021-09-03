@@ -1,11 +1,17 @@
+import os
 from pathlib import Path
 
 from mne.preprocessing import ICA
 
-from utils import read_raw_fif
 from filters import apply_filter
+from cli import input_participant, query_yes_no
 from bad_channels import RANSAC_bads_suggestion
 from events import add_annotations_from_events, check_events
+from utils import read_raw_fif, read_exclusion, write_exclusion, list_raw_fif
+
+
+FOLDER_IN = Path(r"/Users/scheltie/Documents/NeuroTin Data/Raw/")
+FOLDER_OUT = Path(r"/Users/scheltie/Documents/NeuroTin Data/Clean/")
 
 
 def preprocessing_pipeline(fname):
@@ -71,3 +77,62 @@ def preprocessing_pipeline(fname):
     ica.apply(reconst_raw)
 
     return raw
+
+
+def ICA_pipeline(raw):
+    """
+    Apply ICA to remove EOG and ECG artifacts.
+
+    Parameters
+    ----------
+    raw : Raw
+        Raw instance to modify.
+
+    Returns
+    -------
+    raw : Raw instance modified in-place.
+    """
+    ica = ICA(n_components=0.99, max_iter='auto')
+    ica.fit(raw)
+    # ica.plot_sources(raw)
+    # ica.plot_components(inst=raw)
+    eog_indices, eog_scores = ica.find_bads_eog(raw)
+    ecg_indices, ecg_scores = ica.find_bads_ecg(raw)
+    ica.plot_scores(eog_scores)
+    ica.plot_scores(ecg_scores)
+
+    assert query_yes_no('Remove EOG components?')
+    exclude_ecg = query_yes_no('Remove ECG components?')
+
+    ica.exclude = eog_indices if not exclude_ecg else eog_indices+ecg_indices
+    ica.apply(raw)
+    return raw
+
+
+def main():
+    """
+    Main preprocessing pipeline, called once per participant.
+    """
+    _, participant_folder = input_participant(FOLDER_IN)
+    dirname_in = FOLDER_IN / participant_folder
+    dirname_out = FOLDER_OUT / participant_folder
+    exclusion_file = FOLDER_OUT / 'exclusion.txt'
+    assert dirname_in.exists()
+    os.makedirs(dirname_out, exist_ok=True)
+    exclude = read_exclusion(exclusion_file)
+
+    fifs = list_raw_fif(dirname_in)
+    for fif_in in fifs:
+        fif_out = dirname_out / fif_in.relative_to(dirname_in)
+        if fif_out.exists() or fif_out in exclude:
+            continue
+        os.makedirs(fif_out.parent, exist_ok=True)
+        print("-------------------------------------------------------------")
+        print(f"Preprocesing {fif_in.relative_to(dirname_in)}")
+        try:
+            raw = preprocessing_pipeline(fif_in)
+            raw = ICA_pipeline(raw)
+        except AssertionError:
+            exclude.append(fif_out)
+            write_exclusion(exclusion_file, fif_out)
+        raw.save(fif_out, fmt="double")
