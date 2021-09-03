@@ -1,3 +1,7 @@
+from pathlib import Path
+
+from mne.preprocessing import ICA
+
 from utils import read_raw_fif
 from filters import apply_filter
 from bad_channels import RANSAC_bads_suggestion
@@ -23,7 +27,7 @@ def preprocessing_pipeline(fname):
     raw = read_raw_fif(fname)
 
     # Check events
-    recording_type = fname.stem.split('-')[1]
+    recording_type = Path(fname).stem.split('-')[1]
     check_events(raw, recording_type)
 
     # Annotate bad segments of data
@@ -51,5 +55,19 @@ def preprocessing_pipeline(fname):
 
     # Interpolate bad channels
     raw.interpolate_bads(reset_bads=False, mode='accurate')
+
+    # Apply ICA
+    ica = ICA(n_components=0.99, max_iter='auto')
+    ica.fit(raw)
+    # ica.plot_sources(raw)
+    # ica.plot_components(inst=raw)
+    eog_indices, eog_scores = ica.find_bads_eog(raw)
+    ecg_indices, ecg_scores = ica.find_bads_ecg(raw)
+    ica.plot_scores(eog_scores)
+    ica.plot_scores(ecg_scores)
+
+    ica.exclude = eog_indices
+    reconst_raw = raw.copy()
+    ica.apply(reconst_raw)
 
     return raw
