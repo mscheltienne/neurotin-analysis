@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from mne.preprocessing import ICA
+import mne
 
 from filters import apply_filter
 from cli import input_participant, query_yes_no
@@ -62,20 +62,6 @@ def preprocessing_pipeline(fname):
     # Interpolate bad channels
     raw.interpolate_bads(reset_bads=False, mode='accurate')
 
-    # Apply ICA
-    ica = ICA(n_components=0.99, max_iter='auto')
-    ica.fit(raw)
-    # ica.plot_sources(raw)
-    # ica.plot_components(inst=raw)
-    eog_indices, eog_scores = ica.find_bads_eog(raw)
-    ecg_indices, ecg_scores = ica.find_bads_ecg(raw)
-    ica.plot_scores(eog_scores)
-    ica.plot_scores(ecg_scores)
-
-    ica.exclude = eog_indices
-    reconst_raw = raw.copy()
-    ica.apply(reconst_raw)
-
     return raw
 
 
@@ -92,7 +78,7 @@ def ICA_pipeline(raw):
     -------
     raw : Raw instance modified in-place.
     """
-    ica = ICA(n_components=0.99, max_iter='auto')
+    ica = mne.preprocessing.ICA(n_components=0.99, max_iter='auto')
     ica.fit(raw)
     # ica.plot_sources(raw)
     # ica.plot_components(inst=raw)
