@@ -1,14 +1,18 @@
 import mne
 import numpy as np
 from autoreject import Ransac
+from pyprep.find_noisy_channels import NoisyChannels
 
 from events import EVENTS
 
 
-def RANSAC_bads_suggestion(raw):
+def _prepapre_raw(raw):
     """
-    Create epochs around each found paradigm and apply a RANSAC algorithm to
-    detect bad channels.
+    Copy the raw instance and crops it based on the recording type:
+        - Resting-State: Crop 2 minutes starting at the trigger.
+        - Calibration: Crop from the first rest phase to the last stimuli.
+        - Online: Crop from the first non-regulation to the last regulation.
+    Set the montage as 'standard_1020'. The reference 'CPz' is not added.
 
     Parameters
     ----------
@@ -17,11 +21,10 @@ def RANSAC_bads_suggestion(raw):
 
     Returns
     -------
-    bads : list
-        Bad channels.
+    raw : Raw
+        Copied and modified raw instance.
     """
     raw = raw.copy()
-
     events = mne.find_events(raw, stim_channel='TRIGGER')
     unique_events = list(set(event[2] for event in events))
 
@@ -50,6 +53,26 @@ def RANSAC_bads_suggestion(raw):
 
     raw.crop(tmin, tmax, include_tmax=True)
     raw.set_montage('standard_1020')
+
+    return raw
+
+
+def RANSAC_bads_suggestion(raw):
+    """
+    Create fix length-epochs and apply a RANSAC algorithm to detect bad
+    channels using autoreject.
+
+    Parameters
+    ----------
+    raw : Raw
+        Raw instance.
+
+    Returns
+    -------
+    bads : list
+        Bad channels.
+    """
+    raw = _prepapre_raw(raw)
     epochs = mne.make_fixed_length_epochs(
         raw, duration=1.0, preload=True, reject_by_annotation=True)
     picks = mne.pick_types(raw.info, eeg=True)
@@ -57,3 +80,30 @@ def RANSAC_bads_suggestion(raw):
     ransac.fit(epochs)
 
     return ransac.bad_chs_
+
+
+def PREP_bads_suggestion(raw):
+    """
+    Apply the PREP pipeline to detect bad channels:
+        - SNR
+        - Correlation
+        - Deviation
+        - HF Noise
+        - NaN flat
+        - RANSAC
+
+    Parameters
+    ----------
+    raw : Raw
+        Raw instance.
+
+    Returns
+    -------
+    bads : list
+        Bad channels.
+    """
+    raw = _prepapre_raw(raw)
+    raw.pick_types(eeg=True)
+    nc = NoisyChannels(raw)
+    nc.find_all_bads()
+    return nc.get_bads()
