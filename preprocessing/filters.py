@@ -41,17 +41,18 @@ def apply_filter(raw, car, bandpass, notch):
     # Common average reference
     if car:
         raw.set_eeg_reference(
-            ref_channels='average', ch_type='eeg', projection=True)
+            ref_channels="average", ch_type="eeg", projection=True)
 
     # Bandpass filter
     if not all(bp is None for bp in bandpass):
         raw.filter(
             l_freq=bandpass[0],
             h_freq=bandpass[1],
-            picks=["ecg", "eog", "eeg"],
-            method="iir",
-            iir_params=dict(order=4, ftype="butter", output="sos"),
-        )
+            method="fir",
+            phase="zero-double",
+            fir_window="hamming",
+            fir_design="firwin",
+            pad="edge")
 
     # Notch filters
     if notch is not None:
