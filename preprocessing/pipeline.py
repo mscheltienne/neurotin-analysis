@@ -5,7 +5,7 @@ import mne
 
 from filters import apply_filter
 from cli import input_participant
-from bad_channels import RANSAC_bads_suggestion
+from bad_channels import PREP_bads_suggestion
 from events import add_annotations_from_events, check_events
 from utils import read_raw_fif, read_exclusion, write_exclusion, list_raw_fif
 
@@ -48,7 +48,7 @@ def preprocessing_pipeline(fname):
     raw_, _ = add_annotations_from_events(raw_)
 
     # Mark bad channels
-    bads = RANSAC_bads_suggestion(raw_)
+    bads = PREP_bads_suggestion(raw_)
     print ('Suggested bads:', bads)
     raw_.plot_psd(fmin=1, fmax=40, picks='eeg', reject_by_annotation=True)
     raw_.plot(block=True)
