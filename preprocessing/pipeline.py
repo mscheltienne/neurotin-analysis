@@ -3,9 +3,9 @@ from pathlib import Path
 
 import mne
 
-from filters import apply_filter
 from cli import input_participant
 from bad_channels import PREP_bads_suggestion
+from filters import apply_filter_eeg, apply_filter_aux
 from events import add_annotations_from_events, check_events
 from utils import read_raw_fif, read_exclusion, write_exclusion, list_raw_fif
 
@@ -37,9 +37,9 @@ def preprocessing_pipeline(fname):
     check_events(raw, recording_type)
 
     # Annotate bad segments of data
-    raw_ = apply_filter(
-        raw.copy(), car=False, bandpass=(1., None),
-        notch=['eeg', 'eog', 'ecg'])
+    raw_ = raw.copy()
+    apply_filter_eeg(raw_, bandpass=(1., None), notch=True, car=False)
+    apply_filter_aux(raw_, bandpass=(1., None), notch=True)
     raw_.plot(block=True)
     raw.set_annotations(raw_.annotations)
 
@@ -58,7 +58,8 @@ def preprocessing_pipeline(fname):
     # Reference and filter
     raw.add_reference_channels(ref_channels='CPz')
     raw.set_montage('standard_1020')
-    raw = apply_filter(raw, car=True, bandpass=(1., 40.), notch=['eog', 'ecg'])
+    apply_filter_eeg(raw_, bandpass=(1., 40.), notch=False, car=True)
+    apply_filter_aux(raw_, bandpass=(1., 40.), notch=True)
 
     # Interpolate bad channels
     raw.interpolate_bads(reset_bads=False, mode='accurate')
