@@ -130,3 +130,5 @@ def main():
             exclude.append(fif_out)
             write_exclusion(exclusion_file, fif_out)
         raw.save(fif_out, fmt="double")
+        if not query_yes_no('Continue?'):
+            break
