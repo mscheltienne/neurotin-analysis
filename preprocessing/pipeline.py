@@ -90,8 +90,8 @@ def ICA_pipeline(raw):
 
     ica = mne.preprocessing.ICA(method='picard')
     ica.fit(raw, picks='eeg', reject_by_annotation=True)
-    eog_indices, eog_scores = ica.find_bads_eog(raw)
-    ecg_indices, ecg_scores = ica.find_bads_ecg(raw)
+    _, eog_scores = ica.find_bads_eog(raw)
+    _, ecg_scores = ica.find_bads_ecg(raw)
     ica.plot_scores(eog_scores)
     ica.plot_scores(ecg_scores)
     ica.plot_sources(raw, block=True)
