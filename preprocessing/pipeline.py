@@ -50,6 +50,7 @@ def preprocessing_pipeline(fname):
     # Mark bad channels
     bads = PREP_bads_suggestion(raw_)
     print ('Suggested bads:', bads)
+    raw_.info['bads'] = bads
     raw_.plot_psd(fmin=1, fmax=40, picks='eeg', reject_by_annotation=True)
     raw_.plot(block=True)
     raw.info['bads'] = raw_.info['bads']
