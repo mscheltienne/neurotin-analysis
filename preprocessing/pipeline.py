@@ -27,7 +27,8 @@ def preprocessing_pipeline(fname):
 
     Returns
     -------
-    raw : Raw instance.
+    raw : Raw
+        Raw instance.
     """
     # Load
     raw = read_raw_fif(fname)
@@ -78,7 +79,8 @@ def ICA_pipeline(raw):
 
     Returns
     -------
-    raw : Raw instance modified in-place.
+    raw : Raw
+        Raw instance modified in-place.
     """
     # Reset bads, bug described in #9716
     bads = raw.info['bads']
