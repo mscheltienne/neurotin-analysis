@@ -122,7 +122,7 @@ def main():
             continue
         os.makedirs(fif_out.parent, exist_ok=True)
         print("-------------------------------------------------------------")
-        print(f"Preprocesing {fif_in.relative_to(dirname_in)}")
+        print(f"Preprocessing {fif_in.relative_to(dirname_in)}")
         try:
             raw = preprocessing_pipeline(fif_in)
             raw = ICA_pipeline(raw)
