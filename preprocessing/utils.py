@@ -119,4 +119,7 @@ def read_raw_fif(fname):
         except:
             pass
 
+    # Subject info
+    raw.info['subject_info'] = dict()
+
     return raw

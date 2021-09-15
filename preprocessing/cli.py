@@ -41,6 +41,32 @@ def input_participant(folder_in):
     return participant, str(participant).zfill(3)
 
 
+def input_sex():
+    """
+    Input a participant sex. 1: Male - 2: Female.
+
+    Returns
+    -------
+    sex : int
+        Sex of the participant.
+    """
+    def _check_sex(sex):
+        sex = int(sex)
+        assert sex in (1, 2)
+        return sex
+
+    for _ in range(RETRIES):
+        try:
+            sex = _check_sex(input("[IN] Participant sex (1: M, 2: F): "))
+            break
+        except AssertionError:
+            pass
+    else:
+        raise ValueError
+
+    return sex
+
+
 def query_yes_no(question, default="yes", retries=RETRIES):
     """
     Ask a yes/no question via input() and return their answer.

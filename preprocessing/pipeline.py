@@ -4,8 +4,8 @@ from pathlib import Path
 import mne
 
 from bad_channels import PREP_bads_suggestion
-from cli import input_participant, query_yes_no
 from filters import apply_filter_eeg, apply_filter_aux
+from cli import input_participant, input_sex, query_yes_no
 from events import add_annotations_from_events, check_events
 from utils import read_raw_fif, read_exclusion, write_exclusion, list_raw_fif
 
@@ -108,6 +108,7 @@ def main():
     Main preprocessing pipeline, called once per participant.
     """
     _, participant_folder = input_participant(FOLDER_IN)
+    sex = input_sex()
     dirname_in = FOLDER_IN / participant_folder
     dirname_out = FOLDER_OUT / participant_folder
     exclusion_file = FOLDER_OUT / 'exclusion.txt'
@@ -126,6 +127,7 @@ def main():
         try:
             raw = preprocessing_pipeline(fif_in)
             raw = ICA_pipeline(raw)
+            raw.info['subject_info']['sex'] = sex
         except AssertionError:
             exclude.append(fif_out)
             write_exclusion(exclusion_file, fif_out)
