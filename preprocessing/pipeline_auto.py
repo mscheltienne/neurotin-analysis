@@ -55,7 +55,8 @@ def preprocessing_pipeline(fname):
     apply_filter_aux(raw, bandpass=(1., 40.), notch=True)
 
     # Interpolate bad channels
-    raw.interpolate_bads(reset_bads=False, mode='accurate')
+    if len(raw.info['bads']) != 0:
+        raw.interpolate_bads(reset_bads=False, mode='accurate')
 
     return raw
 
