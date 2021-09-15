@@ -3,17 +3,17 @@ from pathlib import Path
 
 import mne
 
+from cli import input_participant, input_sex
 from bad_channels import PREP_bads_suggestion
 from filters import apply_filter_eeg, apply_filter_aux
-from cli import input_participant, input_sex, query_yes_no
 from events import add_annotations_from_events, check_events
 from utils import read_raw_fif, read_exclusion, write_exclusion, list_raw_fif
 
 
-mne.set_log_level('INFO')
+mne.set_log_level('WARNING')
 
 FOLDER_IN = Path(r"/Users/scheltie/Documents/NeuroTin Data/Raw/")
-FOLDER_OUT = Path(r"/Users/scheltie/Documents/NeuroTin Data/Clean/")
+FOLDER_OUT = Path(r"/Users/scheltie/Documents/NeuroTin Data/Clean-Auto/")
 
 
 def preprocessing_pipeline(fname):
@@ -39,28 +39,15 @@ def preprocessing_pipeline(fname):
     recording_type = Path(fname).stem.split('-')[1]
     check_events(raw, recording_type)
 
-    # Annotate bad segments of data
-    raw_ = raw.copy()
-    apply_filter_eeg(raw_, bandpass=(1., None), notch=True, car=False)
-    apply_filter_aux(raw_, bandpass=(1., None), notch=True)
-    raw_.plot(block=True)
-    raw.set_annotations(raw_.annotations)
-
     # Add event annotations
     raw, _ = add_annotations_from_events(raw)
-    raw_, _ = add_annotations_from_events(raw_)
-
-    # Re-filter for bads marking
-    apply_filter_eeg(raw_, bandpass=(1., 40.), notch=True, car=False)
-    raw_.set_montage('standard_1020')
 
     # Mark bad channels
+    raw_ = raw.copy()
+    apply_filter_eeg(raw_, bandpass=(1., 40.), notch=True, car=False)
+    apply_filter_aux(raw_, bandpass=(1., 40.), notch=True)
     bads = PREP_bads_suggestion(raw_)
-    print ('Suggested bads:', bads)
-    raw_.info['bads'] = bads
-    raw_.plot_psd(fmin=1, fmax=40, picks='eeg', reject_by_annotation=True)
-    raw_.plot(block=True)
-    raw.info['bads'] = raw_.info['bads']
+    raw.info['bads'] = bads
 
     # Reference and filter
     raw.add_reference_channels(ref_channels='CPz')
@@ -88,28 +75,24 @@ def ICA_pipeline(raw):
     raw : Raw
         Raw instance modified in-place.
     """
-    # Reset bads, bug described in #9716
+    # Reset bads, bug fixed in #9719
     bads = raw.info['bads']
     raw.info['bads'] = list()
 
     ica = mne.preprocessing.ICA(method='picard')
     ica.fit(raw, picks='eeg', reject_by_annotation=True)
-    _, eog_scores = ica.find_bads_eog(raw)
-    _, ecg_scores = ica.find_bads_ecg(raw)
-    ica.plot_scores(eog_scores)
-    ica.plot_scores(ecg_scores)
-    ica.plot_sources(raw, block=True)
-    # ica.plot_components(inst=raw)
-    assert len(ica.exclude) != 0
-    ica.apply(raw)
+    eog_idx, eog_scores = ica.find_bads_eog(raw)
+    ecg_idx, ecg_scores = ica.find_bads_ecg(raw)
+    ica.exclude = eog_idx + ecg_idx
 
-    raw.info['bads'] = bads # bug described in #9716
+    assert len(ica.exclude) != 0
+    raw.info['bads'] = bads # bug fixed in #9719
     return raw
 
 
 def main():
     """
-    Main preprocessing pipeline, called once per participant.
+    Main preprocessing pipeline.
     """
     _, participant_folder = input_participant(FOLDER_IN)
     sex = input_sex()
@@ -137,5 +120,3 @@ def main():
             exclude.append(fif_out)
             write_exclusion(exclusion_file, fif_out)
         raw.save(fif_out, fmt="double")
-        if not query_yes_no('Continue?'):
-            break
