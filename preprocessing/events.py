@@ -204,8 +204,8 @@ def replace_event_value(raw, old_value, new_value):
     tch = find_event_channel(inst=raw)
     raw.apply_function(
         _replace_event_values_arr,
-        event_value_old=old_value,
-        event_value_new=new_value,
+        old_value=old_value,
+        new_value=new_value,
         picks=raw.ch_names[tch],
         channel_wise=True)
     return raw
