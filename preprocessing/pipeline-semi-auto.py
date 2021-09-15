@@ -122,12 +122,17 @@ def main():
 
     fifs = list_raw_fif(dirname_in)
     for fif_in in fifs:
-        fif_out = dirname_out / fif_in.relative_to(dirname_in)
-        if fif_out.exists() or fif_out in exclude:
-            continue
-        os.makedirs(fif_out.parent, exist_ok=True)
         print("-------------------------------------------------------------")
-        print(f"Preprocessing {fif_in.relative_to(dirname_in)}")
+        fif_out = dirname_out / fif_in.relative_to(dirname_in)
+        if fif_out.exists():
+            print(f"Already preprocessed {fif_in.relative_to(dirname_in)}")
+            continue
+        elif fif_out in exclude:
+            print(f"Excluded {fif_in.relative_to(dirname_in)}")
+            continue
+        else:
+            print(f"Preprocessing {fif_in.relative_to(dirname_in)}")
+        os.makedirs(fif_out.parent, exist_ok=True)
         try:
             raw = preprocessing_pipeline(fif_in)
             raw = ICA_pipeline(raw)

@@ -3,7 +3,6 @@ from pathlib import Path
 
 import mne
 
-from cli import input_participant, input_sex
 from bad_channels import PREP_bads_suggestion
 from filters import apply_filter_eeg, apply_filter_aux
 from events import add_annotations_from_events, check_events
@@ -90,12 +89,11 @@ def ICA_pipeline(raw):
     return raw
 
 
-def main():
+def main(participant, sex):
     """
     Main preprocessing pipeline.
     """
-    _, participant_folder = input_participant(FOLDER_IN)
-    sex = input_sex()
+    participant_folder = str(participant).zfill(3)
     dirname_in = FOLDER_IN / participant_folder
     dirname_out = FOLDER_OUT / participant_folder
     exclusion_file = FOLDER_OUT / 'exclusion.txt'
@@ -105,12 +103,17 @@ def main():
 
     fifs = list_raw_fif(dirname_in)
     for fif_in in fifs:
-        fif_out = dirname_out / fif_in.relative_to(dirname_in)
-        if fif_out.exists() or fif_out in exclude:
-            continue
-        os.makedirs(fif_out.parent, exist_ok=True)
         print("-------------------------------------------------------------")
-        print(f"Preprocessing {fif_in.relative_to(dirname_in)}")
+        fif_out = dirname_out / fif_in.relative_to(dirname_in)
+        if fif_out.exists():
+            print(f"Already preprocessed {fif_in.relative_to(dirname_in)}")
+            continue
+        elif fif_out in exclude:
+            print(f"Excluded {fif_in.relative_to(dirname_in)}")
+            continue
+        else:
+            print(f"Preprocessing {fif_in.relative_to(dirname_in)}")
+        os.makedirs(fif_out.parent, exist_ok=True)
         try:
             raw = preprocessing_pipeline(fif_in)
             raw = ICA_pipeline(raw)
