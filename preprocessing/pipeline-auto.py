@@ -93,6 +93,13 @@ def ICA_pipeline(raw):
 def main(participant, sex):
     """
     Main preprocessing pipeline.
+
+    Parameters
+    ----------
+    participant : int
+        ID of the participant.
+    sex : int
+        Sex of the participant. 1: Male - 2: Female.
     """
     participant_folder = str(participant).zfill(3)
     dirname_in = FOLDER_IN / participant_folder
