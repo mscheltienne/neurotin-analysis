@@ -83,8 +83,9 @@ def ICA_pipeline(raw):
     eog_idx, eog_scores = ica.find_bads_eog(raw)
     ecg_idx, ecg_scores = ica.find_bads_ecg(raw)
     ica.exclude = eog_idx + ecg_idx
-
     assert len(ica.exclude) != 0
+    ica.apply(raw)
+
     raw.info['bads'] = bads # bug fixed in #9719
     return raw
 
