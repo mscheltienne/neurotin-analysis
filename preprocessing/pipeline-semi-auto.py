@@ -92,7 +92,7 @@ def ICA_pipeline(raw):
     bads = raw.info['bads']
     raw.info['bads'] = list()
 
-    ica = mne.preprocessing.ICA(method='picard')
+    ica = mne.preprocessing.ICA(method='picard', max_iter='auto')
     ica.fit(raw, picks='eeg', reject_by_annotation=True)
     _, eog_scores = ica.find_bads_eog(raw)
     _, ecg_scores = ica.find_bads_ecg(raw)
