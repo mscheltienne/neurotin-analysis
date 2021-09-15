@@ -55,7 +55,7 @@ def read_exclusion(exclusion_file):
     return exclude
 
 
-def write_exclusion(exclusion_file, fif_out):
+def write_exclusion(exclusion_file, exclude):
     """
     Add a file to the exclusion file 'FOLDER_OUT / exlusion.txt'.
 
@@ -63,16 +63,18 @@ def write_exclusion(exclusion_file, fif_out):
     ----------
     exclusion_file : str | Path
         Text file storing the file output path to exclude.
-    fif_out : str | Path
-        Path to the output file to exclude.
+    exclude : str | Path | list | tuple
+        Path or list of Paths to the output file to exclude.
     """
     exclusion_file = Path(exclusion_file)
-    if not exclusion_file.exists():
-        mode = 'w'
-    else:
-        mode = 'a'
+    mode = 'w' if not exclusion_file.exists() else 'a'
+    if isinstance(exclude, (str, Path)):
+        exclude = [Path(exclude)]
+    elif isinstance(exclude, (list, tuple)):
+        exclude = [Path(fif) for fif in exclude]
     with open(exclusion_file, mode) as file:
-        file.write(str(fif_out) + '\n')
+        for fif in exclude:
+            file.write(str(fif) + '\n')
 
 
 def read_raw_fif(fname):
