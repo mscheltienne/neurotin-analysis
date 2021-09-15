@@ -50,6 +50,10 @@ def preprocessing_pipeline(fname):
     raw, _ = add_annotations_from_events(raw)
     raw_, _ = add_annotations_from_events(raw_)
 
+    # Re-filter for bads marking
+    apply_filter_eeg(raw_, bandpass=(1., 40.), notch=True, car=False)
+    raw_.set_montage('standard_1020')
+
     # Mark bad channels
     bads = PREP_bads_suggestion(raw_)
     print ('Suggested bads:', bads)
