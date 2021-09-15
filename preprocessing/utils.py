@@ -52,7 +52,7 @@ def read_exclusion(exclusion_file):
         with open(exclusion_file, 'w'):
             pass
         exclude = list()
-    return exclude
+    return [Path(file) for file in exclude]
 
 
 def write_exclusion(exclusion_file, exclude):
