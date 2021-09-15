@@ -120,6 +120,19 @@ def read_raw_fif(fname):
             pass
 
     # Subject info
+    # session = int(fname.parent.parent.name.split()[-1])
+    participant = int(fname.parent.parent.parent.name)
     raw.info['subject_info'] = dict()
+    raw.info['subject_info']['id'] = participant
+    raw.info['subject_info']['his_id'] = str(participant).zfill(3)
+
+    # Device info
+    raw.info['device_info'] = dict()
+    raw.info['device_info']['type'] = 'EEG'
+    raw.info['device_info']['model'] = 'eego mylab'
+    serial = fname.stem.split('-raw')[0].split('-')[-1].split()[1]
+    raw.info['device_info']['serial'] = serial
+    raw.info['device_info']['site'] = \
+        'https://www.ant-neuro.com/products/eego_mylab'
 
     return raw

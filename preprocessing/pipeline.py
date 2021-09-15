@@ -128,6 +128,7 @@ def main():
             raw = preprocessing_pipeline(fif_in)
             raw = ICA_pipeline(raw)
             raw.info['subject_info']['sex'] = sex
+            raw.info._check_consistency()
         except AssertionError:
             exclude.append(fif_out)
             write_exclusion(exclusion_file, fif_out)
