@@ -1,5 +1,8 @@
 import os
+import argparse
+import traceback
 from pathlib import Path
+import multiprocessing as mp
 
 import mne
 
@@ -11,20 +14,17 @@ from utils import read_raw_fif, read_exclusion, write_exclusion, list_raw_fif
 
 mne.set_log_level('ERROR')
 
-FOLDER_IN = Path(r"/Users/scheltie/Documents/NeuroTin Data/Raw/")
-FOLDER_OUT = Path(r"/Users/scheltie/Documents/NeuroTin Data/Clean-Auto/")
 
-
-def preprocessing_pipeline(fname):
+def _prepare_raw(fname):
     """
-    Preprocessing pipeline to annotate bad segments of data, to annotate bad
-    channels, to annotate events, to add the reference and the montage, to
-    clean the data and to interpolate the bad channels.
+    Pipeline loading file, fixing channel names, fixing channels types,
+    checking events, adding events as annotations, marking bad channels, adding
+    montage, applying FIR filters, applying CAR and interpolating bad channels.
 
     Parameters
     ----------
     fname : str | Path
-        Path to the '-raw.fif' file to preprocess.
+        Path to the input '-raw.fif' file to preprocess.
 
     Returns
     -------
@@ -60,7 +60,7 @@ def preprocessing_pipeline(fname):
     return raw
 
 
-def ICA_pipeline(raw):
+def _exclude_EOG_ECG_with_ICA(raw):
     """
     Apply ICA to remove EOG and ECG artifacts.
 
@@ -90,44 +90,183 @@ def ICA_pipeline(raw):
     return raw
 
 
-def main(participant, sex):
+def pipeline(fname, fname_out, birthday, sex):
+    """
+    Pipeline function called by each process for each file.
+
+    Parameters
+    ----------
+    fname : str | Path
+        Path to the input '-raw.fif' file to preprocess.
+    fname_out : str | Path
+        Path to the output '-raw.fif' file preprocessed.
+    birthday : 3-length tuple of int (year, month, day)
+        Birthday of the subject.
+    sex : int
+        Sex of the subject. 1: Male - 2: Female.
+    Returns
+    -------
+    success : bool
+        False if a step raised an AssertionError.
+    fname : Path
+        Path to the input '-raw.fif' file to preprocess.
+    """
+    print (f'Preprocessing: {fname}')
+    try:
+        # Preprocess
+        raw = _prepare_raw(_check_fname(fname))
+        raw = _exclude_EOG_ECG_with_ICA(raw)
+
+        # Add additional info
+        birthday = _check_birthday(birthday)
+        if birthday is not None:
+            raw.info['subject_info']['birthday'] = birthday
+        raw.info['subject_info']['sex'] = _check_sex(sex)
+        raw.info._check_consistency()
+
+        # Export
+        raw.save(_check_fname_out(fname_out), fmt="double", overwrite=False)
+        return (True, fname)
+
+    except AssertionError:
+        print (f'FAILED: {fname}')
+        print(traceback.format_exc())
+        return (False, fname)
+
+
+def _check_fname(fname):
+    """Checks that the input file exists."""
+    fname = Path(fname)
+    assert fname.exists()
+    return fname
+
+
+def _check_fname_out(fname_out):
+    """Checks that fname_out is a Path and create needed directories."""
+    fname_out = Path(fname_out)
+    os.makedirs(fname_out.parent, exist_ok=True)
+    return fname_out
+
+
+def _check_birthday(birthday):
+    """Checks that the birthday format is valid (year, month, day)."""
+    try:
+        birthday = tuple(birthday)
+        assert len(birthday) == 3
+        assert 1900 <= birthday[0] <= 2020
+        assert 1 <= birthday[1] <= 12
+        assert 1 <= birthday[2] <= 31
+    except:
+        birthday = None
+    return birthday
+
+
+def _check_sex(sex):
+    """Checks that sex is either 1 for Male or 2 for Female. Else returns 0 for
+    unknown."""
+    try:
+        sex = int(sex)
+        assert sex in (1, 2)
+    except (ValueError, TypeError, AssertionError):
+        sex = 0
+    return sex
+
+
+def main(subject_info, folder_in, folder_out, processes=1):
     """
     Main preprocessing pipeline.
 
     Parameters
     ----------
-    participant : int
-        ID of the participant.
-    sex : int
-        Sex of the participant. 1: Male - 2: Female.
+    subject_info : str | Path
+        Path to the file containing the subject information to parse.
+    folder_in : str | Path
+        Path to the folder containing the FIF files to preprocess.
+    folder_out : str | Path
+        Path to the folder containing the FIF files preprocessed.
+    processes : int
+        Number of parallel processes.
     """
-    participant_folder = str(participant).zfill(3)
-    dirname_in = FOLDER_IN / participant_folder
-    dirname_out = FOLDER_OUT / participant_folder
-    exclusion_file = FOLDER_OUT / 'exclusion.txt'
-    assert dirname_in.exists()
-    os.makedirs(dirname_out, exist_ok=True)
+    subject_info = _parse_subject_info(subject_info)
+    folder_in, folder_out = _check_folders(folder_in, folder_out)
+    processes = _check_processes(processes)
+
+    exclusion_file = folder_out / 'exclusion.txt'
     exclude = read_exclusion(exclusion_file)
 
-    fifs = list_raw_fif(dirname_in)
-    for fif_in in fifs:
-        print("-------------------------------------------------------------")
-        fif_out = dirname_out / fif_in.relative_to(dirname_in)
-        if fif_out.exists():
-            print(f"Already preprocessed {fif_in.relative_to(dirname_in)}")
-            continue
-        elif fif_out in exclude:
-            print(f"Excluded {fif_in.relative_to(dirname_in)}")
-            continue
-        else:
-            print(f"Preprocessing {fif_in.relative_to(dirname_in)}")
-        os.makedirs(fif_out.parent, exist_ok=True)
-        try:
-            raw = preprocessing_pipeline(fif_in)
-            raw = ICA_pipeline(raw)
-            raw.info['subject_info']['sex'] = sex
-            raw.info._check_consistency()
-            raw.save(fif_out, fmt="double")
-        except AssertionError:
-            exclude.append(fif_out)
-            write_exclusion(exclusion_file, fif_out)
+    # List files to preprocess
+    fifs_in = [fname for fname in list_raw_fif(folder_in, exclude=exclude)
+               if not (folder_out / fname.relative_to(folder_in)).exists()]
+
+    # create input pool for pipeline based on provided subject info
+    subjects = [int(fname.parent.parent.parent.name) for fname in fifs_in]
+    input_pool = [(fifs_in[k], folder_out / fifs_in[k].relative_to(folder_in),
+                   subject_info[idx][0], subject_info[idx][1])
+                  for k, idx in enumerate(subjects) if idx in subject_info]
+
+    with mp.Pool(processes=processes) as p:
+        results = p.starmap(pipeline, input_pool)
+
+    exclude = [fname for success, fname in results if not success]
+    write_exclusion(exclusion_file, exclude)
+
+
+def _parse_subject_info(subject_info):
+    """Parse the subject_info file and return the subject ID with his birthday
+    and sex.
+
+    Returns
+    -------
+    dict
+        key : int
+            ID of the subject.
+        value : 2-length tuple (birtday, sex)
+            birthday : 3-length tuple of int (year, month, day)
+                Birthday of the subject.
+            sex : int
+                Sex of the subject. 1: Male - 2: Female."""
+    subject_info = Path(subject_info)
+    assert subject_info.exists()
+    with open(subject_info, 'r') as file:
+        lines = file.readlines()
+    lines = [line.strip().split(';') for line in lines if len(line) > 0]
+    lines = [[eval(l.strip()) for l in line]
+             for line in lines if len(lines) == 3]
+    return {line[0]: (line[1], line[2]) for line in lines}
+
+
+def _check_folders(folder_in, folder_out):
+    """Checks that the folder exists and are pathlib.Path instances."""
+    folder_in = Path(folder_in)
+    folder_out = Path(folder_out)
+    assert folder_in.exists(), 'The input folder does not exists.'
+    os.makedirs(folder_out, exist_ok=True)
+    return folder_in, folder_out
+
+
+def _check_processes(processes):
+    """Checks that the number of processes is valid."""
+    processes = int(processes)
+    assert 0 < processes
+    return processes
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        prog='NeuroTin preprocessing pipeline',
+        description='Preprocess NeuroTin raw FIF files.')
+    parser.add_argument(
+        'subject_info', type=str,
+        help='File containing the subject information to parse.')
+    parser.add_argument(
+        'folder_in', type=str,
+        help='Folder containing FIF files to preprocess.')
+    parser.add_argument(
+        'folder_out', type=str,
+        help='Folder containing FIF files preprocessed.')
+    parser.add_argument(
+        '-p', '--processes', type=int, metavar='int',
+        help='Number of parallel processes.', default=1)
+    args = parser.parse_args()
+
+    main(args.subject_info, args.folder_in, args.folder_out, args.processes)
