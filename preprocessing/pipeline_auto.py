@@ -77,12 +77,12 @@ def _add_subject_info(raw, subject, birthday, sex):
     subject = _check_subject(subject)
     raw.info['subject_info']['id'] = subject
     raw.info['subject_info']['his_id'] = str(subject).zfill(3)
-    # subject sex - (0, 1, 2) for (Unknown, Male, Female)
-    raw.info['subject_info']['sex'] = _check_sex(sex)
     # subject birthday (year, month, day)
     birthday = _check_birthday(birthday)
     if birthday is not None:
         raw.info['subject_info']['birthday'] = birthday
+    # subject sex - (0, 1, 2) for (Unknown, Male, Female)
+    raw.info['subject_info']['sex'] = _check_sex(sex)
 
     return raw
 
