@@ -133,6 +133,7 @@ def pipeline(fname, fname_out, subject, birthday, sex):
         Birthday of the subject.
     sex : int
         Sex of the subject. 1: Male - 2: Female.
+
     Returns
     -------
     success : bool
