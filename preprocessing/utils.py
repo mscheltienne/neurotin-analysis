@@ -122,16 +122,13 @@ def read_raw_fif(fname):
         except:
             pass
 
-    # Subject info
-    participant = int(fname.parent.parent.parent.name)
+    # Description
+    subject = int(fname.parent.parent.parent.name)
     session = int(fname.parent.parent.name.split()[-1])
     recording_type = fname.parent.name
     recording_run = fname.name.split('-')[0]
-    description = f'Session {session} - {recording_type} {recording_run}'
-    raw.info['subject_info'] = dict()
-    raw.info['subject_info']['id'] = participant
-    raw.info['subject_info']['his_id'] = str(participant).zfill(3)
-    raw.info['description'] = description
+    raw.info['description'] = f'Subject {subject} - Session {session} '+\
+                              f'- {recording_type} {recording_run}'
 
     # Device info
     raw.info['device_info'] = dict()

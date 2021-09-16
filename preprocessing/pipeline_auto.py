@@ -20,16 +20,6 @@ def _prepare_raw(fname):
     Pipeline loading file, fixing channel names, fixing channels types,
     checking events, adding events as annotations, marking bad channels, adding
     montage, applying FIR filters, applying CAR and interpolating bad channels.
-
-    Parameters
-    ----------
-    fname : str | Path
-        Path to the input '-raw.fif' file to preprocess.
-
-    Returns
-    -------
-    raw : Raw
-        Raw instance.
     """
     # Load
     raw = read_raw_fif(fname)
@@ -63,16 +53,6 @@ def _prepare_raw(fname):
 def _exclude_EOG_ECG_with_ICA(raw):
     """
     Apply ICA to remove EOG and ECG artifacts.
-
-    Parameters
-    ----------
-    raw : Raw
-        Raw instance to modify.
-
-    Returns
-    -------
-    raw : Raw
-        Raw instance modified in-place.
     """
     # Reset bads, bug fixed in #9719
     bads = raw.info['bads']
@@ -90,62 +70,27 @@ def _exclude_EOG_ECG_with_ICA(raw):
     return raw
 
 
-def pipeline(fname, fname_out, birthday, sex):
-    """
-    Pipeline function called by each process for each file.
+def _add_subject_info(raw, subject, birthday, sex):
+    """Add subject information to raw instance."""
+    raw.info['subject_info'] = dict()
+    # subject ID
+    subject = _check_subject(subject)
+    raw.info['subject_info']['id'] = subject
+    raw.info['subject_info']['his_id'] = str(subject).zfill(3)
+    # subject sex - (0, 1, 2) for (Unknown, Male, Female)
+    raw.info['subject_info']['sex'] = _check_sex(sex)
+    # subject birthday (year, month, day)
+    birthday = _check_birthday(birthday)
+    if birthday is not None:
+        raw.info['subject_info']['birthday'] = birthday
 
-    Parameters
-    ----------
-    fname : str | Path
-        Path to the input '-raw.fif' file to preprocess.
-    fname_out : str | Path
-        Path to the output '-raw.fif' file preprocessed.
-    birthday : 3-length tuple of int (year, month, day)
-        Birthday of the subject.
-    sex : int
-        Sex of the subject. 1: Male - 2: Female.
-    Returns
-    -------
-    success : bool
-        False if a step raised an AssertionError.
-    fname : Path
-        Path to the input '-raw.fif' file to preprocess.
-    """
-    print (f'Preprocessing: {fname}')
-    try:
-        # Preprocess
-        raw = _prepare_raw(_check_fname(fname))
-        raw = _exclude_EOG_ECG_with_ICA(raw)
-
-        # Add additional info
-        birthday = _check_birthday(birthday)
-        if birthday is not None:
-            raw.info['subject_info']['birthday'] = birthday
-        raw.info['subject_info']['sex'] = _check_sex(sex)
-        raw.info._check_consistency()
-
-        # Export
-        raw.save(_check_fname_out(fname_out), fmt="double", overwrite=False)
-        return (True, fname)
-
-    except AssertionError:
-        print (f'FAILED: {fname}')
-        print(traceback.format_exc())
-        return (False, fname)
+    return raw
 
 
-def _check_fname(fname):
-    """Checks that the input file exists."""
-    fname = Path(fname)
-    assert fname.exists()
-    return fname
-
-
-def _check_fname_out(fname_out):
-    """Checks that fname_out is a Path and create needed directories."""
-    fname_out = Path(fname_out)
-    os.makedirs(fname_out.parent, exist_ok=True)
-    return fname_out
+def _check_subject(subject):
+    """Checks that the subject ID is valid."""
+    subject = int(subject)
+    return subject
 
 
 def _check_birthday(birthday):
@@ -170,6 +115,60 @@ def _check_sex(sex):
     except (ValueError, TypeError, AssertionError):
         sex = 0
     return sex
+
+
+def pipeline(fname, fname_out, subject, birthday, sex):
+    """
+    Pipeline function called by each process for each file.
+
+    Parameters
+    ----------
+    fname : str | Path
+        Path to the input '-raw.fif' file to preprocess.
+    fname_out : str | Path
+        Path to the output '-raw.fif' file preprocessed.
+    subject : int
+        ID of the subject.
+    birthday : 3-length tuple of int (year, month, day)
+        Birthday of the subject.
+    sex : int
+        Sex of the subject. 1: Male - 2: Female.
+    Returns
+    -------
+    success : bool
+        False if a step raised an AssertionError.
+    fname : Path
+        Path to the input '-raw.fif' file to preprocess.
+    """
+    print (f'Preprocessing: {fname}')
+    try:
+        # Preprocess
+        raw = _prepare_raw(_check_fname(fname))
+        raw = _exclude_EOG_ECG_with_ICA(raw)
+        raw = _add_subject_info(raw, subject, birthday, sex)
+        raw.info._check_consistency()
+        # Export
+        raw.save(_check_fname_out(fname_out), fmt="double", overwrite=False)
+        return (True, fname)
+
+    except AssertionError:
+        print (f'FAILED: {fname}')
+        print(traceback.format_exc())
+        return (False, fname)
+
+
+def _check_fname(fname):
+    """Checks that the input file exists."""
+    fname = Path(fname)
+    assert fname.exists()
+    return fname
+
+
+def _check_fname_out(fname_out):
+    """Checks that fname_out is a Path and create needed directories."""
+    fname_out = Path(fname_out)
+    os.makedirs(fname_out.parent, exist_ok=True)
+    return fname_out
 
 
 def main(subject_info, folder_in, folder_out, processes=1):
@@ -201,7 +200,7 @@ def main(subject_info, folder_in, folder_out, processes=1):
     # create input pool for pipeline based on provided subject info
     subjects = [int(fname.parent.parent.parent.name) for fname in fifs_in]
     input_pool = [(fifs_in[k], folder_out / fifs_in[k].relative_to(folder_in),
-                   subject_info[idx][0], subject_info[idx][1])
+                   idx, subject_info[idx][0], subject_info[idx][1])
                   for k, idx in enumerate(subjects) if idx in subject_info]
 
     with mp.Pool(processes=processes) as p:
@@ -212,7 +211,8 @@ def main(subject_info, folder_in, folder_out, processes=1):
 
 
 def _parse_subject_info(subject_info):
-    """Parse the subject_info file and return the subject ID with his birthday
+    """
+    Parse the subject_info file and return the subject ID with his birthday
     and sex.
 
     Returns
