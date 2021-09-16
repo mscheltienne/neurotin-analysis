@@ -105,6 +105,19 @@ def _add_subject_info(raw, subject, birthday, sex):
 def main(subject, birthday, sex, folder_in, folder_out):
     """
     Main preprocessing pipeline, called once per participant.
+
+    Parameters
+    ----------
+    subject : int
+        ID of the subject.
+    birthday : 3-length tuple of int (year, month, day)
+        Birthday of the subject.
+    sex : int
+        Sex of the subject. 1: Male - 2: Female.
+    folder_in : str | Path
+        Path to the folder containing the FIF files to preprocess.
+    folder_out : str | Path
+        Path to the folder containing the FIF files preprocessed.
     """
     subject_folder = str(subject).zfill(3)
     dirname_in = folder_in / subject_folder
