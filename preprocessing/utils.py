@@ -23,7 +23,7 @@ def list_raw_fif(directory, exclude=[]):
     fifs = list()
     for elt in directory.iterdir():
         if elt.is_dir():
-            fifs.extend(list_raw_fif(directory / elt))
+            fifs.extend(list_raw_fif(directory / elt.relative_to(directory)))
         elif elt.name.endswith("-raw.fif") and elt not in exclude:
             fifs.append(elt)
     return fifs
