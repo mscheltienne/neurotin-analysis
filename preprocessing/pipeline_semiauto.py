@@ -10,7 +10,7 @@ from events import add_annotations_from_events, check_events
 from utils import read_raw_fif, read_exclusion, write_exclusion, list_raw_fif
 
 
-mne.set_log_level('WARNING')
+mne.set_log_level('ERROR')
 
 FOLDER_IN = Path(r"/Users/scheltie/Documents/NeuroTin Data/Raw/")
 FOLDER_OUT = Path(r"/Users/scheltie/Documents/NeuroTin Data/Clean/")
@@ -69,8 +69,7 @@ def preprocessing_pipeline(fname):
     apply_filter_aux(raw, bandpass=(1., 40.), notch=True)
 
     # Interpolate bad channels
-    if len(raw.info['bads']) != 0:
-        raw.interpolate_bads(reset_bads=False, mode='accurate')
+    raw.interpolate_bads(reset_bads=False, mode='accurate')
 
     return raw
 
