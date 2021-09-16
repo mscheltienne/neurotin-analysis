@@ -150,7 +150,7 @@ def pipeline(fname, fname_out, subject, birthyear, sex):
         raw.save(_check_fname_out(fname_out), fmt="double", overwrite=False)
         return (True, fname)
 
-    except AssertionError:
+    except Exception:
         print (f'FAILED: {fname}')
         print(traceback.format_exc())
         return (False, fname)
