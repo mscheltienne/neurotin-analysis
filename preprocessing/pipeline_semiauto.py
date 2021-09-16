@@ -87,22 +87,21 @@ def _exclude_EOG_ECG_with_ICA(raw):
     return raw
 
 
-def _add_subject_info(raw, subject, birthday, sex):
+def _add_subject_info(raw, subject, birthyear, sex):
     """Add subject information to raw instance."""
     raw.info['subject_info'] = dict()
     # subject ID
     raw.info['subject_info']['id'] = subject
     raw.info['subject_info']['his_id'] = str(subject).zfill(3)
-    # subject birthday (year, month, day)
-    if birthday is not None:
-        raw.info['subject_info']['birthday'] = birthday
+    # subject birthyear
+    raw.info['subject_info']['birthyear'] = birthyear
     # subject sex - (0, 1, 2) for (Unknown, Male, Female)
     raw.info['subject_info']['sex'] = sex
 
     return raw
 
 
-def main(subject, birthday, sex, folder_in, folder_out):
+def main(subject, birthyear, sex, folder_in, folder_out):
     """
     Main preprocessing pipeline, called once per participant.
 
@@ -110,8 +109,8 @@ def main(subject, birthday, sex, folder_in, folder_out):
     ----------
     subject : int
         ID of the subject.
-    birthday : 3-length tuple of int (year, month, day)
-        Birthday of the subject.
+    birthyear : int
+        Birthyear of the subject.
     sex : int
         Sex of the subject. 1: Male - 2: Female.
     folder_in : str | Path
@@ -137,7 +136,7 @@ def main(subject, birthday, sex, folder_in, folder_out):
         try:
             raw = _prepare_raw(fif_in)
             raw = _exclude_EOG_ECG_with_ICA(raw)
-            raw = _add_subject_info(raw, subject, birthday, sex)
+            raw = _add_subject_info(raw, subject, birthyear, sex)
             raw.info._check_consistency()
             os.makedirs(fif_out.parent, exist_ok=True)
             raw.save(fif_out, fmt="double")
@@ -158,8 +157,8 @@ if __name__ == '__main__':
         'subject', type=int, metavar='int',
         help='ID of the subject.')
     parser.add_argument(
-        'birthday', type=str,
-        help='Birthday of the subject as a tuple of int (year, month, day)')
+        'birthyear', type=str,
+        help='Birthyear of the subject.')
     parser.add_argument(
         'sex', type=int, metavar='int',
         help='Sex of the subject.')
@@ -171,5 +170,5 @@ if __name__ == '__main__':
         help='Folder containing FIF files preprocessed.')
     args = parser.parse_args()
 
-    main(args.subject, args.birthday, args.sex, args.folder_in,
+    main(args.subject, args.birthyear, args.sex, args.folder_in,
          args.folder_out)

@@ -70,17 +70,15 @@ def _exclude_EOG_ECG_with_ICA(raw):
     return raw
 
 
-def _add_subject_info(raw, subject, birthday, sex):
+def _add_subject_info(raw, subject, birthyear, sex):
     """Add subject information to raw instance."""
     raw.info['subject_info'] = dict()
     # subject ID
     subject = _check_subject(subject)
     raw.info['subject_info']['id'] = subject
     raw.info['subject_info']['his_id'] = str(subject).zfill(3)
-    # subject birthday (year, month, day)
-    birthday = _check_birthday(birthday)
-    if birthday is not None:
-        raw.info['subject_info']['birthday'] = birthday
+    # subject birthyear
+    raw.info['subject_info']['birthyear'] = _check_birthyear(birthyear)
     # subject sex - (0, 1, 2) for (Unknown, Male, Female)
     raw.info['subject_info']['sex'] = _check_sex(sex)
 
@@ -89,21 +87,21 @@ def _add_subject_info(raw, subject, birthday, sex):
 
 def _check_subject(subject):
     """Checks that the subject ID is valid."""
-    subject = int(subject)
+    try:
+        subject = int(subject)
+    except:
+        subject = None
     return subject
 
 
-def _check_birthday(birthday):
-    """Checks that the birthday format is valid (year, month, day)."""
+def _check_birthyear(birthyear):
+    """Checks that the birthyear format is valid."""
     try:
-        birthday = tuple(birthday)
-        assert len(birthday) == 3
-        assert 1900 <= birthday[0] <= 2020
-        assert 1 <= birthday[1] <= 12
-        assert 1 <= birthday[2] <= 31
+        birthyear = int(birthyear)
+        assert 1900 <= birthyear <= 2020
     except:
-        birthday = None
-    return birthday
+        birthyear = None
+    return birthyear
 
 
 def _check_sex(sex):
@@ -117,7 +115,7 @@ def _check_sex(sex):
     return sex
 
 
-def pipeline(fname, fname_out, subject, birthday, sex):
+def pipeline(fname, fname_out, subject, birthyear, sex):
     """
     Pipeline function called by each process for each file.
 
@@ -129,8 +127,8 @@ def pipeline(fname, fname_out, subject, birthday, sex):
         Path to the output '-raw.fif' file preprocessed.
     subject : int
         ID of the subject.
-    birthday : 3-length tuple of int (year, month, day)
-        Birthday of the subject.
+    birthyear : int
+        Birthyear of the subject.
     sex : int
         Sex of the subject. 1: Male - 2: Female.
 
@@ -146,7 +144,7 @@ def pipeline(fname, fname_out, subject, birthday, sex):
         # Preprocess
         raw = _prepare_raw(_check_fname(fname))
         raw = _exclude_EOG_ECG_with_ICA(raw)
-        raw = _add_subject_info(raw, subject, birthday, sex)
+        raw = _add_subject_info(raw, subject, birthyear, sex)
         raw.info._check_consistency()
         # Export
         raw.save(_check_fname_out(fname_out), fmt="double", overwrite=False)
@@ -213,7 +211,7 @@ def main(subject_info, folder_in, folder_out, processes=1):
 
 def _parse_subject_info(subject_info):
     """
-    Parse the subject_info file and return the subject ID with his birthday
+    Parse the subject_info file and return the subject ID with his birthyear
     and sex.
 
     Returns
@@ -222,8 +220,8 @@ def _parse_subject_info(subject_info):
         key : int
             ID of the subject.
         value : 2-length tuple (birtday, sex)
-            birthday : 3-length tuple of int (year, month, day)
-                Birthday of the subject.
+            birthyear : int
+                Birthyear of the subject.
             sex : int
                 Sex of the subject. 1: Male - 2: Female."""
     subject_info = Path(subject_info)
