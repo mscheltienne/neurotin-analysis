@@ -1,36 +1,26 @@
 import os
+import argparse
 from pathlib import Path
 
 import mne
 
+from cli import query_yes_no
 from bad_channels import PREP_bads_suggestion
 from filters import apply_filter_eeg, apply_filter_aux
-from cli import input_participant, input_sex, query_yes_no
 from events import add_annotations_from_events, check_events
 from utils import read_raw_fif, read_exclusion, write_exclusion, list_raw_fif
 
 
 mne.set_log_level('ERROR')
 
-FOLDER_IN = Path(r"/Users/scheltie/Documents/NeuroTin Data/Raw/")
-FOLDER_OUT = Path(r"/Users/scheltie/Documents/NeuroTin Data/Clean/")
 
-
-def preprocessing_pipeline(fname):
+def _prepare_raw(fname):
     """
-    Preprocessing pipeline to annotate bad segments of data, to annotate bad
-    channels, to annotate events, to add the reference and the montage, to
-    clean the data and to interpolate the bad channels.
-
-    Parameters
-    ----------
-    fname : str | Path
-        Path to the '-raw.fif' file to preprocess.
-
-    Returns
-    -------
-    raw : Raw
-        Raw instance.
+    Pipeline loading file, fixing channel names, fixing channels types,
+    checking events, prompting to input interactively bad segments annotations,
+    adding events as annotations, prompting to inpt interactively bad channels,
+    adding montage, applying FIR filters, applying CAR and interpolating bad
+    channels.
     """
     # Load
     raw = read_raw_fif(fname)
@@ -74,19 +64,9 @@ def preprocessing_pipeline(fname):
     return raw
 
 
-def ICA_pipeline(raw):
+def _exclude_EOG_ECG_with_ICA(raw):
     """
     Apply ICA to remove EOG and ECG artifacts.
-
-    Parameters
-    ----------
-    raw : Raw
-        Raw instance to modify.
-
-    Returns
-    -------
-    raw : Raw
-        Raw instance modified in-place.
     """
     # Reset bads, bug fixed in #9719
     bads = raw.info['bads']
@@ -107,40 +87,76 @@ def ICA_pipeline(raw):
     return raw
 
 
-def main():
+def _add_subject_info(raw, subject, birthday, sex):
+    """Add subject information to raw instance."""
+    raw.info['subject_info'] = dict()
+    # subject ID
+    raw.info['subject_info']['id'] = subject
+    raw.info['subject_info']['his_id'] = str(subject).zfill(3)
+    # subject birthday (year, month, day)
+    if birthday is not None:
+        raw.info['subject_info']['birthday'] = birthday
+    # subject sex - (0, 1, 2) for (Unknown, Male, Female)
+    raw.info['subject_info']['sex'] = sex
+
+    return raw
+
+
+def main(subject, birthday, sex, folder_in, folder_out):
     """
     Main preprocessing pipeline, called once per participant.
     """
-    _, participant_folder = input_participant(FOLDER_IN)
-    sex = input_sex()
-    dirname_in = FOLDER_IN / participant_folder
-    dirname_out = FOLDER_OUT / participant_folder
-    exclusion_file = FOLDER_OUT / 'exclusion.txt'
+    subject_folder = str(subject).zfill(3)
+    dirname_in = folder_in / subject_folder
+    dirname_out = folder_out / subject_folder
+    exclusion_file = folder_out / 'exclusion.txt'
     assert dirname_in.exists()
     os.makedirs(dirname_out, exist_ok=True)
     exclude = read_exclusion(exclusion_file)
 
-    fifs = list_raw_fif(dirname_in)
-    for fif_in in fifs:
-        print("-------------------------------------------------------------")
+    for fif_in in list_raw_fif(dirname_in, exclude=exclude):
         fif_out = dirname_out / fif_in.relative_to(dirname_in)
         if fif_out.exists():
             print(f"Already preprocessed {fif_in.relative_to(dirname_in)}")
             continue
-        elif fif_out in exclude:
-            print(f"Excluded {fif_in.relative_to(dirname_in)}")
-            continue
-        else:
-            print(f"Preprocessing {fif_in.relative_to(dirname_in)}")
-        os.makedirs(fif_out.parent, exist_ok=True)
+        print(f"Preprocessing {fif_in.relative_to(dirname_in)}")
+
         try:
-            raw = preprocessing_pipeline(fif_in)
-            raw = ICA_pipeline(raw)
-            raw.info['subject_info']['sex'] = sex
+            raw = _prepare_raw(fif_in)
+            raw = _exclude_EOG_ECG_with_ICA(raw)
+            raw = _add_subject_info(raw, subject, birthday, sex)
             raw.info._check_consistency()
+            os.makedirs(fif_out.parent, exist_ok=True)
             raw.save(fif_out, fmt="double")
+
         except AssertionError:
-            exclude.append(fif_out)
-            write_exclusion(exclusion_file, fif_out)
+            exclude.append(fif_in)
+            write_exclusion(exclusion_file, fif_in)
+
         if not query_yes_no('Continue?'):
             break
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        prog='NeuroTin preprocessing pipeline',
+        description='Preprocess NeuroTin raw FIF files semi-automatically.')
+    parser.add_argument(
+        'subject', type=int, metavar='int',
+        help='ID of the subject.')
+    parser.add_argument(
+        'birthday', type=str,
+        help='Birthday of the subject as a tuple of int (year, month, day)')
+    parser.add_argument(
+        'sex', type=int, metavar='int',
+        help='Sex of the subject.')
+    parser.add_argument(
+        'folder_in', type=str,
+        help='Folder containing FIF files to preprocess.')
+    parser.add_argument(
+        'folder_out', type=str,
+        help='Folder containing FIF files preprocessed.')
+    args = parser.parse_args()
+
+    main(args.subject, args.birthday, args.sex, args.folder_in,
+         args.folder_out)

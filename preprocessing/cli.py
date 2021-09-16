@@ -1,70 +1,7 @@
-import os
 import sys
 
 
 RETRIES = 3
-
-
-def input_participant(folder_in):
-    """
-    Input a participant ID.
-
-    Parameters
-    ----------
-    folder_in : str | Path
-        Path to the folder containing the participant folders.
-
-    Returns
-    -------
-    participant : int
-        ID of the participant.
-    participant_folder : str
-        Folder of the participant. The name is created from the participant ID
-        with str(participant).zfill(3).
-    """
-
-    def _check_participant(participant):
-        participant = int(participant)
-        assert 0 < participant
-        assert str(participant).zfill(3) in os.listdir(folder_in)
-        return participant
-
-    for _ in range(RETRIES):
-        try:
-            participant = _check_participant(input("[IN] Participant ID: "))
-            break
-        except AssertionError:
-            pass
-    else:
-        raise ValueError
-
-    return participant, str(participant).zfill(3)
-
-
-def input_sex():
-    """
-    Input a participant sex. 1: Male - 2: Female.
-
-    Returns
-    -------
-    sex : int
-        Sex of the participant.
-    """
-    def _check_sex(sex):
-        sex = int(sex)
-        assert sex in (1, 2)
-        return sex
-
-    for _ in range(RETRIES):
-        try:
-            sex = _check_sex(input("[IN] Participant sex (1: M, 2: F): "))
-            break
-        except AssertionError:
-            pass
-    else:
-        raise ValueError
-
-    return sex
 
 
 def query_yes_no(question, default="yes", retries=RETRIES):
