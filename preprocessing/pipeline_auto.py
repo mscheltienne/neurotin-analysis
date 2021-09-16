@@ -228,9 +228,9 @@ def _parse_subject_info(subject_info):
     assert subject_info.exists()
     with open(subject_info, 'r') as file:
         lines = file.readlines()
-    lines = [line.strip().split(';') for line in lines if len(line) > 0]
+    lines = [line.strip().split() for line in lines if len(line) > 0]
     lines = [[eval(l.strip()) for l in line]
-             for line in lines if len(lines) == 3]
+             for line in lines if len(line) == 3]
     return {line[0]: (line[1], line[2]) for line in lines}
 
 
