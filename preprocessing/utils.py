@@ -3,7 +3,7 @@ from pathlib import Path
 import mne
 
 
-def list_raw_fif(directory):
+def list_raw_fif(directory, exclude=[]):
     """
     List all raw fif files in directory and its subdirectories.
 
@@ -11,6 +11,8 @@ def list_raw_fif(directory):
     ----------
     directory : str | Path
         Path to the directory.
+    exclude : list | tuple
+        List of files to exclude.
 
     Returns
     -------
@@ -22,26 +24,25 @@ def list_raw_fif(directory):
     for elt in directory.iterdir():
         if elt.is_dir():
             fifs.extend(list_raw_fif(directory / elt))
-        elif elt.name.endswith("-raw.fif"):
+        elif elt.name.endswith("-raw.fif") and elt not in exclude:
             fifs.append(elt)
     return fifs
 
 
 def read_exclusion(exclusion_file):
     """
-    Read the list of output fif files to exclude from disk.
-    If the file storing the exlusion list does not exist, it is created at
-    'FOLDER_OUT / exlusion.txt'.
+    Read the list of input fif files to exclude from preprocessing.
+    If the file storing the exlusion list does not exist, it is created.
 
     Parameters
     ----------
     exclusion_file : str | Path
-        Text file storing the file output path to exclude.
+        Text file storing the path to input files to exclude.
 
     Returns
     -------
     exclude : list
-        List of file to exclude.
+        List of files to exclude.
     """
     exclusion_file = Path(exclusion_file)
     if exclusion_file.exists():
@@ -57,21 +58,21 @@ def read_exclusion(exclusion_file):
 
 def write_exclusion(exclusion_file, exclude):
     """
-    Add a file to the exclusion file 'FOLDER_OUT / exlusion.txt'.
+    Add a fif file or a set of fif files to the exclusion file.
 
     Parameters
     ----------
     exclusion_file : str | Path
-        Text file storing the file output path to exclude.
+        Text file storing the path to input files to exclude.
     exclude : str | Path | list | tuple
-        Path or list of Paths to the output file to exclude.
+        Path or list of Paths to input files to exclude.
     """
     exclusion_file = Path(exclusion_file)
     mode = 'w' if not exclusion_file.exists() else 'a'
     if isinstance(exclude, (str, Path)):
-        exclude = [Path(exclude)]
+        exclude = [str(exclude)] if Path(exclude).exists() else []
     elif isinstance(exclude, (list, tuple)):
-        exclude = [Path(fif) for fif in exclude]
+        exclude = [str(fif) for fif in exclude if Path(fif).exists()]
     with open(exclusion_file, mode) as file:
         for fif in exclude:
             file.write(str(fif) + '\n')
