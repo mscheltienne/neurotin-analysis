@@ -323,9 +323,10 @@ if __name__ == '__main__':
         'subject_info_fname', type=str,
         help='File containing the subject information to parse.')
     parser.add_argument(
-        '--auto', dest='semiauto', action='store_false')
+        '--auto', dest='semiauto', action='store_false',
+        help='Flag to enable automatic preprocessing.')
     parser.add_argument(
-        '-p', '--processes', type=int, metavar='int',
+        '--processes', type=int, metavar='int',
         help='Number of parallel processes (if auto).', default=1)
     parser.add_argument(
         '--subject', type=int, metavar='int',
@@ -334,7 +335,7 @@ if __name__ == '__main__':
         '--session', type=int, metavar='int',
         help='ID of the session to consider.', default=None)
     parser.add_argument(
-        'fname', type=str,
+        '--fname', type=str, metavar='path',
         help='FIF file name to preprocess.', default=None)
 
     args = parser.parse_args()
