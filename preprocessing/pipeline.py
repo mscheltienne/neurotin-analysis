@@ -103,7 +103,7 @@ def _add_subject_info(raw, subject, sex):
     TODO: Add birthday/age."""
     raw.info['subject_info'] = dict()
     # subject ID
-    subject = _check_subject_id(subject, raw)
+    subject = _check_subject(subject, raw)
     raw.info['subject_info']['id'] = subject
     raw.info['subject_info']['his_id'] = str(subject).zfill(3) \
         if subject is not None else None
@@ -113,7 +113,7 @@ def _add_subject_info(raw, subject, sex):
     return raw
 
 
-def _check_subject_id(subject, raw):
+def _check_subject(subject, raw):
     """Checks that the subject ID is valid."""
     try:
         subject = int(subject)
