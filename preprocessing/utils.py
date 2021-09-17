@@ -100,10 +100,10 @@ def parse_subject_info(fname):
     assert fname.exists()
     with open(fname, 'r') as file:
         lines = file.readlines()
-    lines = [line.strip().split() for line in lines if len(line) > 0]
+    lines = [line.strip().split(';') for line in lines if len(line) > 0]
     lines = [[eval(l.strip()) for l in line]
-             for line in lines if len(line) == 2]
-    return {line[0]: (line[1], ) for line in lines}
+             for line in lines if len(line) == 3]
+    return {line[0]: (line[1], line[2]) for line in lines}
 
 
 def read_raw_fif(fname):

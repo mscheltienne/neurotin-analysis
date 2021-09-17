@@ -98,17 +98,20 @@ def _exclude_EOG_ECG_with_ICA(raw, semiauto=False):
     return raw
 
 
-def _add_subject_info(raw, subject, sex):
-    """Add subject information to raw instance.
-    TODO: Add birthday/age."""
+def _add_subject_info(raw, subject, sex, birthday):
+    """Add subject information to raw instance."""
     raw.info['subject_info'] = dict()
     # subject ID
     subject = _check_subject(subject, raw)
-    raw.info['subject_info']['id'] = subject
-    raw.info['subject_info']['his_id'] = str(subject).zfill(3) \
-        if subject is not None else None
+    if subject is not None:
+        raw.info['subject_info']['id'] = subject
+        raw.info['subject_info']['his_id'] = str(subject).zfill(3)
     # subject sex - (0, 1, 2) for (Unknown, Male, Female)
     raw.info['subject_info']['sex'] = _check_sex(sex)
+    # birthday
+    birthday = _check_birthday(birthday)
+    if birthday is not None:
+        raw.info['subject_info']['birthday'] = birthday
 
     return raw
 
@@ -135,7 +138,19 @@ def _check_sex(sex):
     return sex
 
 
-def pipeline(fname, fname_out, semiauto, subject, sex):
+def _check_birthday(birthday):
+    """Checks that birthday is given as a tuple of int (year, month, day)."""
+    try:
+        birthday = tuple([int(n) for n in birthday])
+        assert 1900 <= birthday[0] <= 2020
+        assert 1 <= birthday[1] <= 12
+        assert 1 <= birthday[2] <= 31
+    except Exception:
+        birthday = None
+    return birthday
+
+
+def pipeline(fname, fname_out, semiauto, subject, sex, birthday):
     """
     Pipeline function called on each raw file.
 
@@ -152,6 +167,8 @@ def pipeline(fname, fname_out, semiauto, subject, sex):
         ID of the subject.
     sex : int
         Sex of the subject. 1: Male - 2: Female.
+    birthday : 3-length tuple of int
+        Subject's birthday as (year, month, day).
 
     Returns
     -------
@@ -165,7 +182,7 @@ def pipeline(fname, fname_out, semiauto, subject, sex):
         # Preprocess
         raw = _prepare_raw(_check_fname(fname), semiauto=semiauto)
         raw = _exclude_EOG_ECG_with_ICA(raw, semiauto=semiauto)
-        raw = _add_subject_info(raw, subject, sex)
+        raw = _add_subject_info(raw, subject, sex, birthday)
         raw.info._check_consistency()
         # Export
         raw.save(_check_fname_out(fname_out), fmt="double", overwrite=False)
@@ -254,7 +271,7 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
 
     # Create input pool for pipeline based on provided subject info
     input_pool = [(fifs_in[k], folder_out / fifs_in[k].relative_to(folder_in),
-                   semiauto, idx, subject_info[idx][0])
+                   semiauto, idx, subject_info[idx][0], subject_info[idx][1])
                   for k, idx in enumerate(subjects) if idx in subject_info]
     assert 0 < len(input_pool)
 
