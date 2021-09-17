@@ -119,6 +119,8 @@ def main(subject, birthyear, sex, folder_in, folder_out):
         Path to the folder containing the FIF files preprocessed.
     """
     subject_folder = str(subject).zfill(3)
+    folder_in = Path(folder_in)
+    folder_out = Path(folder_out)
     dirname_in = folder_in / subject_folder
     dirname_out = folder_out / subject_folder
     exclusion_file = folder_out / 'exclusion.txt'
