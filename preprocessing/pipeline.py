@@ -53,10 +53,14 @@ def _prepare_raw(fname, semiauto=False):
 
     # Mark bad channels
     bads = PREP_bads_suggestion(raw)  # operates on a copy
-    raw.info['bads'] = bads
     if semiauto:
-        raw.plot_psd(fmin=1, fmax=40, picks='eeg', reject_by_annotation=True)
-        raw.plot(block=True)
+        raw_.info['bads'] = bads
+        apply_filter_eeg(raw_, bandpass=(1., 40.), notch=True, car=False)
+        raw_.plot_psd(fmin=1, fmax=40, picks='eeg', reject_by_annotation=True)
+        raw_.plot(block=True)
+        raw.info['bads'] = raw_.info['bads']
+    else:
+        raw.info['bads'] = bads
 
     # Reference and filter EEG
     raw.add_reference_channels(ref_channels='CPz')
@@ -81,13 +85,12 @@ def _exclude_EOG_ECG_with_ICA(raw, semiauto=False):
     ica.fit(raw, picks='eeg', reject_by_annotation=True)
     eog_idx, eog_scores = ica.find_bads_eog(raw)
     ecg_idx, ecg_scores = ica.find_bads_ecg(raw)
+    ica.exclude = eog_idx + ecg_idx
     if semiauto:
         ica.plot_scores(eog_scores)
         ica.plot_scores(ecg_scores)
         ica.plot_sources(raw, block=True)
-    else:
-        ica.exclude = eog_idx + ecg_idx
-    # ica.plot_components(inst=raw)
+        # ica.plot_components(inst=raw)
     assert len(ica.exclude) != 0
     ica.apply(raw)
 
@@ -132,7 +135,7 @@ def _check_sex(sex):
     return sex
 
 
-def pipeline(fname, fname_out, subject, sex):
+def pipeline(fname, fname_out, semiauto, subject, sex):
     """
     Pipeline function called on each raw file.
 
@@ -142,6 +145,9 @@ def pipeline(fname, fname_out, subject, sex):
         Path to the input '-raw.fif' file to preprocess.
     fname_out : str | Path
         Path to the output '-raw.fif' file preprocessed.
+    semiauto : bool
+        If True, the user will interactively set annotations, mark bad channels
+        and exclude ICA components.
     subject : int
         ID of the subject.
     sex : int
@@ -157,8 +163,8 @@ def pipeline(fname, fname_out, subject, sex):
     print (f'Preprocessing: {fname}')
     try:
         # Preprocess
-        raw = _prepare_raw(_check_fname(fname))
-        raw = _exclude_EOG_ECG_with_ICA(raw)
+        raw = _prepare_raw(_check_fname(fname), semiauto=semiauto)
+        raw = _exclude_EOG_ECG_with_ICA(raw, semiauto=semiauto)
         raw = _add_subject_info(raw, subject, sex)
         raw.info._check_consistency()
         # Export
@@ -207,7 +213,7 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
         Restricts file selection to this subject.
     session : int | None
         Restricts file selection to this session.
-    fname : str | Path | None
+    fname : str | Path
         Restrict file selection to this file (must be inside folder_in).
     """
     # Checks
@@ -216,7 +222,7 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
     processes = _check_arg_processes(processes)
     subject = _check_arg_subject(subject)
     session = _check_arg_session(session)
-    fname = _check_arg_fname(fname)
+    fname = _check_arg_fname(fname, folder_in)
 
     # Read excluded files
     exclusion_file = folder_out / 'exclusion.txt'
@@ -241,23 +247,21 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
                     if sessions[k] == session]
         sessions = [session_id for session_id in sessions
                     if session_id == session]
-    if fname is not None and fname in fifs_in:
+    if fname != '' and fname in fifs_in:
         subjects = subjects[fifs_in.index(fname)]
         sessions = sessions[fifs_in.index(fname)]
         fifs_in = [fname]
 
     # Create input pool for pipeline based on provided subject info
     input_pool = [(fifs_in[k], folder_out / fifs_in[k].relative_to(folder_in),
-                   idx, subject_info[idx][0])
+                   semiauto, idx, subject_info[idx][0])
                   for k, idx in enumerate(subjects) if idx in subject_info]
     assert 0 < len(input_pool)
 
     if semiauto:
-        exclude = list()
+        results = list()
         for inp in input_pool:
-            success, fname = pipeline(*inp)
-            if not success:
-                exclude.append(fname)
+            results.append(pipeline(*inp))
             if not query_yes_no('Continue?'):
                 break
     else:
@@ -302,11 +306,13 @@ def _check_arg_session(session):
 
 def _check_arg_fname(fname, folder_in):
     """Checks that the fname is valid."""
-    fname = Path(fname)
-    try:
-        fname.relative_to(folder_in)
-    except ValueError:
-        raise AssertionError('fname not in folder_in')
+    if fname is not None:
+        fname = Path(fname)
+        try:
+            fname.relative_to(folder_in)
+        except ValueError:
+            raise AssertionError('fname not in folder_in')
+    return fname
 
 
 if __name__ == '__main__':
