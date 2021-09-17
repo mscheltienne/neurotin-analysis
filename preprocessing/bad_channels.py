@@ -4,6 +4,7 @@ from autoreject import Ransac
 from pyprep.find_noisy_channels import NoisyChannels
 
 from events import EVENTS
+from filters import apply_filter_eeg
 
 
 def _prepapre_raw(raw):
@@ -25,6 +26,7 @@ def _prepapre_raw(raw):
         Copied and modified raw instance.
     """
     raw = raw.copy()
+    apply_filter_eeg(raw, bandpass=(1., 40.), notch=True, car=False)
     events = mne.find_events(raw, stim_channel='TRIGGER')
     unique_events = list(set(event[2] for event in events))
 

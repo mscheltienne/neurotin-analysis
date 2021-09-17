@@ -78,6 +78,34 @@ def write_exclusion(exclusion_file, exclude):
             file.write(str(fif) + '\n')
 
 
+def parse_subject_info(fname):
+    """
+    Parse the subject_info file and return the subject ID and sex.
+
+    Parameters
+    ----------
+    fname : str | Path
+        Path to the subject info file.
+
+    Returns
+    -------
+    dict
+        key : int
+            ID of the subject.
+        value : tuple (sex, )
+            sex : int
+                Sex of the subject. 1: Male - 2: Female.
+    """
+    fname = Path(fname)
+    assert fname.exists()
+    with open(fname, 'r') as file:
+        lines = file.readlines()
+    lines = [line.strip().split() for line in lines if len(line) > 0]
+    lines = [[eval(l.strip()) for l in line]
+             for line in lines if len(line) == 2]
+    return {line[0]: (line[1], ) for line in lines}
+
+
 def read_raw_fif(fname):
     """
     Load a RAW instance from a .fif file. Renames the channel to match the
