@@ -122,6 +122,7 @@ def read_raw_fif(fname):
     raw : Raw instance.
     """
     # Load/check file name
+    fname = Path(fname)
     raw = mne.io.read_raw_fif(fname, preload=True)
 
     # Rename channels
