@@ -7,6 +7,7 @@ import multiprocessing as mp
 import mne
 
 from cli import query_yes_no
+from meas_info import fill_info
 from bad_channels import PREP_bads_suggestion
 from filters import apply_filter_eeg, apply_filter_aux
 from events import add_annotations_from_events, check_events
@@ -33,6 +34,7 @@ def _prepare_raw(fname, semiauto=False):
     """
     # Load
     raw = read_raw_fif(fname)
+    raw = fill_info(raw)
 
     # Check events
     recording_type = Path(fname).stem.split('-')[1]

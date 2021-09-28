@@ -119,7 +119,8 @@ def read_raw_fif(fname):
 
     Returns
     -------
-    raw : Raw instance.
+    raw : Raw
+        Raw instance.
     """
     # Load/check file name
     fname = Path(fname)
@@ -150,25 +151,5 @@ def read_raw_fif(fname):
             mne.rename_channels(raw.info, {key: value})
         except Exception:
             pass
-
-    # Description
-    subject = int(fname.parent.parent.parent.name)
-    session = int(fname.parent.parent.name.split()[-1])
-    recording_type = fname.parent.name
-    recording_run = fname.name.split('-')[0]
-    raw.info['description'] = f'Subject {subject} - Session {session} '+\
-                              f'- {recording_type} {recording_run}'
-
-    # Device info
-    raw.info['device_info'] = dict()
-    raw.info['device_info']['type'] = 'EEG'
-    raw.info['device_info']['model'] = 'eego mylab'
-    serial = fname.stem.split('-raw')[0].split('-')[-1].split()[1]
-    raw.info['device_info']['serial'] = serial
-    raw.info['device_info']['site'] = \
-        'https://www.ant-neuro.com/products/eego_mylab'
-
-    # Experimenter
-    raw.info['experimenter'] = 'Mathieu Scheltienne'
 
     return raw
