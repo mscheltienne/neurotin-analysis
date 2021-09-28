@@ -264,9 +264,9 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
                     if sessions[k] == session]
         sessions = [session_id for session_id in sessions
                     if session_id == session]
-    if fname != '' and fname in fifs_in:
-        subjects = subjects[fifs_in.index(fname)]
-        sessions = sessions[fifs_in.index(fname)]
+    if fname is not None and fname in fifs_in:
+        subjects = [subjects[fifs_in.index(fname)]]
+        sessions = [sessions[fifs_in.index(fname)]]
         fifs_in = [fname]
 
     # Create input pool for pipeline based on provided subject info
