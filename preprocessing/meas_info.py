@@ -1,5 +1,5 @@
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 RECORDING_TYPE_MAPPING = {
@@ -65,6 +65,6 @@ def fill_info(raw):
             datetime_ = log[0]
             break
     assert datetime_ is not None
-    raw.info['meas_date'] = datetime_
+    raw.info['meas_date'] = datetime_.astimezone(timezone.utc)
 
     return raw
