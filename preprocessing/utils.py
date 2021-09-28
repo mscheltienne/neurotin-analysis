@@ -168,4 +168,7 @@ def read_raw_fif(fname):
     raw.info['device_info']['site'] = \
         'https://www.ant-neuro.com/products/eego_mylab'
 
+    # Experimenter
+    raw.info['experimenter'] = 'Mathieu Scheltienne'
+
     return raw
