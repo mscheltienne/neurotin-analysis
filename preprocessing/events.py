@@ -130,11 +130,11 @@ def _check_events_calibration(raw, events):
         replace_event_value(raw, events[0, 2], EVENTS["blink"])
     try:
         assert events[1, 2] == EVENTS["rest"]
-    except:
+    except AssertionError:
         replace_event_value(raw, events[1, 2], EVENTS["rest"])
     try:
         assert events[2, 2] == EVENTS["audio"]
-    except:
+    except AssertionError:
         replace_event_value(raw, events[2, 2], EVENTS["audio"])
 
 
@@ -180,7 +180,7 @@ def _check_events_neurofeedback(raw, events):
         replace_event_value(raw, count[0][0], EVENTS["non-regulation"])
     try:
         assert events[1, 2] == EVENTS["regulation"]
-    except:
+    except AssertionError:
         replace_event_value(raw, events[1, 2], EVENTS["regulation"])
 
 

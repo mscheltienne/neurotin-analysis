@@ -128,7 +128,7 @@ def read_raw_fif(fname):
     # Rename channels
     try:
         mne.rename_channels(raw.info, {"AUX7": "EOG", "AUX8": "ECG"})
-    except:
+    except Exception:
         mne.rename_channels(raw.info, {"AUX19": "EOG", "AUX20": "ECG"})
     raw.set_channel_types(mapping={"ECG": "ecg", "EOG": "eog"})
 
@@ -148,7 +148,7 @@ def read_raw_fif(fname):
     for key, value in mapping.items():
         try:
             mne.rename_channels(raw.info, {key: value})
-        except:
+        except Exception:
             pass
 
     # Description
