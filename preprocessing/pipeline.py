@@ -230,7 +230,7 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
         Restricts file selection to this subject.
     session : int | None
         Restricts file selection to this session.
-    fname : str | Path
+    fname : str | Path | None
         Restrict file selection to this file (must be inside folder_in).
     """
     # Checks
@@ -246,21 +246,21 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
     exclude = read_exclusion(exclusion_file)
 
     # List files to preprocess
-    fifs_in = [fname for fname in list_raw_fif(folder_in, exclude=exclude)
-               if not (folder_out / fname.relative_to(folder_in)).exists()]
-    subjects = [int(fname.parent.parent.parent.name) for fname in fifs_in]
-    sessions = [int(fname.parent.parent.name.split()[1]) for fname in fifs_in]
+    fifs_in = [file for file in list_raw_fif(folder_in, exclude=exclude)
+               if not (folder_out / file.relative_to(folder_in)).exists()]
+    subjects = [int(file.parent.parent.parent.name) for file in fifs_in]
+    sessions = [int(file.parent.parent.name.split()[1]) for file in fifs_in]
     if subject is not None:
         sessions = [session_id for k, session_id in enumerate(sessions)
                     if subjects[k] == subject]
-        fifs_in = [fname for k, fname in enumerate(fifs_in)
+        fifs_in = [file for k, file in enumerate(fifs_in)
                     if subjects[k] == subject]
         subjects = [subject_id for subject_id in subjects
                     if subject_id == subject]
     if session is not None:
         subjects = [subject_id for k, subject_id in enumerate(subjects)
                     if sessions[k] == session]
-        fifs_in = [fname for k, fname in enumerate(fifs_in)
+        fifs_in = [file for k, file in enumerate(fifs_in)
                     if sessions[k] == session]
         sessions = [session_id for session_id in sessions
                     if session_id == session]
@@ -285,7 +285,7 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
         with mp.Pool(processes=processes) as p:
             results = p.starmap(pipeline, input_pool)
 
-    exclude = [fname for success, fname in results if not success]
+    exclude = [file for success, file in results if not success]
     write_exclusion(exclusion_file, exclude)
 
 
