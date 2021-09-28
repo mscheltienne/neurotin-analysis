@@ -199,7 +199,7 @@ def replace_event_value(raw, old_value, new_value):
 
     Returns
     -------
-    raw : Raw instance modified in-place
+    raw : Raw instance modified in-place.
     """
     tch = find_event_channel(inst=raw)
     raw.apply_function(
