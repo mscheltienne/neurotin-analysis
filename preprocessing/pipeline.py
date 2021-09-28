@@ -264,7 +264,8 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
                     if sessions[k] == session]
         sessions = [session_id for session_id in sessions
                     if session_id == session]
-    if fname is not None and fname in fifs_in:
+    if fname is not None:
+        assert fname in fifs_in
         subjects = [subjects[fifs_in.index(fname)]]
         sessions = [sessions[fifs_in.index(fname)]]
         fifs_in = [fname]
@@ -353,13 +354,13 @@ if __name__ == '__main__':
         help='Number of parallel processes (if auto).', default=1)
     parser.add_argument(
         '--subject', type=int, metavar='int',
-        help='ID of the subject to consider.', default=None)
+        help='Restrict to files with this subject ID.', default=None)
     parser.add_argument(
         '--session', type=int, metavar='int',
-        help='ID of the session to consider.', default=None)
+        help='Restrict with files with this session ID.', default=None)
     parser.add_argument(
         '--fname', type=str, metavar='path',
-        help='FIF file name to preprocess.', default=None)
+        help='Restrict to this file.', default=None)
 
     args = parser.parse_args()
 
