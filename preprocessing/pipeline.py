@@ -349,8 +349,8 @@ if __name__ == '__main__':
         'subject_info_fname', type=str,
         help='File containing the subject information to parse.')
     parser.add_argument(
-        '--auto', dest='semiauto', action='store_false',
-        help='Flag to enable automatic preprocessing.')
+        '--semiauto', dest='semiauto', action='store_true',
+        help='Flag to enable semi-automatic preprocessing.')
     parser.add_argument(
         '--processes', type=int, metavar='int',
         help='Number of parallel processes (if auto).', default=1)
