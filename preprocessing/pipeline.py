@@ -18,26 +18,26 @@ from utils import (read_raw_fif, read_exclusion, write_exclusion, list_raw_fif,
 mne.set_log_level('ERROR')
 
 
-def _prepare_raw(fname, semiauto=False):
+def prepare_raw(raw, semiauto=False):
     """
-    Automatic pipeline: semiauto=False
-    Pipeline loading file, fixing channel names, fixing channels types,
-    checking events, adding events as annotations, marking bad channels, adding
-    montage, applying FIR filters, applying CAR and interpolating bad channels.
+    Prepare raw instance by checking events, adding events as annotations,
+    marking bad channels, adding montage, applying FIR filters, applying CAR
+    and interpolating bad channels.
 
-    Semi-automatic pipeline: semiauto=True
-    Pipeline loading file, fixing channel names, fixing channels types,
-    checking events, prompting to input interactively bad segments annotations,
-    adding events as annotations, prompting to inpt interactively bad channels,
-    adding montage, applying FIR filters, applying CAR and interpolating bad
-    channels.
+    Parameters
+    ----------
+    raw : raw : Raw
+        Raw instance modified in-place.
+    semiauto : bool
+        If True, the user will interactively add bad segments annotations and
+        bad channels.
+
+    Returns
+    -------
+    raw : Raw instance modified in-place.
     """
-    # Load
-    raw = read_raw_fif(fname)
-    raw = fill_info(raw)
-
     # Check events
-    recording_type = Path(fname).stem.split('-')[1]
+    recording_type = Path(raw.filenames[0]).stem.split('-')[1]
     check_events(raw, recording_type)
 
     # Filter AUX
@@ -75,9 +75,20 @@ def _prepare_raw(fname, semiauto=False):
     return raw
 
 
-def _exclude_EOG_ECG_with_ICA(raw, semiauto=False):
+def exclude_EOG_ECG_with_ICA(raw, semiauto=False):
     """
-    Apply ICA to remove EOG and ECG artifacts.
+    Apply ICA to remove EOG and ECG artifacts from raw instance.
+
+    Parameters
+    ----------
+    raw : raw : Raw
+        Raw instance modified in-place.
+    semiauto : bool
+        If True, the user will interactively exclude ICA components.
+
+    Returns
+    -------
+    raw : Raw instance modified in-place.
     """
     # Reset bads, bug fixed in #9719
     bads = raw.info['bads']
@@ -98,58 +109,6 @@ def _exclude_EOG_ECG_with_ICA(raw, semiauto=False):
 
     raw.info['bads'] = bads # bug fixed in #9719
     return raw
-
-
-def _add_subject_info(raw, subject, sex, birthday):
-    """Add subject information to raw instance."""
-    raw.info['subject_info'] = dict()
-    # subject ID
-    subject = _check_subject(subject, raw)
-    if subject is not None:
-        raw.info['subject_info']['id'] = subject
-        raw.info['subject_info']['his_id'] = str(subject).zfill(3)
-    # subject sex - (0, 1, 2) for (Unknown, Male, Female)
-    raw.info['subject_info']['sex'] = _check_sex(sex)
-    # birthday
-    birthday = _check_birthday(birthday)
-    if birthday is not None:
-        raw.info['subject_info']['birthday'] = birthday
-
-    return raw
-
-
-def _check_subject(subject, raw):
-    """Checks that the subject ID is valid."""
-    try:
-        subject = int(subject)
-        fname = Path(raw.filenames[0])
-        assert int(fname.parent.parent.parent.name) == subject
-    except Exception:
-        subject = None
-    return subject
-
-
-def _check_sex(sex):
-    """Checks that sex is either 1 for Male or 2 for Female. Else returns 0 for
-    unknown."""
-    try:
-        sex = int(sex)
-        assert sex in (1, 2)
-    except Exception:
-        sex = 0
-    return sex
-
-
-def _check_birthday(birthday):
-    """Checks that birthday is given as a tuple of int (year, month, day)."""
-    try:
-        birthday = tuple([int(n) for n in birthday])
-        assert 1900 <= birthday[0] <= 2020
-        assert 1 <= birthday[1] <= 12
-        assert 1 <= birthday[2] <= 31
-    except Exception:
-        birthday = None
-    return birthday
 
 
 def pipeline(fname, fname_out, semiauto, subject, sex, birthday):
@@ -182,10 +141,10 @@ def pipeline(fname, fname_out, semiauto, subject, sex, birthday):
     print (f'Preprocessing: {fname}')
     try:
         # Preprocess
-        raw = _prepare_raw(_check_fname(fname), semiauto=semiauto)
-        raw = _exclude_EOG_ECG_with_ICA(raw, semiauto=semiauto)
-        raw = _add_subject_info(raw, subject, sex, birthday)
-        raw.info._check_consistency()
+        raw = read_raw_fif(fname)
+        raw = fill_info(raw, subject, sex, birthday)
+        raw = prepare_raw(raw, semiauto=semiauto)
+        raw = exclude_EOG_ECG_with_ICA(raw, semiauto=semiauto)
         # Export
         raw.save(_check_fname_out(fname_out), fmt="double", overwrite=False)
         return (True, fname)
@@ -194,13 +153,6 @@ def pipeline(fname, fname_out, semiauto, subject, sex, birthday):
         print (f'FAILED: {fname}')
         print(traceback.format_exc())
         return (False, fname)
-
-
-def _check_fname(fname):
-    """Checks that the input file exists."""
-    fname = Path(fname)
-    assert fname.exists()
-    return fname
 
 
 def _check_fname_out(fname_out):
@@ -237,11 +189,11 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
     """
     # Checks
     subject_info = parse_subject_info(subject_info_fname)
-    folder_in, folder_out = _check_arg_folders(folder_in, folder_out)
-    processes = _check_arg_processes(processes)
-    subject = _check_arg_subject(subject)
-    session = _check_arg_session(session)
-    fname = _check_arg_fname(fname, folder_in)
+    folder_in, folder_out = _check_folders(folder_in, folder_out)
+    processes = _check_processes(processes)
+    subject = _check_subject(subject)
+    session = _check_session(session)
+    fname = _check_fname(fname, folder_in)
 
     # Read excluded files
     exclusion_file = folder_out / 'exclusion.txt'
@@ -292,7 +244,7 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
     write_exclusion(exclusion_file, exclude)
 
 
-def _check_arg_folders(folder_in, folder_out):
+def _check_folders(folder_in, folder_out):
     """Checks that the folder exists and are pathlib.Path instances."""
     folder_in = Path(folder_in)
     folder_out = Path(folder_out)
@@ -301,14 +253,14 @@ def _check_arg_folders(folder_in, folder_out):
     return folder_in, folder_out
 
 
-def _check_arg_processes(processes):
+def _check_processes(processes):
     """Checks that the number of processes is valid."""
     processes = int(processes)
     assert 0 < processes, 'processes should be a positive integer'
     return processes
 
 
-def _check_arg_subject(subject):
+def _check_subject(subject):
     """Checks that the subject ID is valid."""
     if subject is not None:
         subject = int(subject)
@@ -316,7 +268,7 @@ def _check_arg_subject(subject):
     return subject
 
 
-def _check_arg_session(session):
+def _check_session(session):
     """Checks that the session ID is valid."""
     if session is not None:
         session = int(session)
@@ -324,7 +276,7 @@ def _check_arg_session(session):
     return session
 
 
-def _check_arg_fname(fname, folder_in):
+def _check_fname(fname, folder_in):
     """Checks that the fname is valid."""
     if fname is not None:
         fname = Path(fname)
