@@ -56,6 +56,6 @@ arguments can be obtained with the `--help` flag.
 
 ## TODO
 
-[ ] Evamed database analysis
-[ ] Sensor Space time-frequency analysis
-[ ] Source space analysis with `fsaverage` template MRI
+- [ ] Evamed database analysis
+- [ ] Sensor Space time-frequency analysis
+- [ ] Source space analysis with `fsaverage` template MRI
