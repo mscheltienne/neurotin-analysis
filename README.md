@@ -17,7 +17,6 @@ Data
         └─ logs.txt
     └─ ...
     └─ Session 15
-
 └─ 002
 └─ ...
 ```
