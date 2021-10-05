@@ -100,7 +100,7 @@ def _add_measurement_date(raw):
             break
     assert datetime_ is not None
 
-    raw.info['meas_date'] = datetime_.astimezone(timezone.utc)
+    raw.set_meas_date(datetime_.astimezone(timezone.utc))
 
 
 def _add_subject_info(raw, subject, sex, birthday):
