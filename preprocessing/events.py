@@ -49,7 +49,8 @@ def add_annotations_from_events(raw):
     previous_annotations = raw.annotations
     events = mne.find_events(raw, stim_channel="TRIGGER")
     annotations = mne.annotations_from_events(
-        events=events, event_desc=EVENTS_MAPPING, sfreq=raw.info["sfreq"])
+        events=events, event_desc=EVENTS_MAPPING, sfreq=raw.info["sfreq"],
+        orig_time=previous_annotations.orig_time)
     for k in range(events.shape[0]):
         idx = events[k, 2]
         annotations.duration[k] = EVENTS_DURATION_MAPPING[idx]
