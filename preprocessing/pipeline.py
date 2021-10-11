@@ -89,6 +89,7 @@ def exclude_EOG_ECG_with_ICA(raw, semiauto=False):
     Returns
     -------
     raw : Raw instance modified in-place.
+    ica : ICA instance.
     """
     # Reset bads, bug fixed in #9719
     bads = raw.info['bads']
@@ -108,10 +109,10 @@ def exclude_EOG_ECG_with_ICA(raw, semiauto=False):
     ica.apply(raw)
 
     raw.info['bads'] = bads # bug fixed in #9719
-    return raw
+    return raw, ica
 
 
-def pipeline(fname, fname_out, semiauto, subject, sex, birthday):
+def pipeline(fname, fname_out_stem, semiauto, subject, sex, birthday):
     """
     Pipeline function called on each raw file.
 
@@ -119,8 +120,8 @@ def pipeline(fname, fname_out, semiauto, subject, sex, birthday):
     ----------
     fname : str | Path
         Path to the input '-raw.fif' file to preprocess.
-    fname_out : str | Path
-        Path to the output '-raw.fif' file preprocessed.
+    fname_out_stem : str | Path
+        Path and naming scheme used to save -raw.fif and -ica.fif.
     semiauto : bool
         If True, the user will interactively set annotations, mark bad channels
         and exclude ICA components.
@@ -144,9 +145,11 @@ def pipeline(fname, fname_out, semiauto, subject, sex, birthday):
         raw = read_raw_fif(fname)
         raw = fill_info(raw, subject, sex, birthday)
         raw = prepare_raw(raw, semiauto=semiauto)
-        raw = exclude_EOG_ECG_with_ICA(raw, semiauto=semiauto)
+        raw, ica = exclude_EOG_ECG_with_ICA(raw, semiauto=semiauto)
         # Export
-        raw.save(_check_fname_out(fname_out), fmt="double", overwrite=False)
+        raw.save(_check_fname_out_stem(fname_out_stem, 'raw'),
+                 fmt="double", overwrite=False)
+        ica.save(_check_fname_out_stem(fname_out_stem, 'ica'))
         return (True, fname)
 
     except Exception:
@@ -155,9 +158,15 @@ def pipeline(fname, fname_out, semiauto, subject, sex, birthday):
         return (False, fname)
 
 
-def _check_fname_out(fname_out):
-    """Checks that fname_out is a Path and create needed directories."""
-    fname_out = Path(fname_out)
+def _check_fname_out_stem(fname_out_stem, type_):
+    """Checks that fname_out_stem is a valid, appends the correct extension and
+    create needed directories."""
+    type_ = type_.strip().lower()
+    assert type_ in ['raw', 'ica']
+    if type_ == 'raw':
+        fname_out = Path(str(fname_out_stem) + '-raw.fif')
+    elif type == 'ica':
+        fname_out = Path(str(fname_out_stem) + '-ica.fif')
     os.makedirs(fname_out.parent, exist_ok=True)
     return fname_out
 
@@ -225,8 +234,12 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
         fifs_in = [fname]
 
     # Create input pool for pipeline based on provided subject info
-    input_pool = [(fifs_in[k], folder_out / fifs_in[k].relative_to(folder_in),
-                   semiauto, idx, subject_info[idx][0], subject_info[idx][1])
+    input_pool = [(fifs_in[k],
+                   str(folder_out / fifs_in[k].relative_to(folder_in))[:-8],
+                   semiauto,
+                   idx,
+                   subject_info[idx][0],
+                   subject_info[idx][1])
                   for k, idx in enumerate(subjects) if idx in subject_info]
     assert 0 < len(input_pool)
 
