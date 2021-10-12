@@ -165,7 +165,7 @@ def _check_fname_out_stem(fname_out_stem, type_):
     assert type_ in ['raw', 'ica']
     if type_ == 'raw':
         fname_out = Path(str(fname_out_stem) + '-raw.fif')
-    elif type == 'ica':
+    elif type_ == 'ica':
         fname_out = Path(str(fname_out_stem) + '-ica.fif')
     os.makedirs(fname_out.parent, exist_ok=True)
     return fname_out
