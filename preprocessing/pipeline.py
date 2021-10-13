@@ -135,7 +135,7 @@ def pipeline(fname, fname_out_stem, semiauto, subject, sex, birthday):
     Returns
     -------
     success : bool
-        False if a step raised an AssertionError.
+        False if a step raised an Exception.
     fname : Path
         Path to the input '-raw.fif' file to preprocess.
     """
