@@ -121,7 +121,7 @@ def pipeline(fname, fname_out_stem, semiauto, subject, sex, birthday):
     fname : str | Path
         Path to the input '-raw.fif' file to preprocess.
     fname_out_stem : str | Path
-        Path and naming scheme used to save -raw.fif and -ica.fif.
+        Path and naming scheme used to save -raw.fif and -ica.fif files.
     semiauto : bool
         If True, the user will interactively set annotations, mark bad channels
         and exclude ICA components.
