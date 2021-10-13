@@ -29,6 +29,30 @@ def list_raw_fif(directory, exclude=[]):
     return fifs
 
 
+def list_ica_fif(directory):
+    """
+    List all ica fif files in directory and its subdirectories.
+
+    Parameters
+    ----------
+    directory : str | Path
+        Path to the directory.
+
+    Returns
+    -------
+    fifs : list
+        Found ica fif files.
+    """
+    directory = Path(directory)
+    fifs = list()
+    for elt in directory.iterdir():
+        if elt.is_dir():
+            fifs.extend(list_ica_fif(elt))
+        elif elt.name.endswith("-ica.fif"):
+            fifs.append(elt)
+    return fifs
+
+
 def read_exclusion(exclusion_file):
     """
     Read the list of input fif files to exclude from preprocessing.
