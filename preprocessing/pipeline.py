@@ -258,7 +258,7 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
 
 
 def _check_folders(folder_in, folder_out):
-    """Checks that the folder exists and are pathlib.Path instances."""
+    """Checks that the folders exist and are pathlib.Path instances."""
     folder_in = Path(folder_in)
     folder_out = Path(folder_out)
     assert folder_in.exists(), 'The input folder does not exists.'
