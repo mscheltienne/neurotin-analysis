@@ -1,21 +1,26 @@
+import os
+import pickle
+import argparse
 import traceback
 from pathlib import Path
 import multiprocessing as mp
 
 import mne
-import seaborn as sns
 
-from utils import list_raw_fif
+from pipeline import prepare_raw
+from utils import list_raw_fif, read_raw_fif
 
 
-def check_ica(raw_fif_file):
+def check_ica(fname, fname_out_stem):
     """
     Function called on each raw/ica files.
 
     Parameters
     ----------
-    raw_fif_file : Path
-        Path to the input '-raw.fif' file preprocessed.
+    fname : str | Path
+        Path to the input '-raw.fif' file to preprocess.
+    fname_out_stem : str | Path
+        Path and naming scheme used to save -raw.fif and -ica.fif files.
 
     Returns
     -------
@@ -23,40 +28,28 @@ def check_ica(raw_fif_file):
         False if a step raised an Exception.
     raw_fif_file : Path
         Path to the input '-raw.fif' file preprocessed.
-    eog_idx : None | list
-        The indices of EOG related components, sorted by score.
     eog_scores : None | list
         The correlation scores for EOG related components.
-    ecg_idx : None | list
-        The indices of ECG related components, sorted by score.
     ecg_scores : None | list
         The correlation scores for ECG related components.
     """
     try:
-        ica_fif_file = Path(str(raw_fif_file).split('-raw.fif')[0]+'-ica.fif')
-        assert raw_fif_file.exists()
-        assert ica_fif_file.exists()
-        raw = mne.io.read_raw_fif(raw_fif_file)
-        ica = mne.preprocessing.read_ica(ica_fif_file)
-
+        assert Path(str(fname_out_stem) + '-raw.fif').exists()
+        raw = read_raw_fif(fname)
+        raw = prepare_raw(raw)
+        raw.info['bads'] = list()  # bug fixed in #9719
+        ica = mne.preprocessing.ICA(method='picard', max_iter='auto')
+        ica.fit(raw, picks='eeg', reject_by_annotation=True)
         eog_idx, eog_scores = ica.find_bads_eog(raw)
         ecg_idx, ecg_scores = ica.find_bads_ecg(raw)
-
-        return (True, raw_fif_file,
-                eog_idx, eog_scores[eog_idx],
-                ecg_idx, ecg_scores[ecg_idx])
-
-    except AssertionError:
-        print (f'FAILED - NOT FOUND: {raw_fif_file}')
-        print(traceback.format_exc())
-        return (False, raw_fif_file, None, None, None, None)
+        return (True, fname, eog_scores[eog_idx], ecg_scores[ecg_idx])
     except Exception:
-        print (f'FAILED: {raw_fif_file}')
+        print (f'FAILED: {fname}')
         print(traceback.format_exc())
-        return (False, raw_fif_file, None, None, None, None)
+        return (False, fname, None, None)
 
 
-def main(folder, processes=1):
+def main(folder_in, folder_out, output_directory, processes=1):
     """
     Load all preprocessed raws and ICA in folder (and subfolders) sequentially
     and retrieves the number of excluded EOG and ECG components and their
@@ -64,24 +57,37 @@ def main(folder, processes=1):
 
     Parameters
     ----------
-    folder : str | Path
+    folder_in : str | Path
+        Path to the folder containing the FIF files to preprocess.
+    folder_out : str | Path
         Path to the folder containing the FIF files preprocessed.
+    output_directory : str | Path
+        Path to the directory where the results are saved in pickle format.
     processes : int
         Number of parallel processes used.
     """
-    folder = _check_folder(folder)
+    folder_in, folder_out = _check_folders(folder_in, folder_out)
+    output_directory = _check_output_directory(output_directory)
     processes = _check_processes(processes)
 
-    raws = list_raw_fif(folder)
+    raws = list_raw_fif(folder_in)
+    input_pool = [(fname,
+                   str(folder_out / fname.relative_to(folder_in))[:-8])
+                  for fname in raws]
     with mp.Pool(processes=processes) as p:
-        results = p.starmap(check_ica, raws)
+        results = p.starmap(check_ica, input_pool)
+
+    with open(output_directory / 'data-ica.pcl', mode='wb') as f:
+        pickle.dump(results, f, -1)
 
 
-def _check_folder(folder):
-    """Checks that the folder exists and is a pathlib.Path instances."""
-    folder = Path(folder)
-    assert folder.exists(), 'The folder does not exists.'
-    return folder
+def _check_folders(folder_in, folder_out):
+    """Checks that the folders exist and are pathlib.Path instances."""
+    folder_in = Path(folder_in)
+    folder_out = Path(folder_out)
+    assert folder_in.exists(), 'The input folder does not exists.'
+    assert folder_out.exists(), 'The ouput folder does not exists.'
+    return folder_in, folder_out
 
 
 def _check_processes(processes):
@@ -89,3 +95,35 @@ def _check_processes(processes):
     processes = int(processes)
     assert 0 < processes, 'processes should be a positive integer'
     return processes
+
+
+def _check_output_directory(output_directory):
+    """Checks that the folder exists and is a pathlib.Path instance."""
+    output_directory = Path(output_directory)
+    os.makedirs(output_directory, exist_ok=True)
+    with open(output_directory / 'data-ica.pcl', mode='w') as f:
+        f.write('data will be written here..')
+    return output_directory
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        prog='NeuroTin - ICA checker',
+        description='Checks scores and components removed by ICA.')
+    parser.add_argument(
+        'folder_in', type=str,
+        help='Folder containing FIF files to preprocess.')
+    parser.add_argument(
+        'folder_out', type=str,
+        help='Folder containing FIF files preprocessed.')
+    parser.add_argument(
+        'output_directory', type=str,
+        help='Folder where the results are pickled.')
+    parser.add_argument(
+        '--processes', type=int, metavar='int',
+        help='Number of parallel processes.', default=1)
+
+    args = parser.parse_args()
+
+    main(args.folder_in, args.folder_out,
+         args.output_directory, args.processes)
