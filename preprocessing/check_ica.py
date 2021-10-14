@@ -4,6 +4,7 @@ import argparse
 import traceback
 from pathlib import Path
 import multiprocessing as mp
+from collections import Counter
 
 import mne
 import pandas as pd
@@ -136,6 +137,8 @@ def plot_results(result_file, swarmplot=False):
     # an assertion on the number of components.
     data_eog = [elt for elt in data_eog if elt[0] <= 3]
     data_ecg = [elt for elt in data_ecg if elt[0] <= 3]
+    n_eog_components = Counter(elt[0] for elt in data_eog)
+    n_ecg_components = Counter(elt[0] for elt in data_ecg)
 
     # Convert to dataframe
     df_eog = pd.DataFrame(data_eog,
@@ -166,6 +169,8 @@ def plot_results(result_file, swarmplot=False):
     ax[1].set_ylabel('Normalized scores')
     ax[0].set_xlabel('Number of total components')
     ax[1].set_xlabel('Number of total components')
+    ax[0].set_ylim([0., 1.1])  # add headroom for text
+    ax[1].set_ylim([0., 1.1])  # add headroom for text
     ax[0].set_yticks([0, 0.25, 0.5, 0.75, 1.])
     ax[1].set_yticks([0, 0.25, 0.5, 0.75, 1.])
     ax[0].set_yticklabels(['0', '0.25', '0.5', '0.75', '1'])
@@ -177,6 +182,13 @@ def plot_results(result_file, swarmplot=False):
     ax[0].legend().set_visible(False)
     ax[1].legend().set_visible(False)
     f.legend(handles, labels, title='Component n°', loc="right")
+
+    # Add text with counts
+    for k in range(3):
+        ax[0].text(x=k, y=1.05, s=f'n={n_eog_components[k+1]}',
+                   ha='center', va='center')
+        ax[1].text(x=k, y=1.05, s=f'n={n_ecg_components[k+1]}',
+                   ha='center', va='center')
 
     return f, ax
 
