@@ -185,9 +185,9 @@ def plot_results(result_file, swarmplot=False):
 
     # Add text with counts
     for k in range(3):
-        ax[0].text(x=k, y=1.05, s=f'n={n_eog_components[k+1]}',
+        ax[0].text(x=k, y=1.05, s='n=%i' % int(n_eog_components[k+1]/(k+1)),
                    ha='center', va='center')
-        ax[1].text(x=k, y=1.05, s=f'n={n_ecg_components[k+1]}',
+        ax[1].text(x=k, y=1.05, s='n=%i' % int(n_ecg_components[k+1]/(k+1)),
                    ha='center', va='center')
 
     return f, ax
