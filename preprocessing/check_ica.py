@@ -6,6 +6,9 @@ from pathlib import Path
 import multiprocessing as mp
 
 import mne
+import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 from pipeline import prepare_raw
 from utils import list_raw_fif, read_raw_fif
@@ -26,7 +29,7 @@ def check_ica(fname, fname_out_stem):
     -------
     success : bool
         False if a step raised an Exception.
-    raw_fif_file : Path
+    fname : Path
         Path to the input '-raw.fif' file preprocessed.
     eog_scores : None | list
         The correlation scores for EOG related components.
@@ -42,11 +45,11 @@ def check_ica(fname, fname_out_stem):
         ica.fit(raw, picks='eeg', reject_by_annotation=True)
         eog_idx, eog_scores = ica.find_bads_eog(raw)
         ecg_idx, ecg_scores = ica.find_bads_ecg(raw)
-        return (True, fname, eog_scores[eog_idx], ecg_scores[ecg_idx])
+        return (True, str(fname), eog_scores[eog_idx], ecg_scores[ecg_idx])
     except Exception:
         print (f'FAILED: {fname}')
         print(traceback.format_exc())
-        return (False, fname, None, None)
+        return (False, str(fname), None, None)
 
 
 def main(folder_in, folder_out, output_directory, processes=1):
@@ -104,6 +107,88 @@ def _check_output_directory(output_directory):
     with open(output_directory / 'data-ica.pcl', mode='w') as f:
         f.write('data will be written here..')
     return output_directory
+
+
+def plot_results(result_file, swarmplot=False):
+    """
+    Box plot showing the repartition of the results.
+
+    Parameters
+    ----------
+    result_file : str | Path
+        Path to the result file data-ica.pcl containing the components/scores.
+    """
+    result_file = _check_result_file(result_file)
+    with open(result_file, mode='rb') as f:
+        data = pickle.load(f)
+
+    # format: (success, fname, EOG scores, ECG scores)
+    data = [elt for elt in data if elt[0]]  # Remove fails.
+    data_eog, data_ecg = [], []
+    for elt in data:
+        for k, score in enumerate(elt[2]):
+            data_eog.append((elt[2].shape[0], k, abs(score)))
+        for k, score in enumerate(elt[3]):
+            data_ecg.append((elt[3].shape[0], k, abs(score)))
+
+    # Remove problem, for a very small number of files, there was 4, 5 or even
+    # 6 component removed. -> To be fixed in the preprocessing pipeline with
+    # an assertion on the number of components.
+    data_eog = [elt for elt in data_eog if elt[0] <= 3]
+    data_ecg = [elt for elt in data_ecg if elt[0] <= 3]
+
+    # Convert to dataframe
+    df_eog = pd.DataFrame(data_eog,
+                          columns=['n_total_comp', 'idx_comp', 'score'])
+    df_ecg = pd.DataFrame(data_ecg,
+                          columns=['n_total_comp', 'idx_comp', 'score'])
+
+    # Figure settings
+    f, ax = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(20, 7))
+
+    # Box plot
+    sns.boxplot(x='n_total_comp', y='score', hue='idx_comp',
+                data=df_eog, ax=ax[0])
+    sns.boxplot(x='n_total_comp', y='score', hue='idx_comp',
+                data=df_ecg, ax=ax[1])
+
+    # (optional) Swarmplot
+    if bool(swarmplot):
+        sns.swarmplot(x='n_total_comp', y='score', hue='idx_comp',
+                    dodge=True, data=df_eog, ax=ax[0], size=1.5, color=".2")
+        sns.swarmplot(x='n_total_comp', y='score', hue='idx_comp',
+                    dodge=True, data=df_ecg, ax=ax[1], size=1.5, color=".2")
+
+    # Figure settings
+    ax[0].set_title('EOG-related components')
+    ax[1].set_title('ECG-related components')
+    ax[0].set_ylabel('Normalized scores')
+    ax[1].set_ylabel('Normalized scores')
+    ax[0].set_xlabel('Number of total components')
+    ax[1].set_xlabel('Number of total components')
+    ax[0].set_yticks([0, 0.25, 0.5, 0.75, 1.])
+    ax[1].set_yticks([0, 0.25, 0.5, 0.75, 1.])
+    ax[0].set_yticklabels(['0', '0.25', '0.5', '0.75', '1'])
+    ax[1].set_yticklabels(['0', '0.25', '0.5', '0.75', '1'])
+
+    # Legend settings
+    handles = ax[0].legend().legendHandles[:3]
+    labels = ['1', '2', '3']
+    ax[0].legend().set_visible(False)
+    ax[1].legend().set_visible(False)
+    f.legend(handles, labels, title='Component n°', loc="right")
+
+    return f, ax
+
+
+def _check_result_file(result_file):
+    """
+    Checks that the file exist and has the correct hardcoded name.
+    """
+    result_file = Path(result_file)
+    assert result_file.name == 'data-ica.pcl'
+    assert result_file.exists()
+    return result_file
 
 
 if __name__ == '__main__':
