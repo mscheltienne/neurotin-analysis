@@ -60,11 +60,7 @@ def _prepapre_raw(raw):
             [ev[2]==EVENTS['regulation'] for ev in events])][-1]
         tmax = sample_max / raw.info['sfreq'] + 16
 
-    try:
-        assert tmin < tmax
-    except Exception:
-        raise AssertionError
-
+    assert tmin < tmax
     raw.crop(tmin, tmax, include_tmax=True)
     raw.set_montage('standard_1020')
 
