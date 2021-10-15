@@ -250,7 +250,7 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
     with open(folder_out / 'data-ica.pcl', mode='wb') as f:
         pickle.dump(results, f, -1)
 
-    exclude = [file for success, file in results if not success]
+    exclude = [file for success, file, _, _ in results if not success]
     write_exclusion(exclusion_file, exclude)
 
 
