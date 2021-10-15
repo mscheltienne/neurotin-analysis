@@ -26,7 +26,7 @@ def prepare_raw(raw):
 
     Parameters
     ----------
-    raw : raw : Raw
+    raw : Raw
         Raw instance modified in-place.
 
     Returns
