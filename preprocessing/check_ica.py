@@ -37,6 +37,7 @@ def check_ica(fname, fname_out_stem):
     ecg_scores : None | list
         The correlation scores for ECG related components.
     """
+    # To be rework when #9846 is fixed.
     try:
         assert Path(str(fname_out_stem) + '-raw.fif').exists()
         raw = read_raw_fif(fname)
