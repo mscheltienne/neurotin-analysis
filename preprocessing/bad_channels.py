@@ -1,10 +1,17 @@
 import mne
+import pyprep
 import numpy as np
 from autoreject import Ransac
-from pyprep.find_noisy_channels import NoisyChannels
 
 from events import EVENTS
 from filters import apply_filter_eeg
+
+
+# Until 0.4 release, make sure to use the development version.
+if '0.3.1' in pyprep.__version:
+    assert pyprep.__version__.split('0.3.1')[1] != ''
+else:
+    assert 4 <= pyprep.__version__.split('.')[1]
 
 
 def _prepapre_raw(raw):
@@ -111,6 +118,6 @@ def PREP_bads_suggestion(raw):
     """
     raw = _prepapre_raw(raw)
     raw.pick_types(eeg=True)
-    nc = NoisyChannels(raw)
+    nc = pyprep.find_noisy_channels.NoisyChannels(raw)
     nc.find_all_bads()
     return nc.get_bads()
