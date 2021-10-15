@@ -8,7 +8,7 @@ from filters import apply_filter_eeg
 
 
 # Until 0.4 release, make sure to use the development version.
-if '0.3.1' in pyprep.__version:
+if '0.3.1' in pyprep.__version__:
     assert pyprep.__version__.split('0.3.1')[1] != ''
 else:
     assert 4 <= pyprep.__version__.split('.')[1]
