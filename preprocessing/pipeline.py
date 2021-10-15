@@ -18,7 +18,7 @@ from utils import (read_raw_fif, read_exclusion, write_exclusion, list_raw_fif,
 mne.set_log_level('ERROR')
 
 
-def prepare_raw(raw, semiauto=False):
+def prepare_raw(raw):
     """
     Prepare raw instance by checking events, adding events as annotations,
     marking bad channels, adding montage, applying FIR filters, applying CAR
@@ -28,9 +28,6 @@ def prepare_raw(raw, semiauto=False):
     ----------
     raw : raw : Raw
         Raw instance modified in-place.
-    semiauto : bool
-        If True, the user will interactively add bad segments annotations and
-        bad channels.
 
     Returns
     -------
@@ -43,26 +40,11 @@ def prepare_raw(raw, semiauto=False):
     # Filter AUX
     apply_filter_aux(raw, bandpass=(1., 40.), notch=True)
 
-    # Annotate bad segments of data
-    if semiauto:
-        raw_ = raw.copy()
-        apply_filter_eeg(raw_, bandpass=(1., None), notch=True, car=False)
-        raw_.plot(block=True)
-        raw.set_annotations(raw_.annotations)
-
     # Add event annotations
     raw, _ = add_annotations_from_events(raw)
 
     # Mark bad channels
-    bads = PREP_bads_suggestion(raw)  # operates on a copy
-    if semiauto:
-        raw_.info['bads'] = bads
-        apply_filter_eeg(raw_, bandpass=(1., 40.), notch=True, car=False)
-        raw_.plot_psd(fmin=1, fmax=40, picks='eeg', reject_by_annotation=True)
-        raw_.plot(block=True)
-        raw.info['bads'] = raw_.info['bads']
-    else:
-        raw.info['bads'] = bads
+    raw.info['bads'] = PREP_bads_suggestion(raw)  # operates on a copy
 
     # Reference and filter EEG
     raw.add_reference_channels(ref_channels='CPz')
@@ -84,7 +66,8 @@ def exclude_EOG_ECG_with_ICA(raw, semiauto=False):
     raw : raw : Raw
         Raw instance modified in-place.
     semiauto : bool
-        If True, the user will interactively exclude ICA components.
+        If True, the user will interactively exclude ICA components if
+        automatic selection failed.
 
     Returns
     -------
@@ -96,16 +79,23 @@ def exclude_EOG_ECG_with_ICA(raw, semiauto=False):
     raw.info['bads'] = list()
 
     ica = mne.preprocessing.ICA(method='picard', max_iter='auto')
-    ica.fit(raw, picks='eeg', reject_by_annotation=True)
-    eog_idx, eog_scores = ica.find_bads_eog(raw)
-    ecg_idx, ecg_scores = ica.find_bads_ecg(raw)
+    ica.fit(raw, picks='eeg')
+    eog_idx, eog_scores = ica.find_bads_eog(raw, threshold=3.0,
+                                            measure='zscore')
+    ecg_idx, ecg_scores = ica.find_bads_ecg(raw, method='ctps',
+                                            threshold='auto', measure='zscore')
     ica.exclude = eog_idx + ecg_idx
-    if semiauto:
-        ica.plot_scores(eog_scores)
-        ica.plot_scores(ecg_scores)
-        ica.plot_sources(raw, block=True)
-        # ica.plot_components(inst=raw)
-    assert len(ica.exclude) != 0
+    try:
+        assert len(eog_idx) <= 2, 'More than 2 EOG component detected.'
+        assert len(ecg_idx) <= 3, 'More than 3 ECG component detected.'
+        assert len(ica.exclude) != 0, 'No EOG/ECG component detected.'
+    except AssertionError:
+        if semiauto:
+            ica.plot_scores(eog_scores)
+            ica.plot_scores(ecg_scores)
+            ica.plot_sources(raw, block=True)
+        else:
+            raise
     ica.apply(raw)
 
     raw.info['bads'] = bads # bug fixed in #9719
@@ -123,8 +113,8 @@ def pipeline(fname, fname_out_stem, semiauto, subject, sex, birthday):
     fname_out_stem : str | Path
         Path and naming scheme used to save -raw.fif and -ica.fif files.
     semiauto : bool
-        If True, the user will interactively set annotations, mark bad channels
-        and exclude ICA components.
+        If True, the user will interactively exclude ICA components if
+        automatic selection failed.
     subject : int
         ID of the subject.
     sex : int
@@ -144,7 +134,7 @@ def pipeline(fname, fname_out_stem, semiauto, subject, sex, birthday):
         # Preprocess
         raw = read_raw_fif(fname)
         raw = fill_info(raw, subject, sex, birthday)
-        raw = prepare_raw(raw, semiauto=semiauto)
+        raw = prepare_raw(raw)
         raw, ica = exclude_EOG_ECG_with_ICA(raw, semiauto=semiauto)
         # Export
         raw.save(_check_fname_out_stem(fname_out_stem, 'raw'),
