@@ -1,4 +1,5 @@
 import os
+import pickle
 import argparse
 import traceback
 from pathlib import Path
@@ -6,7 +7,6 @@ import multiprocessing as mp
 
 import mne
 
-from cli import query_yes_no
 from meas_info import fill_info
 from bad_channels import PREP_bads_suggestion
 from filters import apply_filter_eeg, apply_filter_aux
@@ -73,6 +73,8 @@ def exclude_EOG_ECG_with_ICA(raw, semiauto=False):
     -------
     raw : Raw instance modified in-place.
     ica : ICA instance.
+    eog_scores : Scores used for selection of the EOG component(s).
+    ecg_scores : Scores used for selection of the ECG component(s).
     """
     # Reset bads, bug fixed in #9719
     bads = raw.info['bads']
@@ -99,7 +101,9 @@ def exclude_EOG_ECG_with_ICA(raw, semiauto=False):
     ica.apply(raw)
 
     raw.info['bads'] = bads # bug fixed in #9719
-    return raw, ica
+
+    # To be rework when #9846 is fixed.
+    return raw, ica, eog_scores[eog_idx], ecg_scores[ecg_idx]
 
 
 def pipeline(fname, fname_out_stem, semiauto, subject, sex, birthday):
@@ -126,26 +130,32 @@ def pipeline(fname, fname_out_stem, semiauto, subject, sex, birthday):
     -------
     success : bool
         False if a step raised an Exception.
-    fname : Path
+    fname : str
         Path to the input '-raw.fif' file to preprocess.
+    eog_scores : array (n, )
+        Scores used for selection of the EOG component(s).
+    ecg_scores : array (n, )
+        Scores used for selection of the ECG component(s).
     """
+    # To be rework when #9846 is fixed.
     print (f'Preprocessing: {fname}')
     try:
         # Preprocess
         raw = read_raw_fif(fname)
         raw = fill_info(raw, subject, sex, birthday)
         raw = prepare_raw(raw)
-        raw, ica = exclude_EOG_ECG_with_ICA(raw, semiauto=semiauto)
+        raw, ica, eog_scores, ecg_scores = exclude_EOG_ECG_with_ICA(
+            raw, semiauto=semiauto)
         # Export
         raw.save(_check_fname_out_stem(fname_out_stem, 'raw'),
                  fmt="double", overwrite=False)
         ica.save(_check_fname_out_stem(fname_out_stem, 'ica'))
-        return (True, fname)
+        return (True, str(fname), eog_scores, ecg_scores)
 
     except Exception:
         print (f'FAILED: {fname}')
         print(traceback.format_exc())
-        return (False, fname)
+        return (False, str(fname), None, None)
 
 
 def _check_fname_out_stem(fname_out_stem, type_):
@@ -233,15 +243,12 @@ def main(folder_in, folder_out, subject_info_fname, semiauto=False,
                   for k, idx in enumerate(subjects) if idx in subject_info]
     assert 0 < len(input_pool)
 
-    if semiauto:
-        results = list()
-        for inp in input_pool:
-            results.append(pipeline(*inp))
-            if not query_yes_no('Continue?'):
-                break
-    else:
-        with mp.Pool(processes=processes) as p:
-            results = p.starmap(pipeline, input_pool)
+    with mp.Pool(processes=processes) as p:
+        results = p.starmap(pipeline, input_pool)
+
+    # To be rework when #9846 is fixed.
+    with open(folder_out / 'data-ica.pcl', mode='wb') as f:
+        pickle.dump(results, f, -1)
 
     exclude = [file for success, file in results if not success]
     write_exclusion(exclusion_file, exclude)
