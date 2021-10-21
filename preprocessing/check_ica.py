@@ -136,9 +136,9 @@ def _create_key(ica_kwargs, find_bads_kwargs, type_,
         raise ValueError('Must be either find on Raw or on Epochs.')
 
     if type_ == 'eog':
-        repr_ = f'EOG - {ica_kwargs_repr} - {find_bads_kwargs_repr} - {dtype}'
+        repr_ = f'EOG - {dtype} - {ica_kwargs_repr} - {find_bads_kwargs_repr}'
     elif type_ == 'ecg':
-       repr_ = f'ECG - {ica_kwargs_repr} - {find_bads_kwargs_repr} - {dtype}'
+       repr_ = f'ECG - {dtype} - {ica_kwargs_repr} - {find_bads_kwargs_repr}'
     else:
         raise ValueError('Must be either eog or ecg.')
 
@@ -188,7 +188,7 @@ def _check_result_file(result_file):
     return result_file
 
 
-def plot_results(result_file, swarmplot=False):
+def plot_results(result_file, swarmplot=False, title_mapping=dict()):
     """
     Box plot showing the repartition of the results.
 
@@ -197,77 +197,10 @@ def plot_results(result_file, swarmplot=False):
     result_file : str | Path
         Path to the result file data-ica.pcl containing the components/scores.
     """
-    with open(result_file, mode='rb') as f:
-        data = pickle.load(f)
-
-    # format: (success, fname, EOG scores, ECG scores)
-    data = [elt for elt in data if elt[0]]  # Remove fails.
-    data_eog, data_ecg = [], []
-    for elt in data:
-        for k, score in enumerate(elt[2]):
-            data_eog.append((elt[2].shape[0], k, abs(score)))
-        for k, score in enumerate(elt[3]):
-            data_ecg.append((elt[3].shape[0], k, abs(score)))
-
-    # Remove problem, for a very small number of files, there was 4, 5 or even
-    # 6 component removed. -> To be fixed in the preprocessing pipeline with
-    # an assertion on the number of components.
-    data_eog = [elt for elt in data_eog if elt[0] <= 3]
-    data_ecg = [elt for elt in data_ecg if elt[0] <= 3]
-    n_eog_components = Counter(elt[0] for elt in data_eog)
-    n_ecg_components = Counter(elt[0] for elt in data_ecg)
-
-    # Convert to dataframe
-    df_eog = pd.DataFrame(data_eog,
-                          columns=['n_total_comp', 'idx_comp', 'score'])
-    df_ecg = pd.DataFrame(data_ecg,
-                          columns=['n_total_comp', 'idx_comp', 'score'])
-
-    # Figure settings
-    f, ax = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(20, 7))
-
-    # Box plot
-    sns.boxplot(x='n_total_comp', y='score', hue='idx_comp',
-                data=df_eog, ax=ax[0])
-    sns.boxplot(x='n_total_comp', y='score', hue='idx_comp',
-                data=df_ecg, ax=ax[1])
-
-    # (optional) Swarmplot
-    if bool(swarmplot):
-        sns.swarmplot(x='n_total_comp', y='score', hue='idx_comp',
-                    dodge=True, data=df_eog, ax=ax[0], size=1.5, color=".2")
-        sns.swarmplot(x='n_total_comp', y='score', hue='idx_comp',
-                    dodge=True, data=df_ecg, ax=ax[1], size=1.5, color=".2")
-
-    # Figure settings
-    ax[0].set_title('EOG-related components')
-    ax[1].set_title('ECG-related components')
-    ax[0].set_ylabel('Normalized scores')
-    ax[1].set_ylabel('Normalized scores')
-    ax[0].set_xlabel('Number of total components')
-    ax[1].set_xlabel('Number of total components')
-    ax[0].set_ylim([0., 1.1])  # add headroom for text
-    ax[1].set_ylim([0., 1.1])  # add headroom for text
-    ax[0].set_yticks([0, 0.25, 0.5, 0.75, 1.])
-    ax[1].set_yticks([0, 0.25, 0.5, 0.75, 1.])
-    ax[0].set_yticklabels(['0', '0.25', '0.5', '0.75', '1'])
-    ax[1].set_yticklabels(['0', '0.25', '0.5', '0.75', '1'])
-
-    # Legend settings
-    handles = ax[0].legend().legendHandles[:3]
-    labels = ['1', '2', '3']
-    ax[0].legend().set_visible(False)
-    ax[1].legend().set_visible(False)
-    f.legend(handles, labels, title='Component n°', loc="right")
-
-    # Add text with counts
-    for k in range(3):
-        ax[0].text(x=k, y=1.05, s='n=%i' % int(n_eog_components[k+1]/(k+1)),
-                   ha='center', va='center')
-        ax[1].text(x=k, y=1.05, s='n=%i' % int(n_ecg_components[k+1]/(k+1)),
-                   ha='center', va='center')
-
-    return f, ax
+    results = _result_file_parser(result_file)
+    for df, counter, key in results:
+        title = title_mapping[key] if key in title_mapping else key
+        _plot_distribution(df, counter, title, swarmplot=swarmplot, ax=None)
 
 
 def _result_file_parser(result_file):
@@ -292,15 +225,17 @@ def _result_file_parser(result_file):
     assert sorted(list(data[2][2]) + list(data[2][3])) == keys
 
     # parse
-    data_per_key = dict()
+    data_per_key = {key: [] for key in keys}
     for elt in data:
         for key in keys:
             if key.startswith('EOG'):
                 for j, score in enumerate(elt[2][key]):
-                    data_per_key[key].append(elt[2][key].shape[0], j, abs(score))
+                    data_per_key[key].append((elt[2][key].shape[0],
+                                              j, abs(score)))
             elif key.startswith('ECG'):
                 for j, score in enumerate(elt[3][key]):
-                    data_per_key[key].append(elt[3][key].shape[0], j, abs(score))
+                    data_per_key[key].append((elt[3][key].shape[0],
+                                              j, abs(score)))
             else:
                 raise ValueError('Key should start with EOG or ECG.')
     del data
@@ -315,12 +250,43 @@ def _result_file_parser(result_file):
 
     # patch together output
     output = [
-        (key,
-         pd.DataFrame(data_per_key[key],
+        (pd.DataFrame(data_per_key[key],
                       columns=['n_total_comp', 'idx_comp', 'score']),
-         counters[key]) for key in keys]
+         counters[key],
+         key)
+        for key in keys
+    ]
 
     return output
+
+
+def _plot_distribution(df, counter, title, swarmplot=False, ax=None):
+    """Plot the score distribution on an axis."""
+    if ax is None:
+        f, ax = plt.subplots(1, 1, sharex=True, sharey=True, figsize=(8, 5))
+
+    # plots
+    sns.boxplot(x='n_total_comp', y='score', hue='idx_comp',
+                data=df, ax=ax)
+    # (optional) swarmplot
+    if bool(swarmplot):
+        sns.swarmplot(x='n_total_comp', y='score', hue='idx_comp',
+                      dodge=True, data=df, ax=ax, size=1.5, color=".2")
+
+    # figure settings
+    ax.set_title(title, fontsize=10)
+    ax.set_ylabel('Normalized scores')
+    ax.set_xlabel('Number of total components')
+    ax.set_ylim([0., 1.1])  # add headroom for text
+    ax.set_yticks([0, 0.25, 0.5, 0.75, 1.])
+    ax.set_yticklabels(['0', '0.25', '0.5', '0.75', '1'])
+    ax.legend().set_visible(False)
+
+    # add counter as text
+    for k in range(3):
+        n = int(counter[k+1]/(k+1))
+        if n != 0:
+            ax.text(x=k, y=1.05, s='n=%i' % n, ha='center', va='center')
 
 
 if __name__ == '__main__':
