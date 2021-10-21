@@ -62,10 +62,10 @@ def check_ica(fname, fname_out_stem):
         False if a step raised an Exception.
     fname : Path
         Path to the input '-raw.fif' file preprocessed.
-    eog_scores : None | list
-        The correlation scores for EOG related components.
-    ecg_scores : None | list
-        The correlation scores for ECG related components.
+    eog_scores : dict
+        Correlation scores for EOG related components.
+    ecg_scores : dict
+        Correlation scores for ECG related components.
     """
     # To be rework when #9846 is fixed.
     try:
@@ -196,6 +196,10 @@ def plot_results(result_file, swarmplot=False, title_mapping=dict()):
     ----------
     result_file : str | Path
         Path to the result file data-ica.pcl containing the components/scores.
+    swarmplot : bool
+        If True, a swarmplot is overlayed on top of the boxplots.
+    title_mapping : dict
+        Dictionary to map the keys with the desired titles.
     """
     results = _result_file_parser(result_file)
     for df, counter, key in results:
