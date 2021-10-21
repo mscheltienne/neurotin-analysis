@@ -15,6 +15,25 @@ from pipeline import prepare_raw
 from utils import list_raw_fif, read_raw_fif
 
 
+# Path to the folder containing the FIF files to preprocess.
+FOLDER_IN = ''
+# Path to the folder containing the FIF files preprocessed.
+FOLDER_OUT = ''
+# File in which the results are pickled
+RESULT_FILE = 'data-ica.pcl'
+
+# Global test settings
+FIND_ON_EPOCHS = False  # bool
+ICA_KWARGS = dict(method='picard', max_iter='auto')  # dict
+FIND_BADS_EOG_KWARGS = dict()  # dict or list of dict
+FIND_BADS_ECG_KWARGS = dict()  # dict or list of dict
+
+if isinstance(FIND_BADS_EOG_KWARGS, dict):
+    FIND_BADS_EOG_KWARGS = [FIND_BADS_EOG_KWARGS]
+if isinstance(FIND_BADS_ECG_KWARGS, dict):
+    FIND_BADS_ECG_KWARGS = [FIND_BADS_ECG_KWARGS]
+
+
 def check_ica(fname, fname_out_stem):
     """
     Function called on each raw/ica files.
@@ -43,18 +62,58 @@ def check_ica(fname, fname_out_stem):
         raw = read_raw_fif(fname)
         raw = prepare_raw(raw)
         raw.info['bads'] = list()  # bug fixed in #9719
-        ica = mne.preprocessing.ICA(method='picard', max_iter='auto')
+
+        if FIND_ON_EPOCHS:
+            inst_eog = mne.preprocessing.create_eog_epochs(
+                raw, ch_name='EOG', picks=['eeg', 'eog'])
+            inst_ecg = mne.preprocessing.create_ecg_epochs(
+                raw, ch_name='ECG', picks=['eeg', 'ecg'])
+        else:
+            inst_eog = inst_ecg = raw
+
+        # Fit
+        ica = mne.preprocessing.ICA(**ICA_KWARGS)
         ica.fit(raw, picks='eeg', reject_by_annotation=True)
-        eog_idx, eog_scores = ica.find_bads_eog(raw)
-        ecg_idx, ecg_scores = ica.find_bads_ecg(raw)
-        return (True, str(fname), eog_scores[eog_idx], ecg_scores[ecg_idx])
+
+        # Init results
+        eog_results_scores = dict()
+        ecg_results_scores = dict()
+
+        # Find EOG-related components
+        for kwargs in FIND_BADS_EOG_KWARGS:
+            eog_idx, eog_scores = ica.find_bads_eog(inst_eog, **kwargs)
+            key = _create_key(ICA_KWARGS, kwargs, type_='eog')
+            eog_results_scores[key] = eog_scores[eog_idx]
+
+        # Find ECG-related components
+        for kwargs in FIND_BADS_ECG_KWARGS:
+            ecg_idx, ecg_scores = ica.find_bads_ecg(inst_ecg, **kwargs)
+            key = _create_key(ICA_KWARGS, kwargs, type_='eog')
+            ecg_results_scores[key] = ecg_scores[ecg_idx]
+
+        return (True, str(fname), eog_results_scores, ecg_results_scores)
     except Exception:
-        print (f'FAILED: {fname}')
+        print ('----------------------------------------------')
+        print (f'FAILED: {fname} -> Skip.')
         print(traceback.format_exc())
+        print ('----------------------------------------------')
         return (False, str(fname), None, None)
 
 
-def main(folder_in, folder_out, output_directory, processes=1):
+def _create_key(ica_kwargs, find_bads_kwargs, type_):
+    """Create a clean str key from the passed kwargs."""
+    ica_kwargs_repr = \
+        str(ica_kwargs).replace('{', '(').replace('}', ')').replace("'", "")
+    find_bads_kwargs_repr = \
+        str(find_bads_kwargs).replace('{', '(').replace('}', ')').replace("'", "")
+    if type_ == 'eog':
+        repr_ = f'EOG - {ica_kwargs_repr} - {find_bads_kwargs_repr}'
+    elif type_ == 'ecg':
+       repr_ = f'ECG - {ica_kwargs_repr} - {find_bads_kwargs_repr}'
+    return repr_
+
+
+def main(processes=1):
     """
     Load all preprocessed raws and ICA in folder (and subfolders) sequentially
     and retrieves the number of excluded EOG and ECG components and their
@@ -62,18 +121,11 @@ def main(folder_in, folder_out, output_directory, processes=1):
 
     Parameters
     ----------
-    folder_in : str | Path
-        Path to the folder containing the FIF files to preprocess.
-    folder_out : str | Path
-        Path to the folder containing the FIF files preprocessed.
-    output_directory : str | Path
-        Path to the directory where the results are saved in pickle format.
     processes : int
         Number of parallel processes used.
     """
-    folder_in, folder_out = _check_folders(folder_in, folder_out)
-    output_directory = _check_output_directory(output_directory)
-    processes = _check_processes(processes)
+    folder_in, folder_out = _check_folders(FOLDER_IN, FOLDER_OUT)
+    result_file = _check_result_file(RESULT_FILE)
 
     raws = list_raw_fif(folder_in)
     input_pool = [(fname,
@@ -82,7 +134,7 @@ def main(folder_in, folder_out, output_directory, processes=1):
     with mp.Pool(processes=processes) as p:
         results = p.starmap(check_ica, input_pool)
 
-    with open(output_directory / 'data-ica.pcl', mode='wb') as f:
+    with open(result_file, mode='wb') as f:
         pickle.dump(results, f, -1)
 
 
@@ -95,20 +147,13 @@ def _check_folders(folder_in, folder_out):
     return folder_in, folder_out
 
 
-def _check_processes(processes):
-    """Checks that the number of processes is valid."""
-    processes = int(processes)
-    assert 0 < processes, 'processes should be a positive integer'
-    return processes
-
-
-def _check_output_directory(output_directory):
-    """Checks that the folder exists and is a pathlib.Path instance."""
-    output_directory = Path(output_directory)
-    os.makedirs(output_directory, exist_ok=True)
-    with open(output_directory / 'data-ica.pcl', mode='w') as f:
+def _check_result_file(result_file):
+    """Checks that the result_file exists and is a pathlib.Path instance."""
+    result_file = Path(result_file)
+    os.makedirs(result_file.parent, exist_ok=True)
+    with open(result_file, mode='w') as f:
         f.write('data will be written here..')
-    return output_directory
+    return result_file
 
 
 def plot_results(result_file, swarmplot=False):
@@ -120,7 +165,6 @@ def plot_results(result_file, swarmplot=False):
     result_file : str | Path
         Path to the result file data-ica.pcl containing the components/scores.
     """
-    result_file = _check_result_file(result_file)
     with open(result_file, mode='rb') as f:
         data = pickle.load(f)
 
@@ -194,34 +238,13 @@ def plot_results(result_file, swarmplot=False):
     return f, ax
 
 
-def _check_result_file(result_file):
-    """
-    Checks that the file exist and has the correct hardcoded name.
-    """
-    result_file = Path(result_file)
-    assert result_file.name == 'data-ica.pcl'
-    assert result_file.exists()
-    return result_file
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='NeuroTin - ICA checker',
         description='Checks scores and components removed by ICA.')
     parser.add_argument(
-        'folder_in', type=str,
-        help='Folder containing FIF files to preprocess.')
-    parser.add_argument(
-        'folder_out', type=str,
-        help='Folder containing FIF files preprocessed.')
-    parser.add_argument(
-        'output_directory', type=str,
-        help='Folder where the results are pickled.')
-    parser.add_argument(
         '--processes', type=int, metavar='int',
         help='Number of parallel processes.', default=1)
-
     args = parser.parse_args()
 
-    main(args.folder_in, args.folder_out,
-         args.output_directory, args.processes)
+    main(args.processes)
