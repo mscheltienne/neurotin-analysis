@@ -16,18 +16,25 @@ from utils import list_raw_fif, read_raw_fif
 
 
 # Path to the folder containing the FIF files to preprocess.
-FOLDER_IN = ''
+FOLDER_IN = r'C:\Users\Mathieu\Documents\datasets\neurotin\raw'
 # Path to the folder containing the FIF files preprocessed.
-FOLDER_OUT = ''
+FOLDER_OUT = r'C:\Users\Mathieu\Documents\datasets\neurotin\clean'
 # File in which the results are pickled
-RESULT_FILE = 'data-ica.pcl'
+RESULT_FILE = r'C:\Users\Mathieu\Documents\datasets\neurotin\data-ica.pcl'
 
 # Global test settings
-FIND_ON_EPOCHS = False  # bool
 FIND_ON_RAW = True  # bool
+FIND_ON_EPOCHS = True  # bool
 ICA_KWARGS = dict(method='picard', max_iter='auto')  # dict
-FIND_BADS_EOG_KWARGS = dict()  # dict or list of dict
-FIND_BADS_ECG_KWARGS = dict()  # dict or list of dict
+FIND_BADS_EOG_KWARGS = [
+    dict(measure='zscore', threshold=3.0),
+    dict(measure='zscore', threshold=4.0),
+    dict(measure='zscore', threshold=5.0)
+]
+FIND_BADS_ECG_KWARGS = [
+    dict(method='correlation', measure='zscore', threshold=3.0),
+    dict(method='correlation', measure='zscore', threshold=6.0)
+]
 
 # Checks
 assert FIND_ON_EPOCHS or FIND_ON_RAW
@@ -126,7 +133,7 @@ def _create_key(ica_kwargs, find_bads_kwargs, type_,
     elif not on_raw and on_epo:
         dtype = 'Epochs'
     else:
-        raise ValueError('Must be either find on Raw or on Epochs. Not both.')
+        raise ValueError('Must be either find on Raw or on Epochs.')
 
     if type_ == 'eog':
         repr_ = f'EOG - {ica_kwargs_repr} - {find_bads_kwargs_repr} - {dtype}'
@@ -154,7 +161,7 @@ def main(processes=1):
 
     raws = list_raw_fif(folder_in)
     input_pool = [(fname,
-                   str(folder_out / fname.relative_to(folder_in))[:-8])
+                    str(folder_out / fname.relative_to(folder_in))[:-8])
                   for fname in raws]
     with mp.Pool(processes=processes) as p:
         results = p.starmap(check_ica, input_pool)
@@ -270,21 +277,28 @@ def _result_file_parser(result_file):
     data = [elt for elt in data if elt[0]]  # Remove fails.
 
     # list keys
-    keys = [_create_key(ICA_KWARGS, kwargs, type_='eog')
-            for kwargs in FIND_BADS_EOG_KWARGS]
-    keys.extend([_create_key(ICA_KWARGS, kwargs, type_='eog')
-                 for kwargs in FIND_BADS_ECG_KWARGS])
+    keys = list()
+    if FIND_ON_RAW:
+        keys.extend([_create_key(ICA_KWARGS, kwargs, type_='eog', on_raw=True)
+                     for kwargs in FIND_BADS_EOG_KWARGS])
+        keys.extend([_create_key(ICA_KWARGS, kwargs, type_='ecg', on_raw=True)
+                     for kwargs in FIND_BADS_ECG_KWARGS])
+    if FIND_ON_RAW:
+        keys.extend([_create_key(ICA_KWARGS, kwargs, type_='eog', on_epo=True)
+                     for kwargs in FIND_BADS_EOG_KWARGS])
+        keys.extend([_create_key(ICA_KWARGS, kwargs, type_='ecg', on_epo=True)
+                     for kwargs in FIND_BADS_ECG_KWARGS])
     keys = sorted(keys)
-    assert sorted(list(data[2][2])) == sorted(list(data[2][3])) == keys
+    assert sorted(list(data[2][2]) + list(data[2][3])) == keys
 
     # parse
     data_per_key = dict()
     for elt in data:
         for key in keys:
-            if key.startswith('ECG'):
+            if key.startswith('EOG'):
                 for j, score in enumerate(elt[2][key]):
                     data_per_key[key].append(elt[2][key].shape[0], j, abs(score))
-            elif key.startswith('EOG'):
+            elif key.startswith('ECG'):
                 for j, score in enumerate(elt[3][key]):
                     data_per_key[key].append(elt[3][key].shape[0], j, abs(score))
             else:
