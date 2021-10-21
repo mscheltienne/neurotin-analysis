@@ -24,10 +24,14 @@ RESULT_FILE = 'data-ica.pcl'
 
 # Global test settings
 FIND_ON_EPOCHS = False  # bool
+FIND_ON_RAW = True  # bool
 ICA_KWARGS = dict(method='picard', max_iter='auto')  # dict
 FIND_BADS_EOG_KWARGS = dict()  # dict or list of dict
 FIND_BADS_ECG_KWARGS = dict()  # dict or list of dict
 
+# Checks
+assert FIND_ON_EPOCHS or FIND_ON_RAW
+assert isinstance(ICA_KWARGS, dict)
 if isinstance(FIND_BADS_EOG_KWARGS, dict):
     FIND_BADS_EOG_KWARGS = [FIND_BADS_EOG_KWARGS]
 if isinstance(FIND_BADS_ECG_KWARGS, dict):
@@ -64,12 +68,10 @@ def check_ica(fname, fname_out_stem):
         raw.info['bads'] = list()  # bug fixed in #9719
 
         if FIND_ON_EPOCHS:
-            inst_eog = mne.preprocessing.create_eog_epochs(
+            eog_epochs = mne.preprocessing.create_eog_epochs(
                 raw, ch_name='EOG', picks=['eeg', 'eog'])
-            inst_ecg = mne.preprocessing.create_ecg_epochs(
+            ecg_epochs = mne.preprocessing.create_ecg_epochs(
                 raw, ch_name='ECG', picks=['eeg', 'ecg'])
-        else:
-            inst_eog = inst_ecg = raw
 
         # Fit
         ica = mne.preprocessing.ICA(**ICA_KWARGS)
@@ -81,15 +83,25 @@ def check_ica(fname, fname_out_stem):
 
         # Find EOG-related components
         for kwargs in FIND_BADS_EOG_KWARGS:
-            eog_idx, eog_scores = ica.find_bads_eog(inst_eog, **kwargs)
-            key = _create_key(ICA_KWARGS, kwargs, type_='eog')
-            eog_results_scores[key] = eog_scores[eog_idx]
+            if FIND_ON_RAW:
+                eog_idx, eog_scores = ica.find_bads_eog(raw, **kwargs)
+                key = _create_key(ICA_KWARGS, kwargs, type_='eog', on_raw=True)
+                eog_results_scores[key] = eog_scores[eog_idx]
+            if FIND_ON_EPOCHS:
+                eog_idx, eog_scores = ica.find_bads_eog(eog_epochs, **kwargs)
+                key = _create_key(ICA_KWARGS, kwargs, type_='eog', on_epo=True)
+                eog_results_scores[key] = eog_scores[eog_idx]
 
         # Find ECG-related components
         for kwargs in FIND_BADS_ECG_KWARGS:
-            ecg_idx, ecg_scores = ica.find_bads_ecg(inst_ecg, **kwargs)
-            key = _create_key(ICA_KWARGS, kwargs, type_='eog')
-            ecg_results_scores[key] = ecg_scores[ecg_idx]
+            if FIND_ON_RAW:
+                ecg_idx, ecg_scores = ica.find_bads_ecg(raw, **kwargs)
+                key = _create_key(ICA_KWARGS, kwargs, type_='ecg', on_raw=True)
+                ecg_results_scores[key] = ecg_scores[ecg_idx]
+            if FIND_ON_EPOCHS:
+                ecg_idx, ecg_scores = ica.find_bads_ecg(ecg_epochs, **kwargs)
+                key = _create_key(ICA_KWARGS, kwargs, type_='ecg', on_epo=True)
+                ecg_results_scores[key] = ecg_scores[ecg_idx]
 
         return (True, str(fname), eog_results_scores, ecg_results_scores)
     except Exception:
@@ -97,19 +109,32 @@ def check_ica(fname, fname_out_stem):
         print (f'FAILED: {fname} -> Skip.')
         print(traceback.format_exc())
         print ('----------------------------------------------')
-        return (False, str(fname), None, None)
+        return (False, str(fname), dict(), dict())
 
 
-def _create_key(ica_kwargs, find_bads_kwargs, type_):
+def _create_key(ica_kwargs, find_bads_kwargs, type_,
+                on_raw=False, on_epo=False):
     """Create a clean str key from the passed kwargs."""
     ica_kwargs_repr = \
-        str(ica_kwargs).replace('{', '(').replace('}', ')').replace("'", "")
+        str(ica_kwargs).replace(
+            '{', '(').replace('}', ')').replace("'", "")
     find_bads_kwargs_repr = \
-        str(find_bads_kwargs).replace('{', '(').replace('}', ')').replace("'", "")
+        str(find_bads_kwargs).replace(
+            '{', '(').replace('}', ')').replace("'", "")
+    if on_raw and not on_epo:
+        dtype = 'Raw'
+    elif not on_raw and on_epo:
+        dtype = 'Epochs'
+    else:
+        raise ValueError('Must be either find on Raw or on Epochs. Not both.')
+
     if type_ == 'eog':
-        repr_ = f'EOG - {ica_kwargs_repr} - {find_bads_kwargs_repr}'
+        repr_ = f'EOG - {ica_kwargs_repr} - {find_bads_kwargs_repr} - {dtype}'
     elif type_ == 'ecg':
-       repr_ = f'ECG - {ica_kwargs_repr} - {find_bads_kwargs_repr}'
+       repr_ = f'ECG - {ica_kwargs_repr} - {find_bads_kwargs_repr} - {dtype}'
+    else:
+        raise ValueError('Must be either eog or ecg.')
+
     return repr_
 
 
@@ -236,6 +261,52 @@ def plot_results(result_file, swarmplot=False):
                    ha='center', va='center')
 
     return f, ax
+
+
+def _result_file_parser(result_file):
+    """Parse the result file and returns dataframes."""
+    with open(result_file, mode='rb') as f:
+        data = pickle.load(f)
+    data = [elt for elt in data if elt[0]]  # Remove fails.
+
+    # list keys
+    keys = [_create_key(ICA_KWARGS, kwargs, type_='eog')
+            for kwargs in FIND_BADS_EOG_KWARGS]
+    keys.extend([_create_key(ICA_KWARGS, kwargs, type_='eog')
+                 for kwargs in FIND_BADS_ECG_KWARGS])
+    keys = sorted(keys)
+    assert sorted(list(data[2][2])) == sorted(list(data[2][3])) == keys
+
+    # parse
+    data_per_key = dict()
+    for elt in data:
+        for key in keys:
+            if key.startswith('ECG'):
+                for j, score in enumerate(elt[2][key]):
+                    data_per_key[key].append(elt[2][key].shape[0], j, abs(score))
+            elif key.startswith('EOG'):
+                for j, score in enumerate(elt[3][key]):
+                    data_per_key[key].append(elt[3][key].shape[0], j, abs(score))
+            else:
+                raise ValueError('Key should start with EOG or ECG.')
+    del data
+
+    # clean-up
+    for key, data in data_per_key.items():
+        data_per_key[key] = [elt for elt in data if elt[0] <= 3]
+
+    # counters
+    counters = {key: Counter(elt[0] for elt in data)
+                for key, data in data_per_key.items()}
+
+    # patch together output
+    output = [
+        (key,
+         pd.DataFrame(data_per_key[key],
+                      columns=['n_total_comp', 'idx_comp', 'score']),
+         counters[key]) for key in keys]
+
+    return output
 
 
 if __name__ == '__main__':
