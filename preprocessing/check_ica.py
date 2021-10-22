@@ -288,13 +288,13 @@ if __name__ == '__main__':
         description='Checks scores and components removed by ICA.')
     parser.add_argument(
         'folder_in', type=str,
-        help='Folder containing FIF files to preprocess.')
+        help='folder containing FIF files to preprocess.')
     parser.add_argument(
         'result_file', type=str,
-        help='Path to the file where the results are pickle.')
+        help='path to the file where the results are pickle.')
     parser.add_argument(
         '--processes', type=int, metavar='int',
-        help='Number of parallel processes.', default=1)
+        help='number of parallel processes.', default=1)
     args = parser.parse_args()
 
     main(args.folder_in, args.result_file, args.processes)
