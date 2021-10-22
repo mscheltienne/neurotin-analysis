@@ -38,7 +38,7 @@ if isinstance(FIND_BADS_ECG_KWARGS, dict):
     FIND_BADS_ECG_KWARGS = [FIND_BADS_ECG_KWARGS]
 
 
-def check_ica(fname, fname_out_stem):
+def check_ica(fname):
     """
     Function called on each raw/ica files.
 
@@ -154,8 +154,9 @@ def main(folder_in, result_file, processes=1):
     result_file = _check_result_file(result_file)
 
     raws = list_raw_fif(folder_in)
+    input_pool = [(fname, ) for fname in raws]
     with mp.Pool(processes=processes) as p:
-        results = p.starmap(check_ica, raws)
+        results = p.starmap(check_ica, input_pool)
 
     with open(result_file, mode='wb') as f:
         pickle.dump(results, f, -1)
