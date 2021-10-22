@@ -15,11 +15,6 @@ from pipeline import prepare_raw
 from utils import list_raw_fif, read_raw_fif
 
 
-# Path to the folder containing the FIF files to preprocess.
-FOLDER_IN = r'C:\Users\Mathieu\Documents\datasets\neurotin\raw'
-# File in which the results are pickled
-RESULT_FILE = r'C:\Users\Mathieu\Documents\datasets\neurotin\data-ica.pcl'
-
 # Global test settings
 FIND_ON_RAW = True  # bool
 FIND_ON_EPOCHS = True  # bool
@@ -140,7 +135,7 @@ def _create_key(ica_kwargs, find_bads_kwargs, type_,
     return repr_
 
 
-def main(processes=1):
+def main(folder_in, result_file, processes=1):
     """
     Load all preprocessed raws and ICA in folder (and subfolders) sequentially
     and retrieves the number of excluded EOG and ECG components and their
@@ -148,11 +143,15 @@ def main(processes=1):
 
     Parameters
     ----------
+    folder_in : str | Path
+        Path to the folder containing the FIF files to preprocess.
+    result_file : str | Path
+        File in which the results are pickled.
     processes : int
         Number of parallel processes used.
     """
-    folder_in = _check_folder_in(FOLDER_IN)
-    result_file = _check_result_file(RESULT_FILE)
+    folder_in = _check_folder_in(folder_in)
+    result_file = _check_result_file(result_file)
 
     raws = list_raw_fif(folder_in)
     with mp.Pool(processes=processes) as p:
@@ -288,8 +287,14 @@ if __name__ == '__main__':
         prog='NeuroTin - ICA checker',
         description='Checks scores and components removed by ICA.')
     parser.add_argument(
+        'folder_in', type=str,
+        help='Folder containing FIF files to preprocess.')
+    parser.add_argument(
+        'result_file', type=str,
+        help='Path to the file where the results are pickle.')
+    parser.add_argument(
         '--processes', type=int, metavar='int',
         help='Number of parallel processes.', default=1)
     args = parser.parse_args()
 
-    main(args.processes)
+    main(args.folder_in, args.result_file, args.processes)
