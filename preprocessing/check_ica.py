@@ -17,8 +17,6 @@ from utils import list_raw_fif, read_raw_fif
 
 # Path to the folder containing the FIF files to preprocess.
 FOLDER_IN = r'C:\Users\Mathieu\Documents\datasets\neurotin\raw'
-# Path to the folder containing the FIF files preprocessed.
-FOLDER_OUT = r'C:\Users\Mathieu\Documents\datasets\neurotin\clean'
 # File in which the results are pickled
 RESULT_FILE = r'C:\Users\Mathieu\Documents\datasets\neurotin\data-ica.pcl'
 
@@ -53,8 +51,6 @@ def check_ica(fname, fname_out_stem):
     ----------
     fname : str | Path
         Path to the input '-raw.fif' file to preprocess.
-    fname_out_stem : str | Path
-        Path and naming scheme used to save -raw.fif and -ica.fif files.
 
     Returns
     -------
@@ -69,7 +65,6 @@ def check_ica(fname, fname_out_stem):
     """
     # To be rework when #9846 is fixed.
     try:
-        assert Path(str(fname_out_stem) + '-raw.fif').exists()
         raw = read_raw_fif(fname)
         raw = prepare_raw(raw)
         raw.info['bads'] = list()  # bug fixed in #9719
@@ -156,27 +151,22 @@ def main(processes=1):
     processes : int
         Number of parallel processes used.
     """
-    folder_in, folder_out = _check_folders(FOLDER_IN, FOLDER_OUT)
+    folder_in = _check_folder_in(FOLDER_IN)
     result_file = _check_result_file(RESULT_FILE)
 
     raws = list_raw_fif(folder_in)
-    input_pool = [(fname,
-                    str(folder_out / fname.relative_to(folder_in))[:-8])
-                  for fname in raws]
     with mp.Pool(processes=processes) as p:
-        results = p.starmap(check_ica, input_pool)
+        results = p.starmap(check_ica, raws)
 
     with open(result_file, mode='wb') as f:
         pickle.dump(results, f, -1)
 
 
-def _check_folders(folder_in, folder_out):
+def _check_folder_in(folder_in):
     """Checks that the folders exist and are pathlib.Path instances."""
     folder_in = Path(folder_in)
-    folder_out = Path(folder_out)
     assert folder_in.exists(), 'The input folder does not exists.'
-    assert folder_out.exists(), 'The ouput folder does not exists.'
-    return folder_in, folder_out
+    return folder_in
 
 
 def _check_result_file(result_file):
