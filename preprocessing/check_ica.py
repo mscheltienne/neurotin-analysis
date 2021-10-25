@@ -230,6 +230,8 @@ def plot_results(result_file, swarmplot=False, title_mapping=dict()):
     """
     results = _result_file_parser(result_file)
     for df, counter, key in results:
+        if len(df) == 0:
+            continue  # skip, nothing to plot.
         title = title_mapping[key] if key in title_mapping else key
         _plot_distribution(df, counter, title, swarmplot=swarmplot, ax=None)
 
