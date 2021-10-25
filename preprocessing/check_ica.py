@@ -215,7 +215,8 @@ def _check_result_file(result_file):
     return result_file
 
 
-def plot_results(result_file, swarmplot=False, title_mapping=dict()):
+def plot_results(result_file, swarmplot=False, title_mapping=dict(),
+                 key_to_plot='all'):
     """
     Box plot showing the repartition of the results.
 
@@ -227,13 +228,30 @@ def plot_results(result_file, swarmplot=False, title_mapping=dict()):
         If True, a swarmplot is overlayed on top of the boxplots.
     title_mapping : dict
         Dictionary to map the keys with the desired titles.
+    key_to_plot : str | list of str | 'all'
+        Subset of keys to plot. If 'all', plot all keys in result_file.
     """
+    key_to_plot = _check_key_to_plot(key_to_plot)
     results = _result_file_parser(result_file)
     for df, counter, key in results:
         if len(df) == 0:
             continue  # skip, nothing to plot.
+        if key_to_plot != 'all' and key not in key_to_plot:
+            continue  # skip
         title = title_mapping[key] if key in title_mapping else key
         _plot_distribution(df, counter, title, swarmplot=swarmplot, ax=None)
+
+
+def _check_key_to_plot(key_to_plot):
+    """Check argument key_to_plot."""
+    if key_to_plot == 'all':
+        return key_to_plot
+    if isinstance(key_to_plot, str):
+        key_to_plot = [key_to_plot]
+    elif isinstance(key_to_plot, (tuple, list)):
+        key_to_plot = list(key_to_plot)
+        assert all(isinstance(key, str) for key in key_to_plot)
+    return key_to_plot
 
 
 def _result_file_parser(result_file):
