@@ -21,12 +21,49 @@ FIND_ON_EPOCHS = True  # bool
 ICA_KWARGS = dict(method='picard', max_iter='auto')  # dict
 FIND_BADS_EOG_KWARGS = [
     dict(measure='zscore', threshold=3.0),
+    dict(measure='zscore', threshold=3.2),
+    dict(measure='zscore', threshold=3.4),
+    dict(measure='zscore', threshold=3.6),
+    dict(measure='zscore', threshold=3.8),
     dict(measure='zscore', threshold=4.0),
-    dict(measure='zscore', threshold=5.0)
+    dict(measure='zscore', threshold=4.2),
+    dict(measure='zscore', threshold=4.4),
+    dict(measure='zscore', threshold=4.6),
+    dict(measure='zscore', threshold=4.8),
+    dict(measure='zscore', threshold=5.0),
+    dict(measure='zscore', threshold=5.5),
+    dict(measure='zscore', threshold=6.0),
+    dict(measure='zscore', threshold=7.0),
+    dict(measure='correlation', threshold=0.5),
+    dict(measure='correlation', threshold=0.6),
+    dict(measure='correlation', threshold=0.7),
+    dict(measure='correlation', threshold=0.75),
+    dict(measure='correlation', threshold=0.8),
+    dict(measure='correlation', threshold=0.85),
+    dict(measure='correlation', threshold=0.9),
 ]
 FIND_BADS_ECG_KWARGS = [
     dict(method='correlation', measure='zscore', threshold=3.0),
-    dict(method='correlation', measure='zscore', threshold=6.0)
+    dict(method='correlation', measure='zscore', threshold=4.0),
+    dict(method='correlation', measure='zscore', threshold=4.5),
+    dict(method='correlation', measure='zscore', threshold=5.0),
+    dict(method='correlation', measure='zscore', threshold=5.2),
+    dict(method='correlation', measure='zscore', threshold=5.4),
+    dict(method='correlation', measure='zscore', threshold=5.6),
+    dict(method='correlation', measure='zscore', threshold=5.8),
+    dict(method='correlation', measure='zscore', threshold=6.0),
+    dict(method='correlation', measure='zscore', threshold=6.2),
+    dict(method='correlation', measure='zscore', threshold=6.4),
+    dict(method='correlation', measure='zscore', threshold=6.6),
+    dict(method='correlation', measure='zscore', threshold=6.8),
+    dict(method='correlation', measure='zscore', threshold=7.0),
+    dict(method='correlation', measure='correlation', threshold=0.5),
+    dict(method='correlation', measure='correlation', threshold=0.6),
+    dict(method='correlation', measure='correlation', threshold=0.7),
+    dict(method='correlation', measure='correlation', threshold=0.75),
+    dict(method='correlation', measure='correlation', threshold=0.8),
+    dict(method='correlation', measure='correlation', threshold=0.85),
+    dict(method='correlation', measure='correlation', threshold=0.9),
 ]
 
 # Checks
