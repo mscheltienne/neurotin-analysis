@@ -251,6 +251,8 @@ def _check_key_to_plot(key_to_plot):
     elif isinstance(key_to_plot, (tuple, list)):
         key_to_plot = list(key_to_plot)
         assert all(isinstance(key, str) for key in key_to_plot)
+    else:
+        raise ValueError('Argument key_to_plot is not valid.')
     return key_to_plot
 
 
