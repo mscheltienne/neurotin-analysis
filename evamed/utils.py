@@ -20,4 +20,6 @@ def read_csv(file):
     file = Path(file)
     assert file.exists(), 'could not find %s' % file
     assert file.suffix == '.csv', "file suffix %s is not .csv" % file.suffix
-    return pd.read_csv(file, encoding='latin1')
+    df = pd.read_csv(file, encoding='latin1', skiprows=0, header=1)
+    df = df.drop(df.columns[-1], axis=1)
+    return df
