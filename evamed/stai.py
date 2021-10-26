@@ -28,7 +28,7 @@ def _parse_stai(df, participant):
     df_stai = df[[f'{prefix}_STAI{k}' for k in range(1, 41)]]\
         .replace(valid_answers)
     df_stai.rename(mapper={f'{prefix}_STAI{k}': f'Q{k}' for k in range(1, 41)},
-                  axis='columns', copy=False, inplace=True)
+                   axis='columns', copy=False, inplace=True)
     df_stai.insert(0, 'date', pd.to_datetime(df[f'{prefix}_date']))
     df_stai.insert(1, 'results', df[f'{prefix}_STAI_R'])
 
