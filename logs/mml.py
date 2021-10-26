@@ -52,5 +52,5 @@ def plot_mml_evolution_per_participants(csv, participants, figsize=(10, 5)):
 
 #%% Main
 if __name__ == '__main__':
-    csv = r'/Volumes/NeuroTin-EEG/Data/mml_logs.csv'
+    csv = r'/Volumes/Data3/NeuroTinEEG/data/mml_logs.csv'
     plot_mml_evolution_per_participants(csv, participants=(60, 61, 65))
