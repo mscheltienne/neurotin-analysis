@@ -1,3 +1,5 @@
+"""Processing of Tinnitus Handicap Inventory (THI) Evamed questionnaires."""
+
 import pandas as pd
 
 
