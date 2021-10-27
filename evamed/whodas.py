@@ -33,6 +33,14 @@ def _parse_whodas(df, participant):
 
     df_whodas = pd.concat((df[col_d].replace(valid_answers), df[col_h]),
                           axis=1)
+
+    # rename d-section
+    df_whodas.rename(mapper={col: f'D-Q{col[-2:]}' for col in col_d},
+                     axis='columns', copy=False, inplace=True)
+    # rename h-section
+    df_whodas.rename(mapper={col: f'H-Q{col[-1]}' for col in col_h},
+                     axis='columns', copy=False, inplace=True)
+
     df_whodas.insert(0, 'date', pd.to_datetime(df[f'{prefix}_date']))
     df_whodas.insert(1, 'results', df[f'{prefix}_WHODAS_R'])
 
