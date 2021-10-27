@@ -17,14 +17,16 @@ def _parse_stai(df, participant):
     df = df.loc[df['patient_code'] == participant]
 
     # extract information
-    valid_answers = {'1. ALMOST NEVER': 1,
-                     '1. NOT AT ALL': 1,
-                     '2. SOMETIMES': 2,
-                     '2. SOMEWHAT': 2,
-                     '3. OFTEN': 3,
-                     '3. MODERATELY SO': 3,
-                     '4. VERY MUCH SO': 4,
-                     '4. ALMOST ALWAYS': 4}
+    valid_answers = {
+        '1. ALMOST NEVER': 1,
+        '1. NOT AT ALL': 1,
+        '2. SOMETIMES': 2,
+        '2. SOMEWHAT': 2,
+        '3. OFTEN': 3,
+        '3. MODERATELY SO': 3,
+        '4. VERY MUCH SO': 4,
+        '4. ALMOST ALWAYS': 4
+    }
     df_stai = df[[f'{prefix}_STAI{k}' for k in range(1, 41)]]\
         .replace(valid_answers)
     df_stai.rename(mapper={f'{prefix}_STAI{k}': f'Q{k}' for k in range(1, 41)},

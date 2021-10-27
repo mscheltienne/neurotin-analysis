@@ -22,11 +22,13 @@ def _parse_whodas(df, participant):
     # d-section
     pattern = re.compile(rf'{prefix}_WHOD\d\d')
     col_d = [col for col in columns if pattern.match(col)]
-    valid_answers = {'None': 1,
-                     'Mild': 2,
-                     'Moderate': 3,
-                     'Severe': 4,
-                     'Extreme or cannot do': 5}  # to confirm
+    valid_answers = {
+        'None': 1,
+        'Mild': 2,
+        'Moderate': 3,
+        'Severe': 4,
+        'Extreme or cannot do': 5  # to confirm
+    }
     # h-section
     pattern = re.compile(rf'{prefix}_WHODH\d')
     col_h = [col for col in columns if pattern.match(col)]

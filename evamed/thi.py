@@ -16,7 +16,11 @@ def _parse_thi(df, participant):
     df = df.loc[df['patient_code'] == participant]
 
     # extract information
-    valid_answers = {'No': 0, 'Sometimes': 2, 'Yes': 4}
+    valid_answers = {
+        'No': 0,
+        'Sometimes': 2,
+        'Yes': 4
+    }
     df_thi = df[[f'{prefix}_THI{k}' for k in range(1, 26)]]\
         .replace(valid_answers)
     df_thi.rename(mapper={f'{prefix}_THI{k}': f'Q{k}' for k in range(1, 26)},
