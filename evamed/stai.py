@@ -7,9 +7,9 @@ import pandas as pd
 def _parse_stai(df, participant):
     """Parse dataframe and extract STAI answers and information."""
     # clean-up columns
-    stai_columns = [col for col in df.columns if 'STAI' in col]
-    assert len(stai_columns) != 0, 'STAI not present in dataframe.'
-    prefix = set(col.split('_')[0] for col in stai_columns)
+    columns = [col for col in df.columns if 'STAI' in col]
+    assert len(columns) != 0, 'STAI not present in dataframe.'
+    prefix = set(col.split('_')[0] for col in columns)
     assert len(prefix) == 1
     prefix = list(prefix)[0]
 

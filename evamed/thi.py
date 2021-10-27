@@ -6,9 +6,9 @@ import pandas as pd
 def _parse_thi(df, participant):
     """Parse dataframe and extract THI answers and information."""
     # clean-up columns
-    thi_columns = [col for col in df.columns if 'THI' in col]
-    assert len(thi_columns) != 0, 'THI not present in dataframe.'
-    prefix = set(col.split('_')[0] for col in thi_columns)
+    columns = [col for col in df.columns if 'THI' in col]
+    assert len(columns) != 0, 'THI not present in dataframe.'
+    prefix = set(col.split('_')[0] for col in columns)
     assert len(prefix) == 1
     prefix = list(prefix)[0]
 
