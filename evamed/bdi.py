@@ -17,7 +17,7 @@ def _parse_bdi(df, participant):
 
     # extract information
     df_bdi = df[[f'{prefix}_BDI{k}' for k in range(1, 22)]]\
-        .applymap(lambda x: int(x[0]))
+        .applymap(lambda x: int(x[0]), na_action='ignore')
     df_bdi.rename(mapper={f'{prefix}_BDI{k}': f'Q{k}' for k in range(1, 22)},
                   axis='columns', copy=False, inplace=True)
     df_bdi.insert(0, 'date', pd.to_datetime(df[f'{prefix}_date']))
