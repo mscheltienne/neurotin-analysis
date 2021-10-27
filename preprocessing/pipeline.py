@@ -82,14 +82,14 @@ def exclude_EOG_ECG_with_ICA(raw, semiauto=False):
 
     ica = mne.preprocessing.ICA(method='picard', max_iter='auto')
     ica.fit(raw, picks='eeg')
-    eog_idx, eog_scores = ica.find_bads_eog(raw, threshold=3.0,
-                                            measure='zscore')
-    ecg_idx, ecg_scores = ica.find_bads_ecg(raw, method='ctps',
-                                            threshold='auto', measure='zscore')
+    eog_idx, eog_scores = ica.find_bads_eog(raw, threshold=0.6,
+                                            measure='correlation')
+    ecg_idx, ecg_scores = ica.find_bads_ecg(raw, method='correlation',
+                                            threshold=6.8, measure='zscore')
     ica.exclude = eog_idx + ecg_idx
     try:
         assert len(eog_idx) <= 2, 'More than 2 EOG component detected.'
-        assert len(ecg_idx) <= 3, 'More than 3 ECG component detected.'
+        assert len(ecg_idx) <= 1, 'More than 1 ECG component detected.'
         assert len(ica.exclude) != 0, 'No EOG/ECG component detected.'
     except AssertionError:
         if semiauto:
