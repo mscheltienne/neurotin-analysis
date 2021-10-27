@@ -3,7 +3,7 @@
 import pandas as pd
 
 
-def _parse_thi(df, participant):
+def _parse_bdi(df, participant):
     """Parse dataframe and extract BDI answers and information."""
     # clean-up columns
     columns = [col for col in df.columns if 'BDI' in col]
