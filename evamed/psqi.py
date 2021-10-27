@@ -39,6 +39,12 @@ def _parse_psqi(df, participant):
     pattern = re.compile(rf'{prefix}_PSQI\d')
     col_questions = [col for col in columns if pattern.match(col)]
     df_psqi = df[col_questions].replace(valid_answers)
+    name_mapper = {col: 'Q'+col.split(f'{prefix}_PSQI')[1].lower()
+                    for col in col_questions}
+    df_psqi.rename(mapper=name_mapper,
+                   axis='columns', copy=False, inplace=True)
+    df_psqi.rename(mapper={'Q5j2': 'Q5j-(opt)', 'Q10e2': 'Q10e-(opt)'},
+                   axis='columns', copy=False, inplace=True)
     df_psqi.insert(0, 'date', pd.to_datetime(df[f'{prefix}_date']))
     df_psqi.insert(1, 'results', df[f'{prefix}_PSQI_R'])
 
