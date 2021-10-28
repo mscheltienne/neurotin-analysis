@@ -1,5 +1,7 @@
 """Processing of Beck's Depression Inventory (BDI) Evamed questionnaires."""
 
+import re
+
 import pandas as pd
 
 
@@ -15,19 +17,25 @@ def _parse_bdi(df, participant):
     # locate participant lines
     df = df.loc[df['patient_code'] == participant]
 
-    # extract information
-    df_bdi = df[[f'{prefix}_BDI{k}' for k in range(1, 22)]]\
-        .applymap(lambda x: int(x[0]), na_action='ignore')
-    df_bdi.rename(mapper={f'{prefix}_BDI{k}': f'Q{k}' for k in range(1, 22)},
-                  axis='columns', copy=False, inplace=True)
+    # extract questions
+    pattern = re.compile(f'{prefix}_BDI' + r'\d{1,2}')
+    columns_questions = [col for col in columns if pattern.match(col)]
+    df_bdi = df[columns_questions].applymap(lambda x: int(x[0]),
+                                            na_action='ignore')
+    # extract date/results
     df_bdi.insert(0, 'date', pd.to_datetime(df[f'{prefix}_date']))
     df_bdi.insert(1, 'results', df[f'{prefix}_BDI_R'])
+    # extract additional information
     df_bdi.insert(2, 'marital status', df[f'{prefix}_MARISTA'])
     df_bdi.insert(3, 'occupation', df[f'{prefix}_OCCUP'])
     df_bdi.insert(4, 'education', df[f'{prefix}_EDUC'])
 
     # sanity-check
-    assert (df_bdi[[f'Q{k}' for k in range(1, 22)]].sum(axis=1) == \
-            df_bdi['results']).all()
+    assert (df_bdi[columns_questions].sum(axis=1) == df_bdi['results']).all()
+
+    # rename
+    mapper = {col: 'Q'+re.search(r'\d{1,2}', col).group()
+              for col in columns_questions}
+    df_bdi.rename(mapper=mapper, axis='columns', copy=False, inplace=True)
 
     return df_bdi

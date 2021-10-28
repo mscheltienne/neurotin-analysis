@@ -1,5 +1,7 @@
 """Processing of Tinnitus Handicap Inventory (THI) Evamed questionnaires."""
 
+import re
+
 import pandas as pd
 
 
@@ -15,21 +17,25 @@ def _parse_thi(df, participant):
     # locate participant lines
     df = df.loc[df['patient_code'] == participant]
 
-    # extract information
+    # extract questions
+    pattern = re.compile(f'{prefix}_THI' + r'\d{1,2}')
+    columns_questions = [col for col in columns if pattern.match(col)]
     valid_answers = {
         'No': 0,
         'Sometimes': 2,
         'Yes': 4
     }
-    df_thi = df[[f'{prefix}_THI{k}' for k in range(1, 26)]]\
-        .replace(valid_answers)
-    df_thi.rename(mapper={f'{prefix}_THI{k}': f'Q{k}' for k in range(1, 26)},
-                  axis='columns', copy=False, inplace=True)
+    df_thi = df[columns_questions].replace(valid_answers)
+    # extract date/results
     df_thi.insert(0, 'date', pd.to_datetime(df[f'{prefix}_date']))
     df_thi.insert(1, 'results', df[f'{prefix}_THI_R'])
 
     # sanity-check
-    assert (df_thi[[f'Q{k}' for k in range(1, 26)]].sum(axis=1) == \
-            df_thi['results']).all()
+    assert (df_thi[columns_questions].sum(axis=1) == df_thi['results']).all()
+
+    # rename
+    mapper = {col: 'Q'+re.search(r'\d{1,2}', col).group()
+              for col in columns_questions}
+    df_thi.rename(mapper=mapper, axis='columns', copy=False, inplace=True)
 
     return df_thi

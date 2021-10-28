@@ -1,6 +1,7 @@
 """Processing of Pittsburg Sleep Quality Index (PSQI) Evamed questionnaires."""
 
 import re
+import copy
 
 import pandas as pd
 
@@ -17,7 +18,7 @@ def _parse_psqi(df, participant):
     # locate participant lines
     df = df.loc[df['patient_code'] == participant]
 
-    # extract information
+    # extract questions
     valid_answers = {
         'Not during the past month': 0,
         'No problem at all': 0,
@@ -37,15 +38,33 @@ def _parse_psqi(df, participant):
         'Partner in same bed': 3
     }
     pattern = re.compile(rf'{prefix}_PSQI\d')
-    col_questions = [col for col in columns if pattern.match(col)]
-    df_psqi = df[col_questions].replace(valid_answers)
-    name_mapper = {col: 'Q'+col.split(f'{prefix}_PSQI')[1].lower()
-                    for col in col_questions}
-    df_psqi.rename(mapper=name_mapper,
-                   axis='columns', copy=False, inplace=True)
-    df_psqi.rename(mapper={'Q5j2': 'Q5j-(opt)', 'Q10e2': 'Q10e-(opt)'},
-                   axis='columns', copy=False, inplace=True)
+    columns_questions = [col for col in columns if pattern.match(col)]
+    df_psqi = df[columns_questions].replace(valid_answers)
+    # extract date/results
     df_psqi.insert(0, 'date', pd.to_datetime(df[f'{prefix}_date']))
     df_psqi.insert(1, 'results', df[f'{prefix}_PSQI_R'])
+
+    # rename
+    mapper = {col: 'Q'+col.split(f'{prefix}_PSQI')[1].lower()
+              for col in columns_questions}
+    df_psqi.rename(mapper=mapper, axis='columns', copy=False, inplace=True)
+    df_psqi.rename(mapper={'Q5j2': 'Q5j-(opt)', 'Q10e2': 'Q10e-(opt)'},
+                   axis='columns', copy=False, inplace=True)
+
+    # reorder
+    old_columns = df_psqi.columns.tolist()
+    columns_to_check = [('Q5j', 'Q5j-(opt)'), ('Q10e', 'Q10e-(opt)')]
+    new_columns = copy.deepcopy(columns)
+    for first, second in columns_to_check:
+        try:
+            first_idx = old_columns.index(first)
+            second_idx = old_columns.index(second)
+            assert abs(first_idx-second_idx) == 1
+            if second_idx < first_idx:
+                new_columns[first_idx], new_columns[second_idx] = \
+                    new_columns[second_idx], new_columns[first_idx]
+        except ValueError:
+            continue
+    df_psqi = df_psqi.reindex(new_columns, axis=1)
 
     return df_psqi

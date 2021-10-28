@@ -1,6 +1,8 @@
 """Processing of State and Trait Anxiety Inventory (STAI) Evamed
 questionnaires."""
 
+import re
+
 import pandas as pd
 
 
@@ -16,34 +18,33 @@ def _parse_stai(df, participant):
     # locate participant lines
     df = df.loc[df['patient_code'] == participant]
 
-    # extract information
-    valid_answers = {
-        '1. ALMOST NEVER': 1,
-        '1. NOT AT ALL': 1,
-        '2. SOMETIMES': 2,
-        '2. SOMEWHAT': 2,
-        '3. OFTEN': 3,
-        '3. MODERATELY SO': 3,
-        '4. VERY MUCH SO': 4,
-        '4. ALMOST ALWAYS': 4
-    }
-    df_stai = df[[f'{prefix}_STAI{k}' for k in range(1, 41)]]\
-        .replace(valid_answers)
-    df_stai.rename(mapper={f'{prefix}_STAI{k}': f'Q{k}' for k in range(1, 41)},
-                   axis='columns', copy=False, inplace=True)
+    # extract questions
+    pattern = re.compile(f'{prefix}_STAI' + r'\d{1,2}')
+    columns_questions = [col for col in columns if pattern.match(col)]
+    df_stai = df[columns_questions].applymap(lambda x: int(x[0]),
+                                             na_action='ignore')
+    # extract date/results
     df_stai.insert(0, 'date', pd.to_datetime(df[f'{prefix}_date']))
     df_stai.insert(1, 'results', df[f'{prefix}_STAI_R'])
 
     # sanity-check
-    weights_4_to_1 = [1, 2, 5, 8, 10, 11, 15, 16, 19, 20, 21, 23, 26, 27, 30,
-                      33, 34, 36, 39]
-    weights_1_to_4 = [3, 4, 6, 7, 9, 12, 13, 14, 17, 18, 22, 24, 25, 28, 29,
-                      31, 32, 35, 37, 38, 40]
-    tmp = df_stai[[f'Q{k}' for k in weights_4_to_1]]\
-        .replace({1: 4, 2: 3, 3: 2, 4: 1})
-    tmp[[f'Q{k}' for k in weights_1_to_4]] = \
-        df_stai[[f'Q{k}' for k in weights_1_to_4]]
-    assert (tmp[[f'Q{k}' for k in range(1, 41)]].sum(axis=1) == \
-            df_stai['results']).all()
+    questions_weights_4_to_1 = [
+        f'{prefix}_STAI'+str(k)
+        for k in (1, 2, 5, 8, 10, 11, 15, 16, 19, 20,
+                  21, 23, 26, 27, 30, 33, 34, 36, 39)
+    ]
+    questions_weights_1_to_4 = [
+        f'{prefix}_STAI'+str(k)
+        for k in (3, 4, 6, 7, 9, 12, 13, 14, 17, 18, 22,
+                  24, 25, 28, 29,31, 32, 35, 37, 38, 40)
+    ]
+    tmp = df_stai[questions_weights_4_to_1].replace({1: 4, 2: 3, 3: 2, 4: 1})
+    tmp[questions_weights_1_to_4] = df_stai[questions_weights_1_to_4]
+    assert (tmp[columns_questions].sum(axis=1) == df_stai['results']).all()
+
+    # rename
+    mapper = {col: 'Q'+re.search(r'\d{1,2}', col).group()
+              for col in columns_questions}
+    df_stai.rename(mapper=mapper, axis='columns', copy=False, inplace=True)
 
     return df_stai

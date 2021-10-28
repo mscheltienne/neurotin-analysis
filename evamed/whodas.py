@@ -18,10 +18,10 @@ def _parse_whodas(df, participant):
     # locate participant lines
     df = df.loc[df['patient_code'] == participant]
 
-    # extract information
+    # extract questions
     # d-section
-    pattern = re.compile(rf'{prefix}_WHOD\d\d')
-    col_d = [col for col in columns if pattern.match(col)]
+    pattern = re.compile(rf'{prefix}_WHOD\d{2}')
+    col_questions_section_d = [col for col in columns if pattern.match(col)]
     valid_answers = {
         'None': 1,
         'Mild': 2,
@@ -31,19 +31,23 @@ def _parse_whodas(df, participant):
     }
     # h-section
     pattern = re.compile(rf'{prefix}_WHODH\d')
-    col_h = [col for col in columns if pattern.match(col)]
+    col_questions_section_h = [col for col in columns if pattern.match(col)]
 
-    df_whodas = pd.concat((df[col_d].replace(valid_answers), df[col_h]),
+    df_whodas = pd.concat((df[col_questions_section_d].replace(valid_answers),
+                           df[col_questions_section_h]),
                           axis=1)
 
-    # rename d-section
-    df_whodas.rename(mapper={col: f'D-Q{col[-2:]}' for col in col_d},
-                     axis='columns', copy=False, inplace=True)
-    # rename h-section
-    df_whodas.rename(mapper={col: f'H-Q{col[-1]}' for col in col_h},
-                     axis='columns', copy=False, inplace=True)
-
+    # extract date/results
     df_whodas.insert(0, 'date', pd.to_datetime(df[f'{prefix}_date']))
     df_whodas.insert(1, 'results', df[f'{prefix}_WHODAS_R'])
+
+    # rename d-section
+    df_whodas.rename(mapper={col: f'Q{col[-2:]}D'
+                             for col in col_questions_section_d},
+                     axis='columns', copy=False, inplace=True)
+    # rename h-section
+    df_whodas.rename(mapper={col: f'Q{col[-1]}H'
+                             for col in col_questions_section_h},
+                     axis='columns', copy=False, inplace=True)
 
     return df_whodas
