@@ -67,4 +67,7 @@ def _parse_psqi(df, participant):
             continue
     df_psqi = df_psqi.reindex(new_columns, axis=1)
 
+    # re-index
+    df_psqi.reset_index(drop=True, inplace=True)
+
     return df_psqi

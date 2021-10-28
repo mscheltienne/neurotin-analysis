@@ -47,4 +47,7 @@ def _parse_stai(df, participant):
               for col in columns_questions}
     df_stai.rename(mapper=mapper, axis='columns', copy=False, inplace=True)
 
+    # re-index
+    df_stai.reset_index(drop=True, inplace=True)
+
     return df_stai

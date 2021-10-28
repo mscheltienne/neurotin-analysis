@@ -50,4 +50,7 @@ def _parse_whodas(df, participant):
                              for col in col_questions_section_h},
                      axis='columns', copy=False, inplace=True)
 
+    # re-index
+    df_whodas.reset_index(drop=True, inplace=True)
+
     return df_whodas

@@ -4,6 +4,8 @@ import re
 
 import pandas as pd
 
+from utils import read_paths, read_csv
+
 
 def _parse_thi(df, participant):
     """Parse dataframe and extract THI answers and information."""
@@ -38,4 +40,21 @@ def _parse_thi(df, participant):
               for col in columns_questions}
     df_thi.rename(mapper=mapper, axis='columns', copy=False, inplace=True)
 
+    # re-index
+    df_thi.reset_index(drop=True, inplace=True)
+
     return df_thi
+
+
+def _parse_thi_evolution(participant):
+    """
+    Parse evolution of THI scores.
+    """
+    paths = read_paths()
+    index = ('baseline', 'pre-assessment', 'post-assessment')
+    dfs = {type_: read_csv(paths[type_]) for type_ in index}
+    dfs_thi = {type_: _parse_thi(df, participant) for type_, df in dfs.items()}
+
+    results = [dfs_thi[type_]['results'][0] for type_ in index]
+    series = pd.Series(results, index)
+    return series

@@ -38,4 +38,7 @@ def _parse_bdi(df, participant):
               for col in columns_questions}
     df_bdi.rename(mapper=mapper, axis='columns', copy=False, inplace=True)
 
+    # re-index
+    df_bdi.reset_index(drop=True, inplace=True)
+
     return df_bdi

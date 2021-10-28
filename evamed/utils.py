@@ -30,7 +30,7 @@ def read_paths(ini_file=None):
 def _check_ini_file(ini_file):
     """Check argument ini_file."""
     if ini_file is None:
-        ini_file = Path(__file__).parent/'paths.ini'
+        ini_file = Path(__file__).parent/'paths.ini'  # default path
     else:
         ini_file = Path(ini_file)
     assert ini_file.exists(), 'could not find %s' % ini_file
