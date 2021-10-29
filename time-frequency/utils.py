@@ -27,7 +27,6 @@ EVENTS_DURATION_MAPPING = {
     5: 16,
     6: 8,
 }
-EPOCH_EVENTS = {5: 1, 6:2}
 
 
 def make_fixed_length_epochs(raw, duration=1., overlap=0.):
@@ -47,24 +46,31 @@ def make_fixed_length_epochs(raw, duration=1., overlap=0.):
     -------
     epochs : Epochs
     """
-    raw = raw.copy()
+    # load events
     events = mne.find_events(raw, stim_channel='TRIGGER')
+    unique_events = set(ev[2] for ev in events)
+    event_id = {EVENTS_MAPPING[value]: value for value in unique_events}
+
+    # add new stim channel
+    raw = raw.copy()
     info = mne.create_info(['STI'], sfreq=raw.info['sfreq'], ch_types='stim')
     stim = mne.io.RawArray(np.zeros(shape=(1, len(raw.times))), info)
     raw.add_channels([stim], force_update_info=True)
 
+    # add fixed length events to the new stim channel
     for k, event in enumerate(events):
         start = event[0] / raw.info['sfreq']
         stop = start + EVENTS_DURATION_MAPPING[event[2]]
         if k == 0:
             stop += 7  # first rest phase extension
         epoch_events = mne.make_fixed_length_events(
-            raw, id=EPOCH_EVENTS[event[2]], start=start, stop=stop,
+            raw, id=int(event[2]), start=start, stop=stop,
             duration=duration, first_samp=False, overlap=overlap)
         raw.add_events(epoch_events, stim_channel='STI', replace=False)
 
+    # create epochs from the new stim channel
     events = mne.find_events(raw, stim_channel='STI')
-    epochs = mne.Epochs(raw, events=events, event_id=[1, 2], tmin=0.,
+    epochs = mne.Epochs(raw, events=events, event_id=event_id, tmin=0.,
                         tmax=duration, baseline=None, picks='eeg',
                         preload=True, reject=None, flat=None)
 
@@ -87,11 +93,13 @@ def reject_epochs(epochs, reject=None):
     -------
     epochs : Epochs
         Good epochs.
+    reject : dict
+        Rejection dictionary used to drop epochs.
     """
     if reject is None:
         reject = get_rejection_threshold(epochs, decim=1)
     epochs.drop_bad(reject=reject)
-    return epochs
+    return epochs, reject
 
 
 def repair_epochs(epochs, thresh_method='random_search'):
