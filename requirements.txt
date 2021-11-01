@@ -19,7 +19,6 @@ dipy
 pyqt5-sip
 sip
 vtk<=9.0.1
-pysurfer
 nilearn
 tqdm
 imageio
@@ -31,3 +30,4 @@ ipywidgets
 ipyvtklink
 pyprep
 bsl
+mne-qt-browser
