@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 
 import mne
 import numpy as np
@@ -7,6 +8,8 @@ import seaborn as sns
 from mne.time_frequency import psd_welch, psd_multitaper
 
 from utils import make_epochs, list_raw_fif
+
+mne.set_log_level('WARNING')
 
 
 def _compute_psd(raw, method='welch', **kwargs):
@@ -50,35 +53,42 @@ def compute_average_psd(folder, participants, method='welch', **kwargs):
     for participant in participants:
         fnames = list_raw_fif(folder/str(participant).zfill(3))
         for fname in fnames:
-            raw = mne.io.read_raw_fif(fname, preload=True)
+            if fname.parent.name != 'Online':
+                continue
 
-            # find session id
-            pattern = re.compile(r'Session (\d{1,2})')
-            session = re.findall(pattern, str(fname))
-            assert len(session == 1)
-            session = int(session[0])
-            # find run id
-            run = int(fname.name.split('-')[0])
+            try:
+                raw = mne.io.read_raw_fif(fname, preload=True)
 
-            # alpha
-            kwargs['fmin'], kwargs['fmax'] = 8., 13.
-            psds_alpha, _ = _compute_psd(raw, method, **kwargs)
-            # delta
-            kwargs['fmin'], kwargs['fmax'] = 1., 4.
-            psds_delta, _ = _compute_psd(raw, method, **kwargs)
+                # find session id
+                pattern = re.compile(r'Session (\d{1,2})')
+                session = re.findall(pattern, str(fname))
+                assert len(session) == 1
+                session = int(session[0])
+                # find run id
+                run = int(fname.name.split('-')[0])
 
-            # sanity check
-            assert sorted(list(psds_alpha)) == sorted(list(psds_delta)) \
-                == ['non-regulation', 'regulation']
+                # alpha
+                kwargs['fmin'], kwargs['fmax'] = 8., 13.
+                psds_alpha, _ = _compute_psd(raw, method, **kwargs)
+                # delta
+                kwargs['fmin'], kwargs['fmax'] = 1., 4.
+                psds_delta, _ = _compute_psd(raw, method, **kwargs)
 
-            for phase in ('regulation', 'non-regulation'):
-                alpha = np.average(psds_alpha[phase], axis=(1, 2))
-                delta = np.average(psds_delta[phase], axis=(1, 2))
-                assert alpha.shape == delta.shape == (10, )
+                # sanity check
+                assert sorted(list(psds_alpha)) == sorted(list(psds_delta)) \
+                    == ['non-regulation', 'regulation']
 
-                for k in range(alpha.shape[0]):
-                    data.append((participant, session, run, phase, k+1,
-                                 alpha[k], delta[k]))
+                for phase in ('regulation', 'non-regulation'):
+                    alpha = np.average(psds_alpha[phase], axis=(1, 2))
+                    delta = np.average(psds_delta[phase], axis=(1, 2))
+                    # sanity check
+                    assert alpha.shape == delta.shape == (10, )
+
+                    for k in range(alpha.shape[0]):
+                        data.append((participant, session, run, phase, k+1,
+                                     alpha[k], delta[k]))
+            except:
+                print (f'Skipping {fname}..')
 
     df = pd.DataFrame(data, columns=['participant', 'session', 'run', 'phase',
                                      'idx', 'alpha', 'delta'])
