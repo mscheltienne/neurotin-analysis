@@ -12,7 +12,7 @@ def load_model(folder, participant, session, model_idx='auto'):
     session = _check_session(session)
     model_idx = _check_model_idx(model_idx)
 
-    session_dir = folder/'Participants'/participant_folder/f'Session {session}'
+    session_dir = folder/participant_folder/f'Session {session}'
 
     if model_idx == 'auto':
         # read_logs
