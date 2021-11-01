@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import mne
 import numpy as np
 from autoreject import AutoReject, get_rejection_threshold
@@ -175,3 +177,29 @@ def repair_epochs(epochs, thresh_method='random_search'):
 
     ar.fit(epochs)
     return ar.transform(epochs)
+
+
+def list_raw_fif(directory, exclude=[]):
+    """
+    List all raw fif files in directory and its subdirectories.
+
+    Parameters
+    ----------
+    directory : str | Path
+        Path to the directory.
+    exclude : list | tuple
+        List of files to exclude.
+
+    Returns
+    -------
+    fifs : list
+        Found raw fif files.
+    """
+    directory = Path(directory)
+    fifs = list()
+    for elt in directory.iterdir():
+        if elt.is_dir():
+            fifs.extend(list_raw_fif(elt))
+        elif elt.name.endswith("-raw.fif") and elt not in exclude:
+            fifs.append(elt)
+    return fifs

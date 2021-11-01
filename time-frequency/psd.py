@@ -1,8 +1,12 @@
+import re
+
 import mne
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from mne.time_frequency import psd_welch, psd_multitaper
 
-from utils import make_epochs
+from utils import make_epochs, list_raw_fif
 
 
 def _compute_psd(raw, method='welch', **kwargs):
@@ -37,25 +41,63 @@ def _check_method(method):
     return method
 
 
-def compute_alpha_psd(raw, method='welch', **kwargs):
-    """Compute the alpha band PSD."""
-    kwargs['fmin'] = 8.
-    kwargs['fmax'] = 13.
-    psds, _ = _compute_psd(raw, method, **kwargs)
-    psds_average = dict()
-    for phase in psds:
-        psds_average[phase] = np.average(psds[phase], axis=(1, 2))
+def compute_average_psd(folder, participants, method='welch', **kwargs):
+    """Compute the average channel/bin PSD for the given participants."""
+    folder = _check_folder(folder)
+    participants = _check_participants(participants)
 
-    return psds_average
+    data = list()
+    for participant in participants:
+        fnames = list_raw_fif(folder/str(participant).zfill(3))
+        for fname in fnames:
+            raw = mne.io.read_raw_fif(fname, preload=True)
+
+            # find session id
+            pattern = re.compile(r'Session (\d{1,2})')
+            session = re.findall(pattern, str(fname))
+            assert len(session == 1)
+            session = int(session[0])
+            # find run id
+            run = int(fname.name.split('-')[0])
+
+            # alpha
+            kwargs['fmin'], kwargs['fmax'] = 8., 13.
+            psds_alpha, _ = _compute_psd(raw, method, **kwargs)
+            # delta
+            kwargs['fmin'], kwargs['fmax'] = 1., 4.
+            psds_delta, _ = _compute_psd(raw, method, **kwargs)
+
+            # sanity check
+            assert sorted(list(psds_alpha)) == sorted(list(psds_delta)) \
+                == ['non-regulation', 'regulation']
+
+            for phase in ('regulation', 'non-regulation'):
+                alpha = np.average(psds_alpha[phase], axis=(1, 2))
+                delta = np.average(psds_delta[phase], axis=(1, 2))
+                assert alpha.shape == delta.shape == (10, )
+
+                for k in range(alpha.shape[0]):
+                    data.append((participant, session, run, phase, k+1,
+                                 alpha[k], delta[k]))
+
+    df = pd.DataFrame(data, columns=['participant', 'session', 'run', 'phase',
+                                     'idx', 'alpha', 'delta'])
+
+    return df
 
 
-def compute_delta_psd(raw, method='welch', **kwargs):
-    """Compute the delta band PSD."""
-    kwargs['fmin'] = 1.
-    kwargs['fmax'] = 4.
-    psds, _ = _compute_psd(raw, method, **kwargs)
-    psds_average = dict()
-    for phase in psds:
-        psds_average[phase] = np.average(psds[phase], axis=(1, 2))
+def _check_folder(folder):
+    """Check argument folder."""
+    folder = Path(folder)
+    assert folder.exists()
+    return folder
 
-    return psds_average
+
+def _check_participants(participants):
+    """Check argument participants."""
+    if isinstance(participants, (int, float)):
+        participants = [int(participants)]
+    else:
+        participants = [int(participant) for participant in participants]
+    assert all(50 <= participant <= 150 for participant in participants)
+    return participants
