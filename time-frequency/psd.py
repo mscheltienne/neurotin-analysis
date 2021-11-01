@@ -45,7 +45,32 @@ def _check_method(method):
 
 
 def compute_average_psd(folder, participants, method='welch', **kwargs):
-    """Compute the average channel/bin PSD for the given participants."""
+    """
+    Compute the average channel/bin PSD for the given participants.
+
+    Parameters
+    ----------
+    folder : str | Path
+        Path to the folder containing preprocessed files.
+    participants : int | list of int
+        Participant ID or list of participant IDs to analyze.
+    method : str
+        Either 'welch' for psd_welch or 'multitaper' for psd_multitaper.
+    **kwargs : dict
+        kwargs are passed to MNE PSD function.
+
+    Returns
+    -------
+    df : DataFrame
+        PSD in alpha and delta band averaged by bin and channels. Columns:
+            participant : int - Participant ID
+            session : int - Session ID (1 to 15)
+            run : int - Run ID
+            phase : str - 'regulation' or 'non-regulation'
+            idx : ID of the phase within the run (1 to 10)
+            alpha : float - Averaged alpha PSD.
+            delta : float - Averaged delta PSD.
+    """
     folder = _check_folder(folder)
     participants = _check_participants(participants)
 
@@ -94,6 +119,11 @@ def compute_average_psd(folder, participants, method='welch', **kwargs):
                                      'idx', 'alpha', 'delta'])
 
     return df
+
+
+def plot_average_psd(df):
+    """Plot average PSD from dataframe computed with compute_average_psd()."""
+    pass
 
 
 def _check_folder(folder):
