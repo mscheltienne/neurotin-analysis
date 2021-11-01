@@ -27,11 +27,13 @@ EVENTS_DURATION_MAPPING = {
     5: 16,
     6: 8,
 }
+FIRST_REST_PHASE_EXT = 7  # extension of the first rest phase in seconds.
 
 
 def make_fixed_length_epochs(raw, duration=1., overlap=0.):
     """
-    Create fixed length epochs for neurofeedback runs.
+    Create fixed length epochs for neurofeedback runs and aggregate epochs
+    together in 2 categories: regulation and non-regulation.
 
     Parameters
     ----------
@@ -47,9 +49,7 @@ def make_fixed_length_epochs(raw, duration=1., overlap=0.):
     epochs : Epochs
     """
     # load events
-    events = mne.find_events(raw, stim_channel='TRIGGER')
-    unique_events = set(ev[2] for ev in events)
-    event_id = {EVENTS_MAPPING[value]: value for value in unique_events}
+    events, event_id = _load_events(raw)
 
     # add new stim channel
     raw = raw.copy()
@@ -62,7 +62,7 @@ def make_fixed_length_epochs(raw, duration=1., overlap=0.):
         start = event[0] / raw.info['sfreq']
         stop = start + EVENTS_DURATION_MAPPING[event[2]]
         if k == 0:
-            stop += 7  # first rest phase extension
+            stop += FIRST_REST_PHASE_EXT  # first rest phase extension
         epoch_events = mne.make_fixed_length_events(
             raw, id=int(event[2]), start=start, stop=stop,
             duration=duration, first_samp=False, overlap=overlap)
@@ -75,6 +75,54 @@ def make_fixed_length_epochs(raw, duration=1., overlap=0.):
                         preload=True, reject=None, flat=None)
 
     return epochs
+
+
+def make_epochs(raw):
+    """
+    Create epochs for regulation and non-regulation events.
+    Regulation epochs last 16 seconds.
+    Non-regulation epochs last 8 seconds. The first non-regulation epoch is
+    cropped on its last 8 seconds.
+
+    Parameters
+    ----------
+    raw : Raw
+        Preprocessed raw instance.
+
+    Returns
+    -------
+    epochs : dict of Epochs
+        Epochs for 'regulation' and for 'non-regulation'.
+    """
+    # load events
+    events, event_id = _load_events(raw)
+
+    # change event sample of the first non-regulation phase
+    events[0, 0] += FIRST_REST_PHASE_EXT * raw.info['sfreq']
+
+    # create epochs
+    epochs = dict()
+    for ev, idx in event_id.items():
+        epochs[ev] = mne.Epochs(raw, events=events, event_id={ev: idx},
+                                tmin=0., tmax=EVENTS_DURATION_MAPPING[idx],
+                                baseline=None, picks='eeg', preload=True,
+                                reject=None, flat=None)
+
+    return epochs
+
+
+def _load_events(raw):
+    """
+    Load events from raw instance and check if it is an online run.
+    """
+    events = mne.find_events(raw, stim_channel='TRIGGER')
+    assert events.shape == (20, 3)
+    unique_events = set(ev[2] for ev in events)
+    assert unique_events == set((EVENTS['regulation'],
+                                 EVENTS['non-regulation']))
+    event_id = {EVENTS_MAPPING[value]: value for value in unique_events}
+
+    return events, event_id
 
 
 def reject_epochs(epochs, reject=None):
