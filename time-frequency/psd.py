@@ -17,7 +17,8 @@ def _compute_psd(raw, method='welch', **kwargs):
         for phase in epochs:
             psds[phase], freqs[phase] = psd_welch(epochs[phase])
     elif method == 'multitaper':
-        psds[phase], freqs[phase] = psd_multitaper(epochs[phase])
+        for phase in epochs:
+            psds[phase], freqs[phase] = psd_multitaper(epochs[phase])
 
     return psds, freqs
 
