@@ -5,6 +5,7 @@ import mne
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib import pyplot as plt
 from mne.time_frequency import psd_welch, psd_multitaper
 
 from utils import make_epochs, list_raw_fif
@@ -22,8 +23,12 @@ def _compute_psd(raw, method='welch', **kwargs):
 
     # select all channels
     if 'picks' not in kwargs:
-        info = epochs['regulation'].info
-        kwargs['picks'] = mne.pick_types(info, eeg=True, exclude=[])
+        picks_reg = mne.pick_types(epochs['regulation'].info,
+                                   eeg=True, exclude=[])
+        picks_rest = mne.pick_types(epochs['non-regulation'].info,
+                                    eeg=True, exclude=[])
+        assert (picks_reg == picks_rest).all()  # sanity-check
+        kwargs['picks'] = picks_reg
 
     psds, freqs = dict(), dict()
     if method == 'welch':
@@ -121,9 +126,30 @@ def compute_average_psd(folder, participants, method='welch', **kwargs):
     return df
 
 
-def plot_average_psd(df):
-    """Plot average PSD from dataframe computed with compute_average_psd()."""
-    pass
+def plot_average_psd(df, participant):
+    """Plot average PSD from dataframe computed with compute_average_psd()
+    for a given participant."""
+    # create figure
+    f, ax = plt.subplots(1, 2, figsize=(10, 5))
+    f.suptitle(f'Participant {participant}', fontsize=16)
+    ax[0].set_title('alpha-band PSD')
+    ax[1].set_title('delta-band PSD')
+
+    # extract information
+    df_ = df[df['participant'] == participant]
+
+    # create plots
+    sns.boxplot(x='session', y='alpha', hue='phase',
+                data=df_, ax=ax[0])
+    sns.boxplot(x='session', y='delta', hue='phase',
+                data=df_, ax=ax[1])
+
+    # Set x-ticks
+    ax[0].set_xticks(range(1, 16, 1))
+    ax[1].set_xticks(range(1, 16, 1))
+    # Set x-label
+    ax[0].set_xlabel('Session ID')
+    ax[1].set_xlabel('Session ID')
 
 
 def _check_folder(folder):
