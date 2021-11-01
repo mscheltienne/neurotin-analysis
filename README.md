@@ -34,6 +34,11 @@ session:
 
 `logs` contains scripts to process and analyze the 4 logging `.csv` files.
 
+## model
+
+`model` contains scripts to analyze the models used in the neurofeedback
+training.
+
 ## preprocessing
 
 `preprocessing` contains scripts to clean the raw data and to fill missing
@@ -53,8 +58,12 @@ information. The automatic pipeline does:
 It can be called via command-line with `python pipeline.py`. Help for the
 arguments can be obtained with the `--help` flag.
 
-## TODO
+## time-frequency
 
-- [ ] Evamed database analysis
-- [ ] Sensor Space time-frequency analysis
-- [ ] Source space analysis with `fsaverage` template MRI
+`time-frequency` contains scripts for sensor-level time-frequency analysis,
+e.g. PSD computation using welch method or multitapers.
+
+## evamed
+
+`evamed` contains scsripts to parse and analyze the evamed questionnaires.
+The questionnaires are provided as an exported compact .csv file.
