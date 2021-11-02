@@ -27,7 +27,7 @@ def _compute_psd(raw, method='welch', **kwargs):
                                    eeg=True, exclude=[])
         picks_rest = mne.pick_types(epochs['non-regulation'].info,
                                     eeg=True, exclude=[])
-        assert (picks_reg == picks_rest).all()  # sanity-check
+        assert (picks_reg == picks_rest).all()  # sanity check
         kwargs['picks'] = picks_reg
 
     psds, freqs = dict(), dict()
@@ -49,9 +49,9 @@ def _check_method(method):
     return method
 
 
-def compute_average_psd(folder, participants, method='welch', **kwargs):
+def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
     """
-    Compute the average channel/bin PSD for the given participants.
+    Compute the PSD and average by frequency bin for the given participants.
 
     Parameters
     ----------
@@ -79,7 +79,7 @@ def compute_average_psd(folder, participants, method='welch', **kwargs):
     folder = _check_folder(folder)
     participants = _check_participants(participants)
 
-    data = list()
+    data = dict()
     for participant in participants:
         fnames = list_raw_fif(folder/str(participant).zfill(3))
         for fname in fnames:
@@ -108,48 +108,54 @@ def compute_average_psd(folder, participants, method='welch', **kwargs):
                 assert sorted(list(psds_alpha)) == sorted(list(psds_delta)) \
                     == ['non-regulation', 'regulation']
 
-                for phase in ('regulation', 'non-regulation'):
-                    alpha = np.average(psds_alpha[phase], axis=(1, 2))
-                    delta = np.average(psds_delta[phase], axis=(1, 2))
-                    # sanity check
-                    assert alpha.shape == delta.shape == (10, )
+                # find ch_names
+                ch_names = raw.pick_types(eeg=True, exclude=[]).ch_names
+                assert len(ch_names) == 64  # sanity check
 
-                    for k in range(alpha.shape[0]):
-                        data.append((participant, session, run, phase, k+1,
-                                     alpha[k], delta[k]))
+                for phase in ('regulation', 'non-regulation'):
+                    alpha = np.average(psds_alpha[phase], axis=2)
+                    delta = np.average(psds_delta[phase], axis=2)
+                    # sanity check
+                    assert alpha.shape == delta.shape == (10, 64)
+
+                    _add_data_to_dict(data, participant, session, run, phase,
+                                      alpha, delta, ch_names)
             except:
                 print (f'Skipping {fname}..')
 
-    df = pd.DataFrame(data, columns=['participant', 'session', 'run', 'phase',
-                                     'idx', 'alpha', 'delta'])
+    df = pd.DataFrame.from_dict(data, orient='columns')
 
     return df
 
 
-def plot_average_psd(df, participant):
-    """Plot average PSD from dataframe computed with compute_average_psd()
-    for a given participant."""
-    # create figure
-    f, ax = plt.subplots(1, 2, figsize=(10, 5))
-    f.suptitle(f'Participant {participant}', fontsize=16)
-    ax[0].set_title('alpha-band PSD')
-    ax[1].set_title('delta-band PSD')
+def _add_data_to_dict(data, participant, session, run, phase, alpha, delta,
+                      ch_names):
+    """Add PSD to data dictionary."""
+    keys = ['participant', 'session', 'run', 'phase', 'idx'] + \
+           [f'alpha_{ch}' for ch in ch_names] + \
+           [f'delta_{ch}' for ch in ch_names]
 
-    # extract information
-    df_ = df[df['participant'] == participant]
+    # init
+    for key in keys:
+        if key not in data:
+            data[key] = list()
 
-    # create plots
-    sns.boxplot(x='session', y='alpha', hue='phase',
-                data=df_, ax=ax[0])
-    sns.boxplot(x='session', y='delta', hue='phase',
-                data=df_, ax=ax[1])
+    # fill data
+    for k in range(alpha.shape[0]):
+        data['participant'].append(participant)
+        data['session'].append(session)
+        data['run'].append(run)
+        data['phase'].append(phase)
+        data['idx'].append(k+1)  # idx of the phase within the run
 
-    # Set x-ticks
-    ax[0].set_xticks(range(1, 16, 1))
-    ax[1].set_xticks(range(1, 16, 1))
-    # Set x-label
-    ax[0].set_xlabel('Session ID')
-    ax[1].set_xlabel('Session ID')
+        # channel psd
+        for j in range(alpha.shape[1]):
+            data[f'alpha_{ch_names[j]}'].append(alpha[k, j])
+            data[f'delta_{ch_names[j]}'].append(delta[k, j])
+
+    # sanity check
+    entries = len(data['participant'])
+    assert all(len(data[key]) == entries for key in keys)
 
 
 def _check_folder(folder):
