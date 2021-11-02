@@ -74,8 +74,8 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
             run : int - Run ID
             phase : str - 'regulation' or 'non-regulation'
             idx : ID of the phase within the run (1 to 10)
-            alpha : float - Averaged alpha PSD.
-            delta : float - Averaged delta PSD.
+            alpha_ch : float - Averaged alpha PSD (1 per channel).
+            delta_ch : float - Averaged delta PSD (1 per channel).
     """
     folder = _check_folder(folder)
     participants = _check_participants(participants)
