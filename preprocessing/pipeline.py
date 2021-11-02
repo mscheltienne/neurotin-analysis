@@ -85,7 +85,7 @@ def exclude_EOG_ECG_with_ICA(raw, semiauto=False):
     eog_idx, eog_scores = ica.find_bads_eog(raw, threshold=0.6,
                                             measure='correlation')
     ecg_idx, ecg_scores = ica.find_bads_ecg(raw, method='correlation',
-                                            threshold=6.8, measure='zscore')
+                                            threshold=6.6, measure='zscore')
     ica.exclude = eog_idx + ecg_idx
     try:
         assert len(eog_idx) <= 2, 'More than 2 EOG component detected.'
