@@ -11,7 +11,7 @@ from filters import apply_filter_eeg
 if '0.3.1' in pyprep.__version__:
     assert pyprep.__version__.split('0.3.1')[1] != ''
 else:
-    assert 4 <= pyprep.__version__.split('.')[1]
+    assert 4 <= int(pyprep.__version__.split('.')[1])
 
 
 def _prepapre_raw(raw):
