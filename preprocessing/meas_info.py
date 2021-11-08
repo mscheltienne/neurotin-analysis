@@ -8,6 +8,36 @@ RECORDING_TYPE_MAPPING = {
     'Online': 'OnRun'}
 
 
+def parse_subject_info(fname):
+    """
+    Parse the subject_info file and return the subject ID and sex.
+
+    Parameters
+    ----------
+    fname : str | Path
+        Path to the subject info file.
+
+    Returns
+    -------
+    dict
+        key : int
+            ID of the subject.
+        value : tuple (sex, birthday)
+            sex : int
+                Sex of the subject. 1: Male - 2: Female.
+            birthday : tuple
+                3-length tuple (year, month, day)
+    """
+    fname = Path(fname)
+    assert fname.exists()
+    with open(fname, 'r') as file:
+        lines = file.readlines()
+    lines = [line.strip().split(';') for line in lines if len(line) > 0]
+    lines = [[eval(l.strip()) for l in line]
+             for line in lines if len(line) == 3]
+    return {line[0]: (line[1], line[2]) for line in lines}
+
+
 def fill_info(raw, subject, sex, birthday):
     """
     Fill the measurement info with:
