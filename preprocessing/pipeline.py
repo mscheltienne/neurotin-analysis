@@ -34,6 +34,10 @@ def prepare_raw(raw):
     raw : Raw
         Raw instance (modified in-place).
     """
+    # Check sampling frequency
+    if raw.info['sfreq'] != 512:
+        raw.resample(sfreq=512)
+
     # Check events
     recording_type = Path(raw.filenames[0]).stem.split('-')[1]
     check_events(raw, recording_type)
@@ -116,16 +120,16 @@ def _check_paths(fname, input_dir_fif, output_dir_fif, output_dir_set):
 
     # check existance
     assert fname.exists()
-    os.makedirs(output_dir_fif, exist_ok=True)
-    os.makedirs(output_dir_set, exist_ok=True)
     # this will fail if fname is not in input_dir_fif
     relative_fname = fname.relative_to(input_dir_fif)
 
     # create output fname
     output_fname_fif = output_dir_fif / relative_fname
-    output_fname_set = output_dir_fif / relative_fname.with_suffix('.set')
+    output_fname_set = output_dir_set / relative_fname.with_suffix('.set')
+    os.makedirs(output_fname_fif.parent, exist_ok=True)
+    os.makedirs(output_fname_set.parent, exist_ok=True)
 
-    return fname, output_fname_fif, output_fname_set
+    return fname, output_fname_fif, str(output_fname_set)
 
 
 def main(input_dir_fif, output_dir_fif, output_dir_set, processes=1,
