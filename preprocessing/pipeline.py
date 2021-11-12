@@ -95,10 +95,10 @@ def pipeline(fname, input_dir_fif, output_dir_fif, output_dir_set):
         # preprocess
         raw = read_raw_fif(fname)
         raw, bads = prepare_raw(raw)
+        raw.apply_proj()
 
         # export
         raw.save(output_fname_fif, fmt="double", overwrite=True)
-        raw.apply_proj()  # export doesn't apply the CAR proj.
         raw.export(output_fname_set, fmt='eeglab')
 
         return (True, str(fname), bads)
