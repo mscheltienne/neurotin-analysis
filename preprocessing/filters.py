@@ -1,6 +1,6 @@
 import numpy as np
 
-from checks import _check_type
+from utils import _check_type
 
 
 def _check_bandpass(bandpass):

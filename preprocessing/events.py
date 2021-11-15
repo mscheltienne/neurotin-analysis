@@ -4,7 +4,7 @@ import mne
 import numpy as np
 from bsl.utils import find_event_channel
 
-from checks import _check_value
+from utils import _check_value
 
 
 EVENTS = {
@@ -187,7 +187,7 @@ def _check_events_neurofeedback(raw, events):
 
 def replace_event_value(raw, old_value, new_value):
     """
-    Replace the an event value on the trigger channel.
+    Replace an event value on the trigger channel.
 
     Parameters
     ----------

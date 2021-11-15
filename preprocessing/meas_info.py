@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import datetime, timezone
 
-from checks import _check_type
+from utils import _check_type
 
 
 RECORDING_TYPE_MAPPING = {

@@ -10,7 +10,8 @@ import mne
 from events import check_events
 from bad_channels import PREP_bads_suggestion
 from filters import apply_filter_eeg, apply_filter_aux
-from utils import read_raw_fif, read_exclusion, write_exclusion, list_raw_fif
+from utils import (read_raw_fif, read_exclusion, write_exclusion,
+                   raw_fif_selection, _check_path, _check_n_jobs)
 
 
 mne.set_log_level('ERROR')
@@ -40,7 +41,7 @@ def prepare_raw(raw):
 
     # Check events
     recording_type = Path(raw.filenames[0]).stem.split('-')[1]
-    check_events(raw, recording_type)
+    check_events(raw, recording_type)  # raise if there is a problem
 
     # Filter AUX
     apply_filter_aux(raw, bandpass=(1., 45.), notch=True)
@@ -49,7 +50,7 @@ def prepare_raw(raw):
     bads = PREP_bads_suggestion(raw)  # operates on a copy
     raw.info['bads'] = bads
 
-    # Reference and filter EEG
+    # Reference (projector) and filter EEG
     raw.add_reference_channels(ref_channels='CPz')
     raw.set_montage('standard_1020')  # only after adding ref channel
     apply_filter_eeg(raw, bandpass=(1., 45.), notch=False, car=True)
@@ -86,8 +87,15 @@ def pipeline(fname, input_dir_fif, output_dir_fif):
     print (f'Preprocessing: {fname}')
     try:
         # checks paths
-        fname, output_fname = \
-            _check_paths(fname, input_dir_fif, output_dir_fif)
+        fname = _check_path(fname, 'fname', must_exist=True)
+        input_dir_fif = _check_path(input_dir_fif, 'input_dir_fif',
+                                    must_exist=True)
+        output_dir_fif = _check_path(output_dir_fif, 'output_dir_fif',
+                                     must_exist=True)
+
+        # create output file name
+        output_fname = _create_output_fname(fname, input_dir_fif,
+                                            output_dir_fif)
 
         # preprocess
         raw = read_raw_fif(fname)
@@ -97,37 +105,29 @@ def pipeline(fname, input_dir_fif, output_dir_fif):
         # export
         raw.save(output_fname, fmt="double", overwrite=True)
 
-        return (True, fname, bads)
+        return (True, str(fname), bads)
 
     except Exception:
         print ('----------------------------------------------')
-        print (f'FAILED: {fname} -> Skip.')
+        print ('FAILED: %s -> Skip.' % fname)
         print(traceback.format_exc())
         print ('----------------------------------------------')
-        return (False, fname, None)
+        return (False, str(fname), None)
 
 
-def _check_paths(fname, input_dir_fif, output_dir_fif):
-    """Checks that fname is valid, and create the output_fname and from fname
-    and the output_dir."""
-    fname = Path(fname)
-    input_dir_fif = Path(input_dir_fif)
-    output_dir_fif = Path(output_dir_fif)
-
-    # check existance
-    assert fname.exists()
+def _create_output_fname(fname, input_dir_fif, output_dir_fif):
+    """Creates the output file name based on the relative path between fname
+    and input_dir_fif."""
     # this will fail if fname is not in input_dir_fif
     relative_fname = fname.relative_to(input_dir_fif)
-
     # create output fname
     output_fname = output_dir_fif / relative_fname
     os.makedirs(output_fname.parent, exist_ok=True)
+    return output_fname
 
-    return str(fname), str(output_fname)
 
-
-def main(input_dir_fif, output_dir_fif, processes=1, subject=None,
-         session=None, fname=None):
+def main(input_dir_fif, output_dir_fif, n_jobs=1, subject=None, session=None,
+         fname=None):
     """
     Main preprocessing pipeline.
 
@@ -137,8 +137,9 @@ def main(input_dir_fif, output_dir_fif, processes=1, subject=None,
         Path to the folder containing the FIF files to preprocess.
     output_dir_fif : str | Path
         Path to the folder containing the FIF files preprocessed.
-    processes : int
-        Number of parallel processes used if semiauto is False.
+    n_jobs : int
+        Number of parallel jobs used. Must not exceed the core count. Can be -1
+        to use all cores.
     subject : int | None
         Restricts file selection to this subject.
     session : int | None
@@ -146,92 +147,37 @@ def main(input_dir_fif, output_dir_fif, processes=1, subject=None,
     fname : str | Path | None
         Restrict file selection to this file (must be inside input_dir_fif).
     """
-    input_dir_fif, output_dir_fif = \
-        _check_folders(input_dir_fif, output_dir_fif)
-    processes = _check_processes(processes)
-    subject = _check_subject(subject)
-    session = _check_session(session)
-    fname = _check_fname(fname, input_dir_fif)
+    # check arguments
+    input_dir_fif = _check_path(input_dir_fif, 'input_dir_fif',
+                                must_exist=True)
+    output_dir_fif = _check_path(output_dir_fif, 'output_dir_fif')
+    n_jobs = _check_n_jobs(n_jobs)
+
+    # create output folder if needed
+    os.makedirs(output_dir_fif, exist_ok=True)
 
     # read excluded files
     exclusion_file = output_dir_fif / 'exclusion.txt'
     exclude = read_exclusion(exclusion_file)
 
     # list files to preprocess
-    fifs_in = [f for f in list_raw_fif(input_dir_fif, exclude=exclude)
-               if not (output_dir_fif/f.relative_to(input_dir_fif)).exists()]
-    subjects = [int(file.parent.parent.parent.name) for file in fifs_in]
-    sessions = [int(file.parent.parent.name.split()[1]) for file in fifs_in]
-
-    # filter inputs
-    if subject is not None:
-        sessions = [session_id for k, session_id in enumerate(sessions)
-                    if subjects[k] == subject]
-        fifs_in = [file for k, file in enumerate(fifs_in)
-                    if subjects[k] == subject]
-    if session is not None:
-        fifs_in = [file for k, file in enumerate(fifs_in)
-                    if sessions[k] == session]
-    if fname is not None:
-        assert fname in fifs_in
-        fifs_in = [fname]
+    fifs_in = raw_fif_selection(input_dir_fif, output_dir_fif, exclude,
+                                subject=subject, session=session, fname=fname)
 
     # create input pool for pipeline based on provided subject info
     input_pool = [(fname, input_dir_fif, output_dir_fif)
                   for fname in fifs_in]
-    assert 0 < len(input_pool)
+    assert 0 < len(input_pool)  # sanity-check
 
-    with mp.Pool(processes=processes) as p:
+    with mp.Pool(processes=n_jobs) as p:
         results = p.starmap(pipeline, input_pool)
 
     with open(output_dir_fif/'bads.pcl', mode='wb') as f:
-        pickle.dump(results, f, -1)
+        pickle.dump([(file, bads) for success, file, bads in results
+                     if success], f, -1)
 
     exclude = [file for success, file, _ in results if not success]
     write_exclusion(exclusion_file, exclude)
-
-
-def _check_folders(input_dir_fif, output_dir_fif):
-    """Checks that the folders exist and are pathlib.Path instances."""
-    input_dir_fif = Path(input_dir_fif)
-    output_dir_fif = Path(output_dir_fif)
-    assert input_dir_fif.exists(), 'The input folder does not exists.'
-    os.makedirs(output_dir_fif, exist_ok=True)
-    return input_dir_fif, output_dir_fif
-
-
-def _check_processes(processes):
-    """Checks that the number of processes is valid."""
-    processes = int(processes)
-    assert 0 < processes, 'processes should be a positive integer'
-    return processes
-
-
-def _check_subject(subject):
-    """Checks that the subject ID is valid."""
-    if subject is not None:
-        subject = int(subject)
-        assert 0 < subject, 'subject should be a positive integer'
-    return subject
-
-
-def _check_session(session):
-    """Checks that the session ID is valid."""
-    if session is not None:
-        session = int(session)
-        assert 1 <= session <= 15, 'session should be included in (1, 15)'
-    return session
-
-
-def _check_fname(fname, folder_in):
-    """Checks that the fname is valid."""
-    if fname is not None:
-        fname = Path(fname)
-        try:
-            fname.relative_to(folder_in)
-        except ValueError:
-            raise AssertionError('fname not in folder_in')
-    return fname
 
 
 if __name__ == '__main__':
@@ -245,8 +191,8 @@ if __name__ == '__main__':
         'output_dir_fif', type=str,
         help='folder containing FIF files preprocessed.')
     parser.add_argument(
-        '--processes', type=int, metavar='int',
-        help='number of parallel processes.', default=1)
+        '--n_jobs', type=int, metavar='int',
+        help='number of parallel jobs.', default=1)
     parser.add_argument(
         '--subject', type=int, metavar='int',
         help='restrict to files with this subject ID.', default=None)
@@ -259,5 +205,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    main(args.input_dir_fif, args.output_dir_fif, args.processes, args.subject,
+    main(args.input_dir_fif, args.output_dir_fif, args.n_jobs, args.subject,
          args.session, args.fname)

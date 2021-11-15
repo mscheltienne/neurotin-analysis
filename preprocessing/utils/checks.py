@@ -3,6 +3,7 @@
 import os
 import operator
 from pathlib import Path
+import multiprocessing
 
 import numpy as np
 
@@ -138,3 +139,22 @@ def _check_value(item, allowed_values, item_name, extra=''):
             options += f', and {repr(allowed_values[-1])}'
         raise ValueError(msg.format(item_name=item_name, options=options,
                                     item=item, extra=extra))
+
+
+def _check_path(path, item_name=None, *, must_exist=False):
+    """Check if path is a valid and return it as pathlib.Path"""
+    _check_type(path, ('path-like', ), item_name)
+    path = Path(path)
+    if must_exist:
+        assert path.exists(), 'The path does not exists.'
+    return path
+
+
+def _check_n_jobs(n_jobs):
+    """Checks that the number of jobs is valid."""
+    _check_type(n_jobs, ('int', ), 'n_jobs')
+    n_cores = multiprocessing.cpu_count()
+    if n_jobs == -1:
+        n_jobs = n_cores
+    _check_value(n_jobs, tuple(range(n_cores+1)), 'n_jobs')
+    return n_jobs
