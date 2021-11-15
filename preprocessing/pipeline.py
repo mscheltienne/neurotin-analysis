@@ -84,7 +84,7 @@ def pipeline(fname, input_dir_fif, output_dir_fif):
     bads : list
         List of interpolated bad channels.
     """
-    print (f'Preprocessing: {fname}')
+    print ('Preprocessing: %s' % fname)
     try:
         # checks paths
         fname = _check_path(fname, 'fname', must_exist=True)
