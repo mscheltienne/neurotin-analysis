@@ -1,6 +1,8 @@
 from pathlib import Path
 from datetime import datetime, timezone
 
+from checks import _check_type
+
 
 RECORDING_TYPE_MAPPING = {
     'Calibration': 'Calib',
@@ -97,13 +99,8 @@ def _add_device_info(raw):
 
 def _add_experimenter_info(raw, experimenter='Mathieu Scheltienne'):
     """Add experimenter information to raw instance."""
-    raw.info['experimenter'] = _check_experimenter(experimenter)
-
-
-def _check_experimenter(experimenter):
-    """Checks that the experimenter is a string."""
-    assert isinstance(experimenter, str)
-    return experimenter
+    _check_type(experimenter, (str, ), 'experimenter')
+    raw.info['experimenter'] = experimenter
 
 
 def _add_measurement_date(raw):
@@ -161,11 +158,8 @@ def _check_subject(subject, raw):
 def _check_sex(sex):
     """Checks that sex is either 1 for Male or 2 for Female. Else returns 0 for
     unknown."""
-    try:
-        sex = int(sex)
-        assert sex in (1, 2)
-    except Exception:
-        sex = 0
+    _check_type(sex, ('int', ))
+    sex = sex if sex in (1, 2) else 0
     return sex
 
 

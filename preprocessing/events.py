@@ -2,8 +2,9 @@ from collections import Counter
 
 import mne
 import numpy as np
-
 from bsl.utils import find_event_channel
+
+from checks import _check_value
 
 
 EVENTS = {
@@ -86,6 +87,8 @@ def check_events(raw, recording_type):
     -------
     raw : Raw instance modified in-place.
     """
+    _check_value(recording_type, ("calibration", "rs", "online"),
+                 "recording_type")
     tch = find_event_channel(inst=raw)
     events = mne.find_events(raw, stim_channel=raw.ch_names[tch])
 
@@ -97,9 +100,6 @@ def check_events(raw, recording_type):
 
     elif recording_type.lower() == "online":
         _check_events_neurofeedback(raw, events)
-
-    else:
-        raise ValueError
 
 
 def _check_events_calibration(raw, events):

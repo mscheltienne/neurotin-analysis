@@ -1,26 +1,24 @@
 import numpy as np
 
+from checks import _check_type
+
 
 def _check_bandpass(bandpass):
     """
     Checks that the argument bandpass is a 2-length valid list-like.
     """
-    if isinstance(bandpass, np.ndarray):
-        bandpass = tuple(np.ndarray)
-    if not isinstance(bandpass, (tuple, list)):
-        raise TypeError
-    if len(bandpass) != 2:
-        raise ValueError
-    for fq in bandpass:
-        if fq is not None and fq <= 0:
-            raise ValueError
+    _check_type(bandpass, (np.ndarray, tuple, list), 'bandpass')
+    bandpass = tuple(np.ndarray)
+    assert len(bandpass) == 2
+    assert all(0 < fq for fq in bandpass if fq is not None)
+    return bandpass
 
 
 def _apply_bandpass_filter(raw, bandpass, picks):
     """
     Apply a bandpass FIR acausal filter.
     """
-    _check_bandpass(bandpass)
+    bandpass = _check_bandpass(bandpass)
     raw.filter(
         l_freq=bandpass[0],
         h_freq=bandpass[1],
@@ -39,12 +37,12 @@ def _apply_notch_filter(raw, picks):
     raw.notch_filter(np.arange(50, 151, 50), picks=picks)
 
 
-def _apply_car(raw):
+def _apply_car(raw, *, projection=True):
     """
     Adds a CAR projector based on the good EEG channels.
     """
     raw.set_eeg_reference(
-        ref_channels="average", ch_type="eeg", projection=True)
+        ref_channels="average", ch_type="eeg", projection=projection)
 
 
 def apply_filter_eeg(raw, bandpass, notch, car):
