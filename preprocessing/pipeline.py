@@ -60,7 +60,7 @@ def prepare_raw(raw):
     return raw, bads
 
 
-def pipeline(fname, input_dir_fif, output_dir_fif, output_dir_set):
+def pipeline(fname, input_dir_fif, output_dir_fif):
     """
     Pipeline function called on each raw file.
 
@@ -72,9 +72,6 @@ def pipeline(fname, input_dir_fif, output_dir_fif, output_dir_set):
         Path to the input raw directory (parent from fname).
     output_dir_fif : str | Path
         Path used to save raw in MNE format with the same structure as in
-        fname.
-    output_dir_set : str | Path
-        Path used to save raw in EEGLAB format with the same structure as in
         fname.
 
     Returns
@@ -89,8 +86,8 @@ def pipeline(fname, input_dir_fif, output_dir_fif, output_dir_set):
     print (f'Preprocessing: {fname}')
     try:
         # checks paths
-        fname, output_fname_fif, output_fname_set = \
-            _check_paths(fname, input_dir_fif, output_dir_fif, output_dir_set)
+        fname, output_fname = \
+            _check_paths(fname, input_dir_fif, output_dir_fif)
 
         # preprocess
         raw = read_raw_fif(fname)
@@ -98,26 +95,24 @@ def pipeline(fname, input_dir_fif, output_dir_fif, output_dir_set):
         raw.apply_proj()
 
         # export
-        raw.save(output_fname_fif, fmt="double", overwrite=True)
-        raw.export(output_fname_set, fmt='eeglab')
+        raw.save(output_fname, fmt="double", overwrite=True)
 
-        return (True, str(fname), bads)
+        return (True, fname, bads)
 
     except Exception:
         print ('----------------------------------------------')
         print (f'FAILED: {fname} -> Skip.')
         print(traceback.format_exc())
         print ('----------------------------------------------')
-        return (False, str(fname), None)
+        return (False, fname, None)
 
 
-def _check_paths(fname, input_dir_fif, output_dir_fif, output_dir_set):
-    """Checks that fname is valid, and create the output_fname_fif and
-    output_fname_set from fname and the output_dir."""
+def _check_paths(fname, input_dir_fif, output_dir_fif):
+    """Checks that fname is valid, and create the output_fname and from fname
+    and the output_dir."""
     fname = Path(fname)
     input_dir_fif = Path(input_dir_fif)
     output_dir_fif = Path(output_dir_fif)
-    output_dir_set = Path(output_dir_set)
 
     # check existance
     assert fname.exists()
@@ -125,16 +120,14 @@ def _check_paths(fname, input_dir_fif, output_dir_fif, output_dir_set):
     relative_fname = fname.relative_to(input_dir_fif)
 
     # create output fname
-    output_fname_fif = output_dir_fif / relative_fname
-    output_fname_set = output_dir_set / relative_fname.with_suffix('.set')
-    os.makedirs(output_fname_fif.parent, exist_ok=True)
-    os.makedirs(output_fname_set.parent, exist_ok=True)
+    output_fname = output_dir_fif / relative_fname
+    os.makedirs(output_fname.parent, exist_ok=True)
 
-    return fname, output_fname_fif, str(output_fname_set)
+    return str(fname), str(output_fname)
 
 
-def main(input_dir_fif, output_dir_fif, output_dir_set, processes=1,
-         subject=None, session=None, fname=None):
+def main(input_dir_fif, output_dir_fif, processes=1, subject=None,
+         session=None, fname=None):
     """
     Main preprocessing pipeline.
 
@@ -144,8 +137,6 @@ def main(input_dir_fif, output_dir_fif, output_dir_set, processes=1,
         Path to the folder containing the FIF files to preprocess.
     output_dir_fif : str | Path
         Path to the folder containing the FIF files preprocessed.
-    output_dir_set : str | Path
-        Path to the folder containing the EEGLAB files preprocessed.
     processes : int
         Number of parallel processes used if semiauto is False.
     subject : int | None
@@ -155,8 +146,8 @@ def main(input_dir_fif, output_dir_fif, output_dir_set, processes=1,
     fname : str | Path | None
         Restrict file selection to this file (must be inside input_dir_fif).
     """
-    input_dir_fif, output_dir_fif, output_dir_set = \
-        _check_folders(input_dir_fif, output_dir_fif, output_dir_set)
+    input_dir_fif, output_dir_fif = \
+        _check_folders(input_dir_fif, output_dir_fif)
     processes = _check_processes(processes)
     subject = _check_subject(subject)
     session = _check_session(session)
@@ -186,7 +177,7 @@ def main(input_dir_fif, output_dir_fif, output_dir_set, processes=1,
         fifs_in = [fname]
 
     # create input pool for pipeline based on provided subject info
-    input_pool = [(fname, input_dir_fif, output_dir_fif, output_dir_set)
+    input_pool = [(fname, input_dir_fif, output_dir_fif)
                   for fname in fifs_in]
     assert 0 < len(input_pool)
 
@@ -200,15 +191,13 @@ def main(input_dir_fif, output_dir_fif, output_dir_set, processes=1,
     write_exclusion(exclusion_file, exclude)
 
 
-def _check_folders(input_dir_fif, output_dir_fif, output_dir_set):
+def _check_folders(input_dir_fif, output_dir_fif):
     """Checks that the folders exist and are pathlib.Path instances."""
     input_dir_fif = Path(input_dir_fif)
     output_dir_fif = Path(output_dir_fif)
-    output_dir_set = Path(output_dir_set)
     assert input_dir_fif.exists(), 'The input folder does not exists.'
     os.makedirs(output_dir_fif, exist_ok=True)
-    os.makedirs(output_dir_set, exist_ok=True)
-    return input_dir_fif, output_dir_fif, output_dir_set
+    return input_dir_fif, output_dir_fif
 
 
 def _check_processes(processes):
@@ -256,9 +245,6 @@ if __name__ == '__main__':
         'output_dir_fif', type=str,
         help='folder containing FIF files preprocessed.')
     parser.add_argument(
-        'output_dir_set', type=str,
-        help='folder containing EEGLAB files preprocessed.')
-    parser.add_argument(
         '--processes', type=int, metavar='int',
         help='number of parallel processes.', default=1)
     parser.add_argument(
@@ -273,5 +259,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    main(args.input_dir_fif, args.output_dir_fif, args.output_dir_set,
-         args.processes, args.subject, args.session, args.fname)
+    main(args.input_dir_fif, args.output_dir_fif, args.processes, args.subject,
+         args.session, args.fname)
