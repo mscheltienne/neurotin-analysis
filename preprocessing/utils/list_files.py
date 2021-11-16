@@ -1,4 +1,4 @@
-from checks import _check_type, _check_path
+from .checks import _check_type, _check_path
 
 
 def list_raw_fif(directory, exclude=[]):
@@ -80,10 +80,10 @@ def raw_fif_selection(input_dir_fif, output_dir_fif, exclude, *, subject=None,
         List of file(s) selected.
     """
     # check arguments
-    input_dir_fif = _check_path(input_dir_fif, 'input_dir_fif',
+    input_dir_fif = _check_path(input_dir_fif, item_name='input_dir_fif',
                                 must_exist=True)
-    output_dir_fif = _check_path(output_dir_fif, 'output_dir_fif')
-    exclude = _check_type(exclude, (list, ), 'exclude')
+    output_dir_fif = _check_path(output_dir_fif, item_name='output_dir_fif')
+    exclude = _check_type(exclude, (list, ), item_name='exclude')
     subject = _check_subject(subject)
     session = _check_session(session)
     fname = _check_fname(fname, input_dir_fif)
@@ -112,7 +112,7 @@ def raw_fif_selection(input_dir_fif, output_dir_fif, exclude, *, subject=None,
 
 def _check_subject(subject):
     """Checks that the subject ID is valid."""
-    _check_type(subject, (None, 'int'), 'subject')
+    _check_type(subject, (None, 'int'), item_name='subject')
     if subject is not None:
         assert 0 < subject, 'subject should be a positive integer'
     return subject
@@ -120,7 +120,7 @@ def _check_subject(subject):
 
 def _check_session(session):
     """Checks that the session ID is valid."""
-    _check_type(session, (None, 'int'), 'session')
+    _check_type(session, (None, 'int'), item_name='session')
     if session is not None:
         assert 1 <= session <= 15, 'session should be included in (1, 15)'
     return session

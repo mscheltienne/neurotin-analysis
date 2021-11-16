@@ -10,8 +10,10 @@ import mne
 from _bad_channels import PREP_bads_suggestion
 from _filters import apply_filter_eeg, apply_filter_aux
 from _events import check_events, add_annotations_from_events
-from utils import (read_raw_fif, read_exclusion, write_exclusion,
-                   raw_fif_selection, _check_path, _check_n_jobs)
+from utils.read_raw_fif import read_raw_fif
+from utils.list_files import raw_fif_selection
+from utils.checks import _check_path, _check_n_jobs
+from utils.exclusion import read_exclusion, write_exclusion
 
 
 mne.set_log_level('ERROR')
@@ -88,10 +90,12 @@ def pipeline(fname, input_dir_fif, output_dir_fif):
     print ('Preprocessing: %s' % fname)
     try:
         # checks paths
-        fname = _check_path(fname, 'fname', must_exist=True)
-        input_dir_fif = _check_path(input_dir_fif, 'input_dir_fif',
+        fname = _check_path(fname, item_name='fname', must_exist=True)
+        input_dir_fif = _check_path(input_dir_fif,
+                                    item_name='input_dir_fif',
                                     must_exist=True)
-        output_dir_fif = _check_path(output_dir_fif, 'output_dir_fif',
+        output_dir_fif = _check_path(output_dir_fif,
+                                     item_name='output_dir_fif',
                                      must_exist=True)
 
         # create output file name
@@ -149,9 +153,9 @@ def main(input_dir_fif, output_dir_fif, n_jobs=1, subject=None, session=None,
         Restrict file selection to this file (must be inside input_dir_fif).
     """
     # check arguments
-    input_dir_fif = _check_path(input_dir_fif, 'input_dir_fif',
+    input_dir_fif = _check_path(input_dir_fif, item_name='input_dir_fif',
                                 must_exist=True)
-    output_dir_fif = _check_path(output_dir_fif, 'output_dir_fif')
+    output_dir_fif = _check_path(output_dir_fif, item_name='output_dir_fif')
     n_jobs = _check_n_jobs(n_jobs)
 
     # create output folder if needed

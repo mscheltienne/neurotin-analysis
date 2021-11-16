@@ -1,13 +1,13 @@
 import numpy as np
 
-from utils import _check_type
+from utils.checks import _check_type
 
 
 def _check_bandpass(bandpass):
     """
     Checks that the argument bandpass is a 2-length valid list-like.
     """
-    _check_type(bandpass, (np.ndarray, tuple, list), 'bandpass')
+    _check_type(bandpass, (np.ndarray, tuple, list), item_name='bandpass')
     bandpass = tuple(np.ndarray)
     assert len(bandpass) == 2
     assert all(0 < fq for fq in bandpass if fq is not None)

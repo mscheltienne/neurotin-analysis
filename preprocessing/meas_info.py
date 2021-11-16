@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import datetime, timezone
 
-from utils import _check_type, _check_path, _check_value
+from utils.checks import _check_type, _check_path, _check_value
 
 
 RECORDING_TYPE_MAPPING = {
@@ -30,7 +30,7 @@ def parse_subject_info(fname):
             birthday : tuple
                 3-length tuple (year, month, day)
     """
-    fname = _check_path(fname, 'fname', must_exist=True)
+    fname = _check_path(fname, item_name='fname', must_exist=True)
     with open(fname, 'r') as file:
         lines = file.readlines()
     lines = [line.strip().split(';') for line in lines if len(line) > 0]
@@ -98,7 +98,7 @@ def _add_device_info(raw):
 
 def _add_experimenter_info(raw, experimenter='Mathieu Scheltienne'):
     """Add experimenter information to raw instance."""
-    _check_type(experimenter, (str, ), 'experimenter')
+    _check_type(experimenter, (str, ), item_name='experimenter')
     raw.info['experimenter'] = experimenter
 
 
@@ -106,12 +106,13 @@ def _add_measurement_date(raw):
     """Add measurement date information to raw instance."""
     fname = Path(raw.filenames[0])
     recording_type = fname.parent.name
-    _check_value(recording_type, RECORDING_TYPE_MAPPING, 'recording_type')
+    _check_value(recording_type, RECORDING_TYPE_MAPPING,
+                 item_name='recording_type')
     recording_type = RECORDING_TYPE_MAPPING[recording_type]
     recording_run = int(fname.name.split('-')[0])
 
     logs_file = fname.parent.parent / 'logs.txt'
-    logs_file = _check_path(logs_file, 'logs_file', must_exist=True)
+    logs_file = _check_path(logs_file, item_name='logs_file', must_exist=True)
     with open(logs_file, 'r') as f:
         lines = f.readlines()
     lines = [line.split(' - ') for line in lines
@@ -161,7 +162,7 @@ def _check_subject(subject, raw):
 def _check_sex(sex):
     """Checks that sex is either 1 for Male or 2 for Female. Else returns 0 for
     unknown."""
-    _check_type(sex, ('int', ))
+    _check_type(sex, ('int', ), item_name='sex')
     sex = sex if sex in (1, 2) else 0
     return sex
 

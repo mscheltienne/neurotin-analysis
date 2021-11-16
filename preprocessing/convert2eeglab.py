@@ -8,7 +8,8 @@ import multiprocessing as mp
 
 import mne
 
-from utils import _check_path, _check_n_jobs, raw_fif_selection
+from utils.list_files import raw_fif_selection
+from utils.checks import _check_path, _check_n_jobs
 
 mne.set_log_level('ERROR')
 
@@ -38,9 +39,11 @@ def pipeline(fname, input_dir_fif, output_dir_set):
     """
     try:
         fname = _check_path(fname, 'fname', must_exist=True)
-        input_dir_fif = _check_path(input_dir_fif, 'input_dir_fif',
+        input_dir_fif = _check_path(input_dir_fif,
+                                    item_name='input_dir_fif',
                                     must_exist=True)
-        output_dir_set = _check_path(output_dir_set, 'output_dir_set',
+        output_dir_set = _check_path(output_dir_set,
+                                     item_name='output_dir_set',
                                      must_exist=True)
 
         relative_fname = fname.relative_to(input_dir_fif)
@@ -83,9 +86,9 @@ def main(input_dir_fif, output_dir_set, n_jobs=1, subject=None, session=None,
         Restrict file selection to this file (must be inside input_dir_fif).
     """
     # check arguments
-    input_dir_fif = _check_path(input_dir_fif, 'input_dir_fif',
+    input_dir_fif = _check_path(input_dir_fif, item_name='input_dir_fif',
                                 must_exist=True)
-    output_dir_set = _check_path(output_dir_set, 'output_dir_set')
+    output_dir_set = _check_path(output_dir_set, item_name='output_dir_set')
     n_jobs = _check_n_jobs(n_jobs)
 
     # create output folder if needed

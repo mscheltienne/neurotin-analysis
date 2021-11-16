@@ -4,7 +4,7 @@ import mne
 import numpy as np
 from bsl.utils import find_event_channel
 
-from utils import _check_value
+from utils.checks import _check_value
 
 
 EVENTS = {
@@ -92,7 +92,7 @@ def check_events(raw, recording_type):
         "calibration": _check_events_calibration,
         "rs": _check_events_resting_state,
         "online": _check_events_neurofeedback}
-    _check_value(recording_type, check_functions, "recording_type")
+    _check_value(recording_type, check_functions, item_name="recording_type")
     tch = find_event_channel(inst=raw)
     events = mne.find_events(raw, stim_channel=raw.ch_names[tch])
     check_functions[recording_type](raw, events)

@@ -3,8 +3,8 @@ import pyprep
 import numpy as np
 from autoreject import Ransac
 
-from events import EVENTS
-from filters import apply_filter_eeg
+from _events import EVENTS
+from _filters import apply_filter_eeg
 
 
 # Until 0.4 release, make sure to use the development version.
