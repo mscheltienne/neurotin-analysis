@@ -141,17 +141,57 @@ def _check_value(item, allowed_values, item_name, extra=''):
                                     item=item, extra=extra))
 
 
-def _check_path(path, item_name=None, *, must_exist=False):
-    """Check if path is a valid and return it as pathlib.Path"""
-    _check_type(path, ('path-like', ), item_name)
-    path = Path(path)
+def _check_path(item, item_name=None, *, must_exist=False):
+    """Check if path is a valid and return it as pathlib.Path.
+
+    Parameters
+    ----------
+    item : object
+        Item to check.
+    item_name : str | None
+        Name of the item to show inside the error message.
+    must_exist : bool
+        If True, the path must lead to an existing directory or file.
+
+    Returns
+    -------
+    item : Path
+        Provided path as a pathlib.Path object.
+
+    Raises
+    ------
+    TypeError
+        When item is not a path-like object.
+    AssertionError
+        When must_exist is set to True and the path does not lead to an
+        existing directory or file.
+    """
+    _check_type(item, ('path-like', ), item_name)
+    item = Path(item)
     if must_exist:
-        assert path.exists(), 'The path does not exists.'
-    return path
+        assert item.exists(), 'The path does not exists.'
+    return item
 
 
 def _check_n_jobs(n_jobs):
-    """Checks that the number of jobs is valid."""
+    """Checks that the number of jobs is valid.
+
+    Parameters
+    ----------
+    n_jobs : int
+        Number of jobs to run. Must be smaller than the number of cores on the
+        computer. Can be -1 to use all available cores.
+
+    Returns
+    -------
+    n_jobs : int
+        Number of jobs to run.
+
+    Notes
+    -----
+    Number of cores is retrieved with multiprocessing.cpu_count(). Behavior
+    may differ based on the OS.
+    """
     _check_type(n_jobs, ('int', ), 'n_jobs')
     n_cores = multiprocessing.cpu_count()
     if n_jobs == -1:

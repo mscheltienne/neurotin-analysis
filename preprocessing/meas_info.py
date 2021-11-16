@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import datetime, timezone
 
-from utils import _check_type
+from utils import _check_type, _check_path, _check_value
 
 
 RECORDING_TYPE_MAPPING = {
@@ -30,8 +30,7 @@ def parse_subject_info(fname):
             birthday : tuple
                 3-length tuple (year, month, day)
     """
-    fname = Path(fname)
-    assert fname.exists()
+    fname = _check_path(fname, 'fname', must_exist=True)
     with open(fname, 'r') as file:
         lines = file.readlines()
     lines = [line.strip().split(';') for line in lines if len(line) > 0]
@@ -107,10 +106,13 @@ def _add_measurement_date(raw):
     """Add measurement date information to raw instance."""
     fname = Path(raw.filenames[0])
     recording_type = fname.parent.name
-    recording_run = fname.name.split('-')[0]
+    _check_value(recording_type, RECORDING_TYPE_MAPPING, 'recording_type')
+    recording_type = RECORDING_TYPE_MAPPING[recording_type]
+    recording_run = int(fname.name.split('-')[0])
 
-    logs = fname.parent.parent / 'logs.txt'
-    with open(logs, 'r') as f:
+    logs_file = fname.parent.parent / 'logs.txt'
+    logs_file = _check_path(logs_file, 'logs_file', must_exist=True)
+    with open(logs_file, 'r') as f:
         lines = f.readlines()
     lines = [line.split(' - ') for line in lines
              if len(line.split(' - ')) > 1]
@@ -120,9 +122,7 @@ def _add_measurement_date(raw):
 
     datetime_ = None
     for log in logs:
-        conditions = (log[1] == RECORDING_TYPE_MAPPING[recording_type],
-                      int(log[2][-1]) == int(recording_run))
-        if all(conditions):
+        if log[1] == recording_type and int(log[2][-1]) == recording_run:
             datetime_ = log[0]
             break
     assert datetime_ is not None
@@ -132,16 +132,19 @@ def _add_measurement_date(raw):
 
 def _add_subject_info(raw, subject, sex, birthday):
     """Add subject information to raw instance."""
-    raw.info['subject_info'] = dict()
+    subject_info = dict()
     # subject ID
     subject = _check_subject(subject, raw)
     if subject is not None:
-        raw.info['subject_info']['id'] = subject
-        raw.info['subject_info']['his_id'] = str(subject).zfill(3)
+        subject_info['id'] = subject
+        subject_info['his_id'] = str(subject).zfill(3)
     # subject sex - (0, 1, 2) for (Unknown, Male, Female)
-    raw.info['subject_info']['sex'] = _check_sex(sex)
+    subject_info['sex'] = _check_sex(sex)
     # birthday
-    raw.info['subject_info']['birthday'] = _check_birthday(birthday)
+    subject_info['birthday'] = _check_birthday(birthday)
+
+    # use (future) setter
+    raw.info['subject_info'] = subject_info
 
 
 def _check_subject(subject, raw):

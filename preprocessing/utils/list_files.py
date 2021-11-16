@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from checks import _check_type, _check_path
 
 
@@ -19,7 +17,7 @@ def list_raw_fif(directory, exclude=[]):
     fifs : list
         Found raw fif files.
     """
-    directory = Path(directory)
+    directory = _check_path(directory, must_exist=True)
     fifs = list()
     for elt in directory.iterdir():
         if elt.is_dir():
@@ -43,7 +41,7 @@ def list_ica_fif(directory):
     fifs : list
         Found ica fif files.
     """
-    directory = Path(directory)
+    directory = _check_path(directory, must_exist=True)
     fifs = list()
     for elt in directory.iterdir():
         if elt.is_dir():
@@ -53,8 +51,8 @@ def list_ica_fif(directory):
     return fifs
 
 
-def raw_fif_selection(input_dir_fif, output_dir_fif, exclude, *, subject,
-                      session, fname):
+def raw_fif_selection(input_dir_fif, output_dir_fif, exclude, *, subject=None,
+                      session=None, fname=None):
     """List raw fif file to preprocess.
 
     The list of files is filtered by exclusion/subject/session. Files already
@@ -130,8 +128,9 @@ def _check_session(session):
 
 def _check_fname(fname, folder):
     """Checks that the fname is valid and present in folder."""
-    fname = _check_path(fname)
+    if fname is None:
+        return fname
+    fname = _check_path(fname, must_exist=True)
     folder = _check_path(folder, must_exist=True)
-    if fname is not None:
-        fname.relative_to(folder)  # raise if fname is not in folder
+    fname.relative_to(folder)  # raise if fname is not in folder
     return fname

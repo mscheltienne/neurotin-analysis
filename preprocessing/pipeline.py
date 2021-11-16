@@ -156,7 +156,7 @@ def main(input_dir_fif, output_dir_fif, n_jobs=1, subject=None, session=None,
     # create output folder if needed
     os.makedirs(output_dir_fif, exist_ok=True)
 
-    # read excluded files
+    # read exclusion file (create if needed)
     exclusion_file = output_dir_fif / 'exclusion.txt'
     exclude = read_exclusion(exclusion_file)
 

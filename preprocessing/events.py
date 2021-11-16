@@ -87,36 +87,31 @@ def check_events(raw, recording_type):
     -------
     raw : Raw instance modified in-place.
     """
-    _check_value(recording_type, ("calibration", "rs", "online"),
-                 "recording_type")
+    check_functions = {
+        "calibration": _check_events_calibration,
+        "rs": _check_events_resting_state,
+        "online": _check_events_neurofeedback}
+    _check_value(recording_type, check_functions, "recording_type")
     tch = find_event_channel(inst=raw)
     events = mne.find_events(raw, stim_channel=raw.ch_names[tch])
-
-    if recording_type.lower() == "calibration":
-        _check_events_calibration(raw, events)
-
-    elif recording_type.lower() == "rs":
-        _check_events_resting_state(raw, events)
-
-    elif recording_type.lower() == "online":
-        _check_events_neurofeedback(raw, events)
+    check_functions[recording_type](raw, events)
 
 
 def _check_events_calibration(raw, events):
     """
     Checks the event count and value in the calibration recordings.
     """
-    # Check the number of different events.
+    # check the number of different events.
     count = Counter(events[:, 2])
     assert len(count.keys()) == 3, (
         "Calibration should include 3 different event keys. "
         f"Found {tuple(count.keys())}")
 
-    # Check that the numbers of events are (1, 75, 75).
+    # check that the numbers of events are (1, 75, 75).
     count = sorted(count.items(), key=lambda x: (x[1], x[0]))
     assert count[0][1] == 1, (
-        "Calibration should have a single event occurence for blink "
-        f"paradigm. Found {count[0][1]}.")
+        "Calibration should have a single event for blink paradigm."
+        f"Found {count[0][1]}.")
     assert count[1][1] == 75, (
         "Calibration should include 75 x rest and 75 x audio. "
         f"Found for id {count[1][0]}: {count[1][1]}.")
@@ -124,7 +119,7 @@ def _check_events_calibration(raw, events):
         "Calibration should include 75 x rest and 75 x audio. "
         f"Found for id {count[2][0]}: {count[2][1]}.")
 
-    # Check the value of each events.
+    # check the value of each events.
     try:
         assert events[0, 2] == EVENTS["blink"]
     except AssertionError:
@@ -143,12 +138,12 @@ def _check_events_resting_state(raw, events):
     """
     Checks the event count and value in the resting-state recordings.
     """
-    # Check count
+    # check count
     assert events.shape[0] == 1, (
         "Resting-State files should have only one event. "
         f"Found {events.shape[0]}.")
 
-    # Check value
+    # check value
     try:
         assert events[0, 2] == EVENTS["resting-state"]
     except AssertionError:
@@ -159,13 +154,13 @@ def _check_events_neurofeedback(raw, events):
     """
     Checks the event count and value in the neurofeedback recordings.
     """
-    # Check the number of different events.
+    # check the number of different events.
     count = Counter(events[:, 2])
     assert len(count.keys()) == 2, (
-        "Calibration should include 2 different event keys. "
+        "Neurofeedback should include 2 different event keys. "
         f"Found {tuple(count.keys())}")
 
-    # Check that the numbers of events are (10, 10).
+    # check that the numbers of events are (10, 10).
     count = sorted(count.items(), key=lambda x: (x[1], x[0]))
     assert count[0][1] == 10, (
         "Neurofeedback should include 10 x regulation and 10 x "
