@@ -1,7 +1,7 @@
 # NeuroTinAnalysis
 
 Scripts and programs to analyze the NeuroTin EEG dataset.
-The dataset folder structure is set to:
+The RAW dataset folder structure is set to:
 
 ```
 Data
@@ -42,21 +42,40 @@ training.
 ## preprocessing
 
 `preprocessing` contains scripts to clean the raw data and to fill missing
-information. The automatic pipeline does:
+information. The pipeline is splits in different steps creating intermediate
+files.
+
+### Step 1
 
 - Rename channels and fix channel types.
-- Fill `.info['description']`, `.info['device_info']`, `.info['experimenter']`,
-  `.info['meas_date']`, `.info['subject_info']`.
+- Checks sampling frequency and resample to 512 Hz if needed.
 - Checks events and add events as annotations.
+- Filter AUX with FIR bandpass (1., 45.) Hz and notch filter for powerline.
 - Mark bad channels with the PREP pipeline.
 - Add reference channel `CPz` and set standard 10/20 montage.
-- Filter with FIR bandpass (1., 40.) Hz.
-- Apply common average reference (CAR).
+- Filter EEG with FIR bandpass (1., 45.) Hz.
+- Add common average reference (CAR) projector.
 - Interpolate bad channels.
-- Apply ICA and remove components correlated to EOG and ECG channels.
+- Apply common average reference (CAR) projector.
 
-It can be called via command-line with `python pipeline.py`. Help for the
+It can be called via command-line with `python prepare_raw.py`. Help for the
 arguments can be obtained with the `--help` flag.
+
+### Step 2
+
+- Apply ICA and remove occular and heartbeat related components.
+
+It can be called via command-line with `python ica.py`. Help for the arguments
+can be obtained with the `--help` flag.
+
+### Step 3
+
+- Fill `.info['description']`, `.info['device_info']`, `.info['experimenter']`,
+  `.info['meas_date']`, `.info['subject_info']`.
+
+It can be called via command-line with `python meas_info.py`. Help for the
+arguments can be obtained with the `--help` flag.
+Note that this last step can be operated in-place, overwriting existing files.
 
 ## time-frequency
 
