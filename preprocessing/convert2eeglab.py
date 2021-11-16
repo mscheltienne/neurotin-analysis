@@ -101,7 +101,7 @@ def main(input_dir_fif, output_dir_set, n_jobs=1, subject=None, session=None,
                                 subject=subject, session=session, fname=fname,
                                 ignore_existing=ignore_existing)
 
-    # create input pool for pipeline based on provided subject info
+    # create input pool for pipeline
     input_pool = [(fname, input_dir_fif, output_dir_set)
                   for fname in fifs_in]
     assert 0 < len(input_pool)  # sanity-check
@@ -115,8 +115,8 @@ def main(input_dir_fif, output_dir_set, n_jobs=1, subject=None, session=None,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        prog='NeuroTin converting to set patch.',
-        description='Convert raw to set.')
+        prog='NeuroTin converter to EEGLAB format.',
+        description='Convert MNE raw files to EEGLAB raw files.')
     parser.add_argument(
         'input_dir_fif', type=str,
         help='folder containing FIF files to preprocess.')
