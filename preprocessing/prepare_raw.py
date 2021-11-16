@@ -7,9 +7,9 @@ import multiprocessing as mp
 
 import mne
 
-from events import check_events
-from bad_channels import PREP_bads_suggestion
-from filters import apply_filter_eeg, apply_filter_aux
+from _bad_channels import PREP_bads_suggestion
+from _filters import apply_filter_eeg, apply_filter_aux
+from _events import check_events, add_annotations_from_events
 from utils import (read_raw_fif, read_exclusion, write_exclusion,
                    raw_fif_selection, _check_path, _check_n_jobs)
 
@@ -42,6 +42,7 @@ def prepare_raw(raw):
     # Check events
     recording_type = Path(raw.filenames[0]).stem.split('-')[1]
     check_events(raw, recording_type)  # raise if there is a problem
+    raw, _ = add_annotations_from_events(raw)
 
     # Filter AUX
     apply_filter_aux(raw, bandpass=(1., 45.), notch=True)

@@ -48,7 +48,8 @@ def add_annotations_from_events(raw):
     annotations : Annotations
     """
     previous_annotations = raw.annotations
-    events = mne.find_events(raw, stim_channel="TRIGGER")
+    tch = find_event_channel(inst=raw)
+    events = mne.find_events(raw, stim_channel=raw.ch_names[tch])
     annotations = mne.annotations_from_events(
         events=events, event_desc=EVENTS_MAPPING, sfreq=raw.info["sfreq"],
         orig_time=previous_annotations.orig_time)
