@@ -152,8 +152,8 @@ def _create_output_fname(fname, input_dir_fif, output_dir_fif):
     return output_fname, ica_output_fname
 
 
-def main(input_dir_fif, output_dir_fif, n_jobs=1, subject=None,
-         session=None, fname=None):
+def main(input_dir_fif, output_dir_fif, n_jobs=1, subject=None, session=None,
+         fname=None, ignore_existing=True):
     """
     Main preprocessing pipeline.
 
@@ -174,6 +174,8 @@ def main(input_dir_fif, output_dir_fif, n_jobs=1, subject=None,
         Restricts file selection to this session.
     fname : str | Path | None
         Restrict file selection to this file (must be inside input_dir_fif).
+    ignore_existing : bool
+        If True, files already preprocessed are not included.
     """
     # check arguments
     input_dir_fif = _check_path(input_dir_fif, item_name='input_dir_fif',
@@ -231,8 +233,11 @@ if __name__ == '__main__':
     parser.add_argument(
         '--fname', type=str, metavar='path',
         help='restrict to this file.', default=None)
+    parser.add_argument(
+        '--ignore_existing', action='store_true',
+        help='ignore files already processed.')
 
     args = parser.parse_args()
 
     main(args.input_dir_fif, args.output_dir_fif, args.n_jobs, args.subject,
-         args.session, args.fname)
+         args.session, args.fname, args.ignore_existing)
