@@ -4,12 +4,6 @@ from datetime import datetime, timezone
 from utils.checks import _check_type, _check_path, _check_value
 
 
-RECORDING_TYPE_MAPPING = {
-    'Calibration': 'Calib',
-    'RestingState': 'RestS',
-    'Online': 'OnRun'}
-
-
 def parse_subject_info(fname):
     """
     Parse the subject_info file and return the subject ID and sex.
@@ -104,11 +98,16 @@ def _add_experimenter_info(raw, experimenter='Mathieu Scheltienne'):
 
 def _add_measurement_date(raw):
     """Add measurement date information to raw instance."""
+    recording_type_mapping = {
+        'Calibration': 'Calib',
+        'RestingState': 'RestS',
+        'Online': 'OnRun'}
+
     fname = Path(raw.filenames[0])
     recording_type = fname.parent.name
-    _check_value(recording_type, RECORDING_TYPE_MAPPING,
+    _check_value(recording_type, recording_type_mapping,
                  item_name='recording_type')
-    recording_type = RECORDING_TYPE_MAPPING[recording_type]
+    recording_type = recording_type_mapping[recording_type]
     recording_run = int(fname.name.split('-')[0])
 
     logs_file = fname.parent.parent / 'logs.txt'
