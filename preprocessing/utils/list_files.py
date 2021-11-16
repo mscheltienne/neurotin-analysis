@@ -51,19 +51,17 @@ def list_ica_fif(directory):
     return fifs
 
 
-def raw_fif_selection(input_dir_fif, output_dir_fif, exclude, *, subject=None,
-                      session=None, fname=None):
+def raw_fif_selection(input_dir, output_dir, exclude, *, subject=None,
+                      session=None, fname=None, ignore_existing=True):
     """List raw fif file to preprocess.
 
-    The list of files is filtered by exclusion/subject/session. Files already
-    present in output_dir_fif are ignored.
-    If fname is provided, other conditions don't apply and [fname] is returned.
+    The list of files is filtered by exclusion/subject/session/fname.
 
     Parameters
     ----------
-    input_dir_fif : str | Path
+    input_dir : str | Path
         Path to the folder containing the FIF files to preprocess.
-    output_dir_fif : str | Path
+    output_dir : str | Path
         Path to the folder containing the FIF files preprocessed.
     exclude : list
         List of pathlib.Path instance to exclude from the selection.
@@ -73,6 +71,8 @@ def raw_fif_selection(input_dir_fif, output_dir_fif, exclude, *, subject=None,
         Restricts file selection to this session.
     fname : str | Path | None
         Restrict file selection to this file (must be inside input_dir_fif).
+    ignore_existing : bool
+        If True, existing output files are not included.
 
     Returns
     -------
@@ -80,17 +80,18 @@ def raw_fif_selection(input_dir_fif, output_dir_fif, exclude, *, subject=None,
         List of file(s) selected.
     """
     # check arguments
-    input_dir_fif = _check_path(input_dir_fif, item_name='input_dir_fif',
-                                must_exist=True)
-    output_dir_fif = _check_path(output_dir_fif, item_name='output_dir_fif')
+    input_dir = _check_path(input_dir, item_name='input_dir', must_exist=True)
+    output_dir = _check_path(output_dir, item_name='output_dir')
     exclude = _check_type(exclude, (list, ), item_name='exclude')
     subject = _check_subject(subject)
     session = _check_session(session)
-    fname = _check_fname(fname, input_dir_fif)
+    fname = _check_fname(fname, input_dir)
 
     # list files
-    fifs_in = [f for f in list_raw_fif(input_dir_fif, exclude=exclude)
-               if not (output_dir_fif/f.relative_to(input_dir_fif)).exists()]
+    fifs_in = list_raw_fif(input_dir, exclude=exclude)
+    if ignore_existing:
+        fifs_in = [file for file in fifs_in
+                   if not (output_dir / file.relative_to(input_dir)).exists()]
     subjects = [int(file.parent.parent.parent.name) for file in fifs_in]
     sessions = [int(file.parent.parent.name.split()[1]) for file in fifs_in]
 

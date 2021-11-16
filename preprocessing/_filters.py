@@ -8,7 +8,7 @@ def _check_bandpass(bandpass):
     Checks that the argument bandpass is a 2-length valid list-like.
     """
     _check_type(bandpass, (np.ndarray, tuple, list), item_name='bandpass')
-    bandpass = tuple(np.ndarray)
+    bandpass = tuple(bandpass)
     assert len(bandpass) == 2
     assert all(0 < fq for fq in bandpass if fq is not None)
     return bandpass

@@ -54,7 +54,7 @@ def exclude_ocular_and_heartbeat_with_ICA(raw, *, semiauto=False):
     eog_scores : Scores used for selection of the ocular component(s).
     ecg_scores : Scores used for selection of the heartbeat component(s).
     """
-    ica = _ica(method='picard', max_iter='auto')
+    ica = _ica(raw, method='picard', max_iter='auto')
 
     eog_idx, eog_scores = \
         _exclude_ocular_components(raw, ica, threshold=0.6,
@@ -108,7 +108,7 @@ def pipeline(fname, input_dir_fif, output_dir_fif):
     print ('Preprocessing: %s' % fname)
     try:
         # checks paths
-        fname = _check_path(fname, 'fname', must_exist=True)
+        fname = _check_path(fname, item_name='fname', must_exist=True)
         input_dir_fif = _check_path(input_dir_fif,
                                     item_name='input_dir_fif',
                                     must_exist=True)
@@ -234,5 +234,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    main(args.input_dir_fif, args.output_dir_fif, args.processes, args.subject,
+    main(args.input_dir_fif, args.output_dir_fif, args.n_jobs, args.subject,
          args.session, args.fname)
