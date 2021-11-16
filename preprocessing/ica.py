@@ -192,7 +192,8 @@ def main(input_dir_fif, output_dir_fif, n_jobs=1, subject=None, session=None,
 
     # list files to preprocess
     fifs_in = raw_fif_selection(input_dir_fif, output_dir_fif, exclude,
-                                subject=subject, session=session, fname=fname)
+                                subject=subject, session=session, fname=fname,
+                                ignore_existing=ignore_existing)
 
     # create input pool for pipeline based on provided subject info
     input_pool = [(fname, input_dir_fif, output_dir_fif)
