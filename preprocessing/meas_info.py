@@ -308,7 +308,8 @@ def main(input_dir_fif, output_dir_fif, subject_info, n_jobs=1, subject=None,
                                 ignore_existing=ignore_existing)
 
     # create input pool for pipeline based on provided subject info
-    input_pool = _create_input_pool(fifs_in, subject_info_dict)
+    input_pool = _create_input_pool(fifs_in, input_dir_fif, output_dir_fif,
+                                    subject_info_dict)
     assert 0 < len(input_pool)  # sanity-check
 
     with mp.Pool(processes=n_jobs) as p:
