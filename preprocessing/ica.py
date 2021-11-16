@@ -15,7 +15,7 @@ mne.set_log_level('ERROR')
 def _ica(raw, **kwargs):
     """Fit an ICA with the given kwargs to raw EEG channels.
     kwargs are passed to mne.preprocessing.ICA()."""
-    ica = mne.preprocessing.ICA(method='picard', max_iter='auto')
+    ica = mne.preprocessing.ICA(**kwargs)
     ica.fit(raw, picks='eeg')
     return ica
 
@@ -144,7 +144,7 @@ def _create_output_fname(fname, input_dir_fif, output_dir_fif):
     # create output fname
     output_fname = output_dir_fif / relative_fname
     ica_output_fname = \
-        output_dir_fif / str(relative_fname).replace('-raw', '-ica')
+        output_dir_fif / str(relative_fname).replace('-raw.fif', '-ica.fif')
     os.makedirs(output_fname.parent, exist_ok=True)
     return output_fname, ica_output_fname
 
