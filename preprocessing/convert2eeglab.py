@@ -38,7 +38,7 @@ def pipeline(fname, input_dir_fif, output_dir_set):
         Path to the input '-raw.fif' file to convert.
     """
     try:
-        fname = _check_path(fname, 'fname', must_exist=True)
+        fname = _check_path(fname, item_name='fname', must_exist=True)
         input_dir_fif = _check_path(input_dir_fif,
                                     item_name='input_dir_fif',
                                     must_exist=True)
@@ -52,7 +52,7 @@ def pipeline(fname, input_dir_fif, output_dir_set):
 
         raw = mne.io.read_raw_fif(fname, preload=True)
         raw.apply_proj()
-        raw.export(output_fname_set, fmt='eeglab')
+        raw.export(str(output_fname_set), fmt='eeglab')
 
         return (True, str(fname))
 
