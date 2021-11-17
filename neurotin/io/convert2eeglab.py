@@ -8,6 +8,7 @@ import multiprocessing as mp
 import mne
 
 from .list_files import raw_fif_selection
+from .. import logger
 from ..utils.checks import _check_path, _check_n_jobs
 
 mne.set_log_level('ERROR')
@@ -36,6 +37,7 @@ def pipeline(fname, input_dir_fif, output_dir_set):
     fname : str
         Path to the input '-raw.fif' file to convert.
     """
+    logger.info('Processing: %s' % fname)
     try:
         fname = _check_path(fname, item_name='fname', must_exist=True)
         input_dir_fif = _check_path(input_dir_fif,
@@ -56,10 +58,8 @@ def pipeline(fname, input_dir_fif, output_dir_set):
         return (True, str(fname))
 
     except Exception:
-        print ('----------------------------------------------')
-        print ('FAILED: %s -> Skip.' % fname)
-        print(traceback.format_exc())
-        print ('----------------------------------------------')
+        logger.warning('FAILED: %s -> Skip.' % fname)
+        logger.debug(traceback.format_exc())
         return (False, str(fname))
 
 

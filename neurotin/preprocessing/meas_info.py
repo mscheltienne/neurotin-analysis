@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 import mne
 
+from .. import logger
 from ..utils.checks import (_check_type, _check_path, _check_value,
                             _check_n_jobs)
 from ..io.list_files import raw_fif_selection
@@ -229,7 +230,7 @@ def pipeline(fname, input_dir_fif, output_dir_fif, raw_dir_fif, subject, sex,
     fname : str
         Path to the input '-raw.fif' file to preprocess.
     """
-    print ('Preprocessing: %s' % fname)
+    logger.info('Processing: %s' % fname)
     try:
         # checks paths
         fname = _check_path(fname, item_name='fname', must_exist=True)
@@ -258,10 +259,8 @@ def pipeline(fname, input_dir_fif, output_dir_fif, raw_dir_fif, subject, sex,
         return (True, str(fname))
 
     except Exception:
-        print ('----------------------------------------------')
-        print ('FAILED: %s -> Skip.' % fname)
-        print(traceback.format_exc())
-        print ('----------------------------------------------')
+        logger.warning('FAILED: %s -> Skip.' % fname)
+        logger.debug(traceback.format_exc())
         return (False, str(fname))
 
 

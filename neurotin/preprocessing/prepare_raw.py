@@ -6,6 +6,7 @@ import multiprocessing as mp
 
 import mne
 
+from .. import logger
 from .bad_channels import PREP_bads_suggestion
 from .filters import apply_filter_eeg, apply_filter_aux
 from .events import check_events, add_annotations_from_events
@@ -86,7 +87,7 @@ def pipeline(fname, input_dir_fif, output_dir_fif):
     bads : list
         List of interpolated bad channels.
     """
-    print ('Preprocessing: %s' % fname)
+    logger.info('Processing: %s' % fname)
     try:
         # checks paths
         fname = _check_path(fname, item_name='fname', must_exist=True)
@@ -112,10 +113,8 @@ def pipeline(fname, input_dir_fif, output_dir_fif):
         return (True, str(fname), bads)
 
     except Exception:
-        print ('----------------------------------------------')
-        print ('FAILED: %s -> Skip.' % fname)
-        print(traceback.format_exc())
-        print ('----------------------------------------------')
+        logger.warning('FAILED: %s -> Skip.' % fname)
+        logger.debug(traceback.format_exc())
         return (False, str(fname), None)
 
 
