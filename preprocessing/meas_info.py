@@ -344,7 +344,8 @@ def _create_input_pool(fifs_in, input_dir_fif, output_dir_fif, raw_dir_fif,
     """Create input pool for pipeline function.
     Shape: (fname, input_dir_fif, output_dir_fif, subject, sex, birthday)."""
     input_pool = list()
-    pattern = re.compile('\/(\d{3})\/')  # pattern to match subject
+    # pattern to match subject
+    pattern = re.compile('\%s(\d{3})\%s' % (os.sep, os.sep))
     for fname in fifs_in:
         match = re.findall(pattern, str(fname))
         assert len(match) == 1
