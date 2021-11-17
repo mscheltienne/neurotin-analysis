@@ -82,6 +82,7 @@ def exclude_ocular_and_heartbeat_with_ICA(raw, *, semiauto=False):
     return raw, ica, eog_scores, ecg_scores
 
 
+# -----------------------------------------------------------------------------
 def pipeline(fname, input_dir_fif, output_dir_fif):
     """
     Pipeline function called on each raw file.

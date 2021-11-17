@@ -62,6 +62,7 @@ def prepare_raw(raw):
     return raw, bads
 
 
+# -----------------------------------------------------------------------------
 def pipeline(fname, input_dir_fif, output_dir_fif):
     """
     Pipeline function called on each raw file.

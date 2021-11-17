@@ -197,6 +197,7 @@ def _check_birthday(birthday):
     return birthday
 
 
+# -----------------------------------------------------------------------------
 def pipeline(fname, input_dir_fif, output_dir_fif, raw_dir_fif, subject, sex,
              birthday):
     """
