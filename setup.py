@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-
-import itertools
-
 from pathlib import Path
 from setuptools import setup, find_packages
 
@@ -95,4 +91,13 @@ setup(
     install_requires=install_requires,
     packages=find_packages(),
     include_package_data=True,
+    entry_points={
+        'console_scripts': [
+            'neurotin = neurotin.commands.main:run',
+            'neurotin_logs_mml = neurotin.commands.neurotin_logs_mml:run',
+            'neurotin_pp_ica = neurotin.commands.neurotin_pp_ica:run',
+            'neurotin_pp_meas_info = neurotin.commands.neurotin_pp_meas_info:run',
+            'neurotin_pp_prepare_raw = neurotin.commands.neurotin_pp_prepare_raw:run'
+          ]
+        }
     )
