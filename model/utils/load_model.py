@@ -1,13 +1,14 @@
 import pickle
-from pathlib import Path
-from datetime import datetime
+import datetime
+
+from .checks import _check_type, _check_path
 
 
 def load_model(folder, participant, session, model_idx='auto'):
     """
     Load a saved model for a given participant/session.
     """
-    folder = _check_folder(folder)
+    folder = _check_path(folder, item_name='folder', must_exist=True)
     participant, participant_folder = _check_participant(participant)
     session = _check_session(session)
     model_idx = _check_model_idx(model_idx)
@@ -30,42 +31,41 @@ def load_model(folder, participant, session, model_idx='auto'):
     return weights, info, reject, reject_local, calib_idx
 
 
-def _check_folder(folder):
-    """Check argument folder."""
-    folder = Path(folder)
-    assert folder.exists()
-    return folder
-
-
 def _check_participant(participant):
     """Check argument participant."""
-    participant = int(participant)
+    _check_type(participant, ('int', ), item_name='participant')
     assert 50 <= participant <= 150, 'Invalid participant ID.'
     return participant, str(participant).zfill(3)
 
 
 def _check_session(session):
     """Check argument session."""
-    session = int(session)
+    _check_type(session, ('int', ), item_name='session')
     assert 1 <= session <= 15, 'Invalid session ID.'
     return session
 
 
 def _check_model_idx(model_idx):
     """Check argument model_idx."""
+    _check_type(model_idx, ('int', str), item_name='model_idx')
     if isinstance(model_idx, str):
         model_idx = model_idx.lower().strip()
         assert model_idx == 'auto', 'Invalid model IDx.'
     else:
-        model_idx = int(model_idx)
         assert 1 <= model_idx, 'Invalid model IDx.'
     return model_idx
 
 
 def _read_logs(session_dir):
     """Read logs for a given participant/session."""
-    with open(session_dir/'logs.txt', 'r') as f:
+    session_dir = _check_path(session_dir, item_name='session_dir',
+                              must_exist=True)
+    logs_file = _check_path(session_dir/'logs.txt', item_name='logs_file',
+                            must_exist=True)
+
+    with open(logs_file, 'r') as f:
         lines = f.readlines()
+
     lines = [line.split(' - ') for line in lines if len(line.split(' - ')) > 1]
     logs = [[datetime.strptime(line[0].strip(), "%d/%m/%Y %H:%M")]+
             [line[k].strip() for k in range(1, len(line))] for line in lines]
