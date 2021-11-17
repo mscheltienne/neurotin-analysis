@@ -63,8 +63,8 @@ def pipeline(fname, input_dir_fif, output_dir_set):
         return (False, str(fname))
 
 
-def main(input_dir_fif, output_dir_set, n_jobs=1, subject=None, session=None,
-         fname=None, ignore_existing=True):
+def main(input_dir_fif, output_dir_set, n_jobs=1, participant=None,
+         session=None, fname=None, ignore_existing=True):
     """
     Main preprocessing pipeline.
 
@@ -77,8 +77,8 @@ def main(input_dir_fif, output_dir_set, n_jobs=1, subject=None, session=None,
     n_jobs : int
         Number of parallel jobs used. Must not exceed the core count. Can be -1
         to use all cores.
-    subject : int | None
-        Restricts file selection to this subject.
+    participant : int | None
+        Restricts file selection to this participant.
     session : int | None
         Restricts file selection to this session.
     fname : str | Path | None
@@ -97,8 +97,8 @@ def main(input_dir_fif, output_dir_set, n_jobs=1, subject=None, session=None,
 
     # list files to preprocess
     fifs_in = raw_fif_selection(input_dir_fif, output_dir_set, exclude=[],
-                                subject=subject, session=session, fname=fname,
-                                ignore_existing=ignore_existing)
+                                participant=participant, session=session,
+                                fname=fname, ignore_existing=ignore_existing)
 
     # create input pool for pipeline
     input_pool = [(fname, input_dir_fif, output_dir_set)
