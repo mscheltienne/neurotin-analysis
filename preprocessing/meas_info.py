@@ -42,7 +42,7 @@ def parse_subject_info(fname):
     return {line[0]: (line[1], line[2]) for line in lines}
 
 
-def fill_info(raw, subject, sex, birthday):
+def fill_info(raw, input_dir_fif, raw_dir_fif, subject, sex, birthday):
     """
     Fill the measurement info with:
         - a description including the subject ID, session ID, recording type
@@ -55,6 +55,12 @@ def fill_info(raw, subject, sex, birthday):
     ----------
     raw : Raw
         Raw instance modified in-place.
+    input_dir_fif : str | Path
+        Path to the input raw directory (parent from fname) (used to set
+        measurement date).
+    raw_dir_fif : str | Path
+        Path to the directory containing raw data with logs files (used to set
+        measurement date).
     subject : int
         ID of the subject.
     sex : int
@@ -69,7 +75,7 @@ def fill_info(raw, subject, sex, birthday):
     _add_description(raw, subject)
     _add_device_info(raw)
     _add_experimenter_info(raw, experimenter='Mathieu Scheltienne')
-    _add_measurement_date(raw)
+    _add_measurement_date(raw, input_dir_fif, raw_dir_fif)
     _add_subject_info(raw, subject, sex, birthday)
     raw.info._check_consistency()
     return raw
@@ -105,7 +111,7 @@ def _add_experimenter_info(raw, experimenter='Mathieu Scheltienne'):
     raw.info['experimenter'] = experimenter
 
 
-def _add_measurement_date(raw):
+def _add_measurement_date(raw, input_dir_fif, raw_dir_fif):
     """Add measurement date information to raw instance."""
     recording_type_mapping = {
         'Calibration': 'Calib',
@@ -118,9 +124,13 @@ def _add_measurement_date(raw):
                  item_name='recording_type')
     recording_type = recording_type_mapping[recording_type]
     recording_run = int(fname.name.split('-')[0])
+    relative_path = fname.relative_to(input_dir_fif)
 
-    logs_file = fname.parent.parent / 'logs.txt'
-    logs_file = _check_path(logs_file, item_name='logs_file', must_exist=True)
+    logs_file = raw_dir_fif / relative_path.parent.parent / 'logs.txt'
+    logs_file = _check_path(logs_file, item_name='logs_file')
+    if not logs_file.exists():
+        return  # don't set meas date
+
     with open(logs_file, 'r') as f:
         lines = f.readlines()
     lines = [line.split(' - ') for line in lines
@@ -187,7 +197,8 @@ def _check_birthday(birthday):
     return birthday
 
 
-def pipeline(fname, input_dir_fif, output_dir_fif, subject, sex, birthday):
+def pipeline(fname, input_dir_fif, output_dir_fif, raw_dir_fif, subject, sex,
+             birthday):
     """
     Pipeline function called on each raw file.
 
@@ -200,6 +211,9 @@ def pipeline(fname, input_dir_fif, output_dir_fif, subject, sex, birthday):
     output_dir_fif : str | Path | None
         Path used to save raw in MNE format with the same structure as in
         fname. If None, the input file is overwritten in-place.
+    raw_dir_fif : str | Path
+        Path to the directory containing raw data with logs files (used to set
+        measurement date).
     subject : int
         ID of the subject.
     sex : int
@@ -225,6 +239,8 @@ def pipeline(fname, input_dir_fif, output_dir_fif, subject, sex, birthday):
             output_dir_fif = _check_path(output_dir_fif,
                                          item_name='output_dir_fif',
                                          must_exist=True)
+        raw_dir_fif = _check_path(raw_dir_fif, item_name='raw_dir_fif',
+                                  must_exist=True)
 
         # create output file name
         if output_dir_fif is not None:
@@ -234,7 +250,8 @@ def pipeline(fname, input_dir_fif, output_dir_fif, subject, sex, birthday):
             output_fname = fname
 
         raw = mne.io.read_raw_fif(fname, preload=True)
-        raw = fill_info(raw, subject, sex, birthday)
+        raw = fill_info(raw, input_dir_fif, raw_dir_fif, subject, sex,
+                        birthday)
         raw.save(output_fname, fmt="double", overwrite=True)
 
         return (True, str(fname))
@@ -258,8 +275,8 @@ def _create_output_fname(fname, input_dir_fif, output_dir_fif):
     return output_fname
 
 
-def main(input_dir_fif, output_dir_fif, subject_info, n_jobs=1, subject=None,
-         session=None, fname=None, ignore_existing=True):
+def main(input_dir_fif, output_dir_fif, raw_dir_fif, subject_info, n_jobs=1,
+         subject=None, session=None, fname=None, ignore_existing=True):
     """
     Main preprocessing pipeline.
 
@@ -270,6 +287,9 @@ def main(input_dir_fif, output_dir_fif, subject_info, n_jobs=1, subject=None,
     output_dir_fif : str | Path | None
         Path to the folder containing the FIF files preprocessed. If None, the
         input file is overwritten in-place.
+    raw_dir_fif : str | Path
+        Path to the directory containing raw data with logs files (used to set
+        measurement date).
     subject_info : str | Path
         Path to the subject_info file.
     n_jobs : int
@@ -309,7 +329,7 @@ def main(input_dir_fif, output_dir_fif, subject_info, n_jobs=1, subject=None,
 
     # create input pool for pipeline based on provided subject info
     input_pool = _create_input_pool(fifs_in, input_dir_fif, output_dir_fif,
-                                    subject_info_dict)
+                                    raw_dir_fif, subject_info_dict)
     assert 0 < len(input_pool)  # sanity-check
 
     with mp.Pool(processes=n_jobs) as p:
@@ -319,7 +339,7 @@ def main(input_dir_fif, output_dir_fif, subject_info, n_jobs=1, subject=None,
         pickle.dump([file for success, file in results if not success], f, -1)
 
 
-def _create_input_pool(fifs_in, input_dir_fif, output_dir_fif,
+def _create_input_pool(fifs_in, input_dir_fif, output_dir_fif, raw_dir_fif,
                        subject_info_dict):
     """Create input pool for pipeline function.
     Shape: (fname, input_dir_fif, output_dir_fif, subject, sex, birthday)."""
@@ -331,7 +351,8 @@ def _create_input_pool(fifs_in, input_dir_fif, output_dir_fif,
         subject = int(match[0])
         sex, birthday = subject_info_dict[subject]
         input_pool.append(
-            (fname, input_dir_fif, output_dir_fif, subject, sex, birthday))
+            (fname, input_dir_fif, output_dir_fif, raw_dir_fif,
+             subject, sex, birthday))
     return input_pool
 
 
@@ -347,6 +368,9 @@ if __name__ == '__main__':
         'output_dir_fif', type=str,
         help='folder containing FIF files preprocessed (can be None to '
              'overwrite existing files in input_dir_fif).')
+    parser.add_argument(
+        'raw_dir_fif', type=str,
+        help='folder containing raw FIF files with session logs.')
     parser.add_argument(
         'subject_info', type=str,
         help='path to the subject info file.')
@@ -372,5 +396,6 @@ if __name__ == '__main__':
     output_dir_fif = None if args.output_dir_fif.lower().strip() == 'none' \
         else args.output_dir_fif
 
-    main(args.input_dir_fif,output_dir_fif, args.subject_info, args.n_jobs,
-         args.subject, args.session, args.fname, args.ignore_existing)
+    main(args.input_dir_fif, output_dir_fif, args.raw_dir_fif,
+         args.subject_info, args.n_jobs, args.subject, args.session,
+         args.fname, args.ignore_existing)
