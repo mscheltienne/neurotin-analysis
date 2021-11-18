@@ -295,7 +295,7 @@ def _cli(input_dir_fif, output_dir_fif, raw_dir_fif, subject_info, n_jobs=1,
     # read subject_info
     subject_info_dict = parse_subject_info(subject_info)
 
-    # list files to preprocess
+    # list files to process
     fifs_in = raw_fif_selection(input_dir_fif, output_dir_fif, exclude=[],
                                 participant=participant, session=session,
                                 fname=fname, ignore_existing=ignore_existing)

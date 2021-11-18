@@ -82,7 +82,7 @@ def _main(input_dir_fif, output_dir_set, n_jobs=1, participant=None,
     # create output folder if needed
     os.makedirs(output_dir_set, exist_ok=True)
 
-    # list files to preprocess
+    # list files to process
     fifs_in = raw_fif_selection(input_dir_fif, output_dir_set, exclude=[],
                                 participant=participant, session=session,
                                 fname=fname, ignore_existing=ignore_existing)
