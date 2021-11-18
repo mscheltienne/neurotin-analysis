@@ -204,6 +204,8 @@ def pipeline(fname, input_dir_fif, output_dir_fif, raw_dir_fif, subject, sex,
     """
     Pipeline function called on each raw file.
 
+    Add measurement information.
+
     Parameters
     ----------
     fname : str | Path
@@ -278,7 +280,7 @@ def _create_output_fname(fname, input_dir_fif, output_dir_fif):
 def main(input_dir_fif, output_dir_fif, raw_dir_fif, subject_info, n_jobs=1,
          participant=None, session=None, fname=None, ignore_existing=True):
     """
-    Main preprocessing pipeline.
+    CLI processing pipeline.
 
     Parameters
     ----------

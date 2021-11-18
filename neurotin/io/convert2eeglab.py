@@ -66,7 +66,7 @@ def pipeline(fname, input_dir_fif, output_dir_set):
 def main(input_dir_fif, output_dir_set, n_jobs=1, participant=None,
          session=None, fname=None, ignore_existing=True):
     """
-    Main preprocessing pipeline.
+    CLI processing pipeline.
 
     Parameters
     ----------

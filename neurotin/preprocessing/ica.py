@@ -88,6 +88,8 @@ def pipeline(fname, input_dir_fif, output_dir_fif):
     """
     Pipeline function called on each raw file.
 
+    Exclude ocular and heartbeat related components with ICA.
+
     Parameters
     ----------
     fname : str | Path
@@ -153,7 +155,7 @@ def _create_output_fname(fname, input_dir_fif, output_dir_fif):
 def main(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
          session=None, fname=None, ignore_existing=True):
     """
-    Main preprocessing pipeline.
+    CLI processing pipeline.
 
     Parameters
     ----------
