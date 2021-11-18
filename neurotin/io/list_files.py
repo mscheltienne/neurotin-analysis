@@ -51,7 +51,7 @@ def list_ica_fif(directory, *, exclude=[]):
 
 
 def _list_fif(directory, exclude, endswith):
-    """Recursive function listing raw fif files in directory and its
+    """Recursive function listing fif files in directory and its
     subdirectories."""
     fifs = list()
     for elt in directory.iterdir():
