@@ -96,6 +96,8 @@ setup(
             'neurotin = neurotin.commands.main:run',
             'neurotin_io_convert2eeglab = '+\
                 'neurotin.commands.neurotin_io_convert2eeglab:run',
+            'neurotin_io_apply_proj = '+\
+                'neurotin.commands.neurotin_io_apply_proj:run',
             'neurotin_logs_mml = neurotin.commands.neurotin_logs_mml:run',
             'neurotin_pp_ica = neurotin.commands.neurotin_pp_ica:run',
             'neurotin_pp_meas_info = '+\
