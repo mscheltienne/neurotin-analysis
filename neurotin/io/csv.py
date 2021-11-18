@@ -21,3 +21,21 @@ def read_csv(csv, **kwargs):
     assert csv.suffix == '.csv', 'Provided file is not a .csv file.'
     df = pd.read_csv(csv, **kwargs)
     return df
+
+
+def read_csv_evamed(csv):
+    """
+    Read the CSV file retrieved from evamed.
+
+    Parameters
+    ----------
+    csv : str | pathlib.Path
+        Path to the csv file to read. Must be in .csv format.
+
+    Returns
+    -------
+    df : pandas.DataFrame
+    """
+    df = read_csv(csv, encoding='latin1', skiprows=0, header=1)
+    df = df.drop(df.columns[-1], axis=1)
+    return df
