@@ -86,7 +86,7 @@ def exclude_ocular_and_heartbeat_with_ICA(raw, *, semiauto=False):
 
 # -----------------------------------------------------------------------------
 @fill_doc
-def pipeline(fname, input_dir_fif, output_dir_fif):
+def _pipeline(fname, input_dir_fif, output_dir_fif):
     """%(pipeline_header)s
 
     Exclude ocular and heartbeat related components with ICA.
@@ -148,9 +148,9 @@ def _create_output_fname(fname, input_dir_fif, output_dir_fif):
 
 
 @fill_doc
-def main(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
+def _cli(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
          session=None, fname=None, ignore_existing=True):
-    """%(main_header)s
+    """%(cli_header)s
 
     Parameters
     ----------
@@ -186,7 +186,7 @@ def main(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
     assert 0 < len(input_pool)  # sanity-check
 
     with mp.Pool(processes=n_jobs) as p:
-        results = p.starmap(pipeline, input_pool)
+        results = p.starmap(_pipeline, input_pool)
 
     with open(output_dir_fif/'ica.pcl', mode='wb') as f:
         pickle.dump([(file, eog_scores, ecg_scores)

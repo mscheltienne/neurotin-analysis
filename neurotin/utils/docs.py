@@ -23,8 +23,8 @@ docdict['success'] = """
 success : bool
     False if a processing step raised an Exception."""
 
-# ----------------------------------- main -----------------------------------
-docdict['main_header'] = """CLI procesisng pipeline."""
+# ----------------------------------- cli ------------------------------------
+docdict['cli_header'] = """CLI procesisng pipeline."""
 docdict['input_dir_fif'] = """
 input_dir_fif : str | Path
     Path to the folder containing the FIF files to process."""

@@ -1,6 +1,6 @@
 import argparse
 
-from neurotin.io.apply_proj import main
+from neurotin.io.apply_proj import _cli
 
 
 def run():
@@ -35,5 +35,5 @@ def run():
     output_dir_fif = None if args.output_dir_fif.lower().strip() == 'none' \
         else args.output_dir_fif
 
-    main(args.input_dir_fif, output_dir_fif, args.n_jobs, args.subject,
+    _cli(args.input_dir_fif, output_dir_fif, args.n_jobs, args.subject,
          args.session, args.fname, args.ignore_existing)

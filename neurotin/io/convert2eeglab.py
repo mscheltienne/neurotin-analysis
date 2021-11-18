@@ -16,7 +16,7 @@ mne.set_log_level('ERROR')
 
 
 @fill_doc
-def pipeline(fname, input_dir_fif, output_dir_set):
+def _pipeline(fname, input_dir_fif, output_dir_set):
     """%(pipeline_header)s
 
     Convert .fif to .set files.
@@ -59,9 +59,9 @@ def pipeline(fname, input_dir_fif, output_dir_set):
 
 
 @fill_doc
-def main(input_dir_fif, output_dir_set, n_jobs=1, participant=None,
-         session=None, fname=None, ignore_existing=True):
-    """%(main_header)s
+def _main(input_dir_fif, output_dir_set, n_jobs=1, participant=None,
+          session=None, fname=None, ignore_existing=True):
+    """%(cli_header)s
 
     Parameters
     ----------
@@ -93,7 +93,7 @@ def main(input_dir_fif, output_dir_set, n_jobs=1, participant=None,
     assert 0 < len(input_pool)  # sanity-check
 
     with mp.Pool(processes=n_jobs) as p:
-        results = p.starmap(pipeline, input_pool)
+        results = p.starmap(_pipeline, input_pool)
 
     with open(output_dir_set/'fails.pcl', mode='wb') as f:
         pickle.dump([file for success, file in results if not success], f, -1)

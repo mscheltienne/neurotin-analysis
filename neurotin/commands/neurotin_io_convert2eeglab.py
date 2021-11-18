@@ -1,6 +1,6 @@
 import argparse
 
-from neurotin.io.convert2eeglab import main
+from neurotin.io.convert2eeglab import _cli
 
 
 def run():
@@ -32,5 +32,5 @@ def run():
 
     args = parser.parse_args()
 
-    main(args.input_dir_fif, args.output_dir_set, args.n_jobs, args.subject,
+    _cli(args.input_dir_fif, args.output_dir_set, args.n_jobs, args.subject,
          args.session, args.fname, args.ignore_existing)
