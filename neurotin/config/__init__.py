@@ -1,6 +1,6 @@
 """Config module."""
 
-import os
+import socket
 from pathlib import Path
 from configparser import ConfigParser
 
@@ -12,7 +12,7 @@ def load_paths():
     config.read(Path(__file__).parent/'paths.ini')
 
     # find which PC is in use
-    name = os.getenv('COMPUTERNAME')
+    name = socket.gethostname()
 
     return {key.replace('_', '-').lower(): path
             for key, path in config.items(name)}
