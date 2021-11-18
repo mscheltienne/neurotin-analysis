@@ -6,7 +6,7 @@ import multiprocessing as mp
 import mne
 
 from .. import logger
-from ..io.list_files import raw_fif_selection, read_exclusion, write_exclusion
+from ..io.list_files import raw_fif_selection
 from ..utils.docs import fill_doc
 from ..utils.checks import _check_path, _check_n_jobs
 
@@ -171,12 +171,8 @@ def _cli(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
     # create output folder if needed
     os.makedirs(output_dir_fif, exist_ok=True)
 
-    # read excluded files
-    exclusion_file = output_dir_fif / 'exclusion.txt'
-    exclude = read_exclusion(exclusion_file)
-
     # list files to process
-    fifs_in = raw_fif_selection(input_dir_fif, output_dir_fif, exclude,
+    fifs_in = raw_fif_selection(input_dir_fif, output_dir_fif,
                                 participant=participant, session=session,
                                 fname=fname, ignore_existing=ignore_existing)
 
@@ -192,6 +188,3 @@ def _cli(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
         pickle.dump([(file, eog_scores, ecg_scores)
                      for success, file, eog_scores, ecg_scores in results
                      if success], f, -1)
-
-    exclude = [file for success, file, _, _ in results if not success]
-    write_exclusion(exclusion_file, exclude)

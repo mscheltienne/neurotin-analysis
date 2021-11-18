@@ -11,7 +11,7 @@ from .bad_channels import PREP_bads_suggestion
 from .filters import apply_filter_eeg, apply_filter_aux
 from .events import check_events, add_annotations_from_events
 from ..io import read_raw_fif
-from ..io.list_files import raw_fif_selection, read_exclusion, write_exclusion
+from ..io.list_files import raw_fif_selection
 from ..utils.docs import fill_doc
 from ..utils.checks import _check_path, _check_n_jobs
 
@@ -147,12 +147,8 @@ def _cli(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
     # create output folder if needed
     os.makedirs(output_dir_fif, exist_ok=True)
 
-    # read exclusion file (create if needed)
-    exclusion_file = output_dir_fif / 'exclusion.txt'
-    exclude = read_exclusion(exclusion_file)
-
     # list files to process
-    fifs_in = raw_fif_selection(input_dir_fif, output_dir_fif, exclude,
+    fifs_in = raw_fif_selection(input_dir_fif, output_dir_fif,
                                 participant=participant, session=session,
                                 fname=fname, ignore_existing=ignore_existing)
 
@@ -167,6 +163,3 @@ def _cli(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
     with open(output_dir_fif/'bads.pcl', mode='wb') as f:
         pickle.dump([(file, bads) for success, file, bads in results
                      if success], f, -1)
-
-    exclude = [file for success, file, _ in results if not success]
-    write_exclusion(exclusion_file, exclude)
