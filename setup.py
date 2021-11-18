@@ -103,7 +103,9 @@ setup(
             'neurotin_pp_meas_info = '+\
                 'neurotin.commands.neurotin_pp_meas_info:run',
             'neurotin_pp_prepare_raw = '+\
-                'neurotin.commands.neurotin_pp_prepare_raw:run'
+                'neurotin.commands.neurotin_pp_prepare_raw:run',
+            'neurotin_pp_validation_ica = '+\
+                'neurotin.commands.neurotin_pp_validation_ica:run'
           ]
         }
     )

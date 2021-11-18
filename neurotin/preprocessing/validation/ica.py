@@ -1,8 +1,9 @@
+"""Validation (slow) test to check different ICA methods, ocular components and
+heartbeat components detection methods and thresholds."""
+
 import os
 import pickle
-import argparse
 import traceback
-from pathlib import Path
 import multiprocessing as mp
 from collections import Counter
 
@@ -11,10 +12,13 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from pipeline import prepare_raw
-from utils import list_raw_fif, read_raw_fif
+from ... import logger
+from ...io.list_files import raw_fif_selection
+from ...utils.docs import fill_doc
+from ...utils.checks import _check_path, _check_n_jobs
 
 
+# -----------------------------------------------------------------------------
 # Global test settings
 FIND_ON_RAW = True  # bool
 FIND_ON_EPOCHS = True  # bool
@@ -75,29 +79,32 @@ if isinstance(FIND_BADS_ECG_KWARGS, dict):
     FIND_BADS_ECG_KWARGS = [FIND_BADS_ECG_KWARGS]
 
 
-def check_ica(fname):
-    """
-    Function called on each raw files.
+# -----------------------------------------------------------------------------
+@fill_doc
+def _pipeline(fname):
+    """%(pipeline_header)s
+
+    Compute and apply ICA-based ocular and heartbeat artifact rejection with
+    the different ICA and detection methods.
 
     Parameters
     ----------
-    fname : str | Path
-        Path to the input '-raw.fif' file to preprocess.
+    %(fname)s
 
     Returns
     -------
-    success : bool
-        False if a step raised an Exception.
-    fname : Path
-        Path to the input '-raw.fif' file preprocessed.
+    %(success)s
+    %(fname)s
     eog_scores : dict
-        Correlation scores for EOG related components.
+        Correlation scores for EOG related components. Keys are automatically
+        generated based on the method used to select the components.
     ecg_scores : dict
-        Correlation scores for ECG related components.
+        Correlation scores for ECG related components. Keys are automatically
+        generated based on the method used to select the components.
     """
+    logger.info('Processing: %s' % fname)
     try:
-        raw = read_raw_fif(fname)
-        raw = prepare_raw(raw)
+        raw = mne.io.read_raw_fif(fname, preload=True)
 
         if FIND_ON_EPOCHS:
             eog_epochs = mne.preprocessing.create_eog_epochs(
@@ -138,16 +145,14 @@ def check_ica(fname):
         return (True, str(fname), eog_results_scores, ecg_results_scores)
 
     except Exception:
-        print ('----------------------------------------------')
-        print (f'FAILED: {fname} -> Skip.')
-        print(traceback.format_exc())
-        print ('----------------------------------------------')
+        logger.warning('FAILED: %s -> Skip.' % fname)
+        logger.debug(traceback.format_exc())
         return (False, str(fname), dict(), dict())
 
 
 def _create_key(ica_kwargs, find_bads_kwargs, type_,
                 on_raw=False, on_epo=False):
-    """Create a clean str key from the passed kwargs."""
+    """Create a clean str key from the provided kwargs."""
     ica_kwargs_repr = \
         str(ica_kwargs).replace(
             '{', '(').replace('}', ')').replace("'", "")
@@ -171,7 +176,9 @@ def _create_key(ica_kwargs, find_bads_kwargs, type_,
     return repr_
 
 
-def main(input_dir_fif, result_file, processes=1):
+@fill_doc
+def _cli(input_dir_fif, result_file, n_jobs=1, participant=None, session=None,
+         fname=None):
     """
     Load all preprocessed raws in folder (and subfolders) sequentially
     and retrieves the number of excluded EOG and ECG components and their
@@ -179,41 +186,41 @@ def main(input_dir_fif, result_file, processes=1):
 
     Parameters
     ----------
-    folder_in : str | Path
-        Path to the folder containing the FIF files to preprocess.
+    %(input_dir_fif)s
     result_file : str | Path
-        File in which the results are pickled.
-    processes : int
-        Number of parallel processes used.
+        Path to the result file in which the test results are pickled.
+    %(n_jobs)s
+    %(select_participant)s
+    %(select_session)s
+    %(select_fname)s
     """
-    input_dir_fif = _check_input_dir_fif(input_dir_fif)
+    input_dir_fif = _check_path(input_dir_fif, item_name='input_dir_fif',
+                                must_exist=True)
     result_file = _check_result_file(result_file)
+    n_jobs = _check_n_jobs(n_jobs)
 
-    raws = list_raw_fif(input_dir_fif)
-    input_pool = [(fname, ) for fname in raws]
-    with mp.Pool(processes=processes) as p:
-        results = p.starmap(check_ica, input_pool)
+    # list files to process
+    fifs_in = raw_fif_selection(input_dir_fif, input_dir_fif, exclude=[],
+                                participant=participant, session=session,
+                                fname=fname, ignore_existing=False)
+    input_pool = [(fname, ) for fname in fifs_in]
+    with mp.Pool(processes=n_jobs) as p:
+        results = p.starmap(_pipeline, input_pool)
 
     with open(result_file, mode='wb') as f:
         pickle.dump(results, f, -1)
 
 
-def _check_input_dir_fif(input_dir_fif):
-    """Checks that the folders exist and are pathlib.Path instances."""
-    input_dir_fif = Path(input_dir_fif)
-    assert input_dir_fif.exists(), 'The input folder does not exists.'
-    return input_dir_fif
-
-
 def _check_result_file(result_file):
     """Checks that the result_file exists and is a pathlib.Path instance."""
-    result_file = Path(result_file)
+    result_file = _check_path(result_file, item_name='result_file')
     os.makedirs(result_file.parent, exist_ok=True)
     with open(result_file, mode='w') as f:
         f.write('data will be written here..')
     return result_file
 
 
+# -----------------------------------------------------------------------------
 def plot_results(result_file, swarmplot=False, title_mapping=dict(),
                  key_to_plot='all'):
     """
@@ -222,7 +229,7 @@ def plot_results(result_file, swarmplot=False, title_mapping=dict(),
     Parameters
     ----------
     result_file : str | Path
-        Path to the result file data-ica.pcl containing the components/scores.
+        Path to the result file in which the test results are pickled.
     swarmplot : bool
         If True, a swarmplot is overlayed on top of the boxplots.
     title_mapping : dict
@@ -339,21 +346,3 @@ def _plot_distribution(df, counter, title, swarmplot=False, ax=None):
         n = int(counter[k+1]/(k+1))
         if n != 0:
             ax.text(x=k, y=1.05, s='n=%i' % n, ha='center', va='center')
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        prog='NeuroTin - ICA checker',
-        description='Checks scores and components removed by ICA.')
-    parser.add_argument(
-        'input_dir_fif', type=str,
-        help='folder containing FIF files to preprocess.')
-    parser.add_argument(
-        'result_file', type=str,
-        help='path to the file where the results are pickled.')
-    parser.add_argument(
-        '--processes', type=int, metavar='int',
-        help='number of parallel processes.', default=1)
-    args = parser.parse_args()
-
-    main(args.folder_in, args.result_file, args.processes)
