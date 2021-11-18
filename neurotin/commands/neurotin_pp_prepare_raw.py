@@ -1,36 +1,35 @@
 import argparse
 
+from neurotin.commands import helpdict
 from neurotin.preprocessing.prepare_raw import _cli
 
 
 def run():
-    """Entrypoint for neurotin_logs_mml."""
+    """Entrypoint for neurotin.preprocessing.prepare_raw"""
     parser = argparse.ArgumentParser(
         prog='NeuroTin',
         description='Prepare NeuroTin raw FIF files.')
     parser.add_argument(
-        'input_dir_fif', type=str,
-        help='folder containing FIF files to preprocess.')
+        'input_dir_fif', type=str, help=helpdict['input_dir_fif'])
     parser.add_argument(
-        'output_dir_fif', type=str,
-        help='folder containing FIF files preprocessed.')
+        'output_dir_fif', type=str, help=helpdict['output_dir_fif'])
     parser.add_argument(
-        '--n_jobs', type=int, metavar='int',
-        help='number of parallel jobs.', default=1)
+        '--n_jobs', type=int, metavar='int', help=helpdict['n_jobs'],
+        default=1)
     parser.add_argument(
-        '--subject', type=int, metavar='int',
-        help='restrict to files with this subject ID.', default=None)
+        '--participant', type=int, metavar='int', help=helpdict['participant'],
+        default=None)
     parser.add_argument(
-        '--session', type=int, metavar='int',
-        help='restrict with files with this session ID.', default=None)
+        '--session', type=int, metavar='int', help=helpdict['session'],
+        default=None)
     parser.add_argument(
-        '--fname', type=str, metavar='path',
-        help='restrict to this file.', default=None)
+        '--fname', type=str, metavar='path', help=helpdict['fname'],
+        default=None)
     parser.add_argument(
         '--ignore_existing', action='store_true',
-        help='ignore files already processed.')
+        help=helpdict['ignore_existing'])
 
     args = parser.parse_args()
 
-    _cli(args.input_dir_fif, args.output_dir_fif, args.n_jobs, args.subject,
-         args.session, args.fname, args.ignore_existing)
+    _cli(args.input_dir_fif, args.output_dir_fif, args.n_jobs,
+         args.participant, args.session, args.fname, args.ignore_existing)

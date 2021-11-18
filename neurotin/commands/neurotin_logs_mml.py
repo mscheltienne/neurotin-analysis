@@ -6,7 +6,7 @@ from neurotin.logs import plot_mml_across_participants
 
 
 def run():
-    """Entrypoint for neurotin_logs_mml."""
+    """Entrypoint for neurotin.logs.plot_mml_across_participants"""
     parser = argparse.ArgumentParser(
         prog='NeuroTin',
         description='Analyze minimum masking level .csv file.')
