@@ -6,8 +6,9 @@ import multiprocessing as mp
 import mne
 
 from .. import logger
-from ..utils.checks import _check_path, _check_n_jobs
 from ..io.list_files import raw_fif_selection, read_exclusion, write_exclusion
+from ..utils.docs import fill_doc
+from ..utils.checks import _check_path, _check_n_jobs
 
 mne.set_log_level('ERROR')
 
@@ -34,21 +35,21 @@ def _exclude_heartbeat_components(raw, ica, **kwargs):
     return ecg_idx, ecg_scores[ecg_idx]
 
 
+@fill_doc
 def exclude_ocular_and_heartbeat_with_ICA(raw, *, semiauto=False):
     """
     Apply ICA to remove ocular and heartbeat artifacts from raw instance.
 
     Parameters
     ----------
-    raw : raw : Raw
-        Raw instance modified in-place.
+    %(raw_in_place)s
     semiauto : bool
         If True, the user will interactively exclude ICA components if
         automatic selection failed.
 
     Returns
     -------
-    raw : Raw instance modified in-place.
+    %(raw_in_place)s
     ica : ICA instance.
     eog_scores : Scores used for selection of the ocular component(s).
     ecg_scores : Scores used for selection of the heartbeat component(s).
@@ -84,28 +85,22 @@ def exclude_ocular_and_heartbeat_with_ICA(raw, *, semiauto=False):
 
 
 # -----------------------------------------------------------------------------
+@fill_doc
 def pipeline(fname, input_dir_fif, output_dir_fif):
-    """
-    Pipeline function called on each raw file.
+    """%(pipeline_header)s
 
     Exclude ocular and heartbeat related components with ICA.
 
     Parameters
     ----------
-    fname : str | Path
-        Path to the input '-raw.fif' file to preprocess.
-    input_dir_fif : str | Path
-        Path to the input raw directory (parent from fname).
-    output_dir_fif : str | Path
-        Path used to save raw in MNE format with the same structure as in
-        fname.
+    %(fname)s
+    %(input_dir_fif)s
+    %(output_dir_fif)s
 
     Returns
     -------
-    success : bool
-        False if a step raised an Exception.
-    fname : str
-        Path to the input '-raw.fif' file to preprocess.
+    %(success)s
+    %(fname)s
     """
     logger.info('Processing: %s' % fname)
     try:
@@ -152,30 +147,20 @@ def _create_output_fname(fname, input_dir_fif, output_dir_fif):
     return output_fname, ica_output_fname
 
 
+@fill_doc
 def main(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
          session=None, fname=None, ignore_existing=True):
-    """
-    CLI processing pipeline.
+    """%(main_header)s
 
     Parameters
     ----------
-    input_dir_fif : str | Path
-        Path to the folder containing the FIF files preprocessed on which ICA
-        must be applied.
-    output_dir_fif : str | Path
-        Path to the folder containing the FIF files without ocular and
-        heartbeat components.
-    n_jobs : int
-        Number of parallel jobs used. Must not exceed the core count. Can be -1
-        to use all cores.
-    participant : int | None
-        Restricts file selection to this participant.
-    session : int | None
-        Restricts file selection to this session.
-    fname : str | Path | None
-        Restrict file selection to this file (must be inside input_dir_fif).
-    ignore_existing : bool
-        If True, files already preprocessed are not included.
+    %(input_dir_fif)s
+    %(output_dir_fif)s
+    %(n_jobs)s
+    %(select_participant)s
+    %(select_session)s
+    %(select_fname)s
+    %(ignore_existing)s
     """
     # check arguments
     input_dir_fif = _check_path(input_dir_fif, item_name='input_dir_fif',

@@ -1,5 +1,6 @@
 import numpy as np
 
+from ..utils.docs import fill_doc
 from ..utils.checks import _check_type
 
 
@@ -45,6 +46,7 @@ def _apply_car(raw, *, projection=True):
         ref_channels="average", ch_type="eeg", projection=projection)
 
 
+@fill_doc
 def apply_filter_eeg(raw, bandpass, notch, car):
     """
     Apply filters in-place to the EEG channels:
@@ -54,8 +56,7 @@ def apply_filter_eeg(raw, bandpass, notch, car):
 
     Parameters
     ----------
-    raw : Raw
-        Raw instance modified in-place.
+    %(raw_in_place)s
     bandpass : tuple
         A 2-length tuple (highpass, lowpass), e.g. (1., 40.).
         The lowpass or highpass filter can be disabled by using None.
@@ -74,6 +75,7 @@ def apply_filter_eeg(raw, bandpass, notch, car):
         _apply_notch_filter(raw, 'eeg')
 
 
+@fill_doc
 def apply_filter_aux(raw, bandpass, notch):
     """
     Apply filters in-place to the AUX channels:
@@ -82,8 +84,7 @@ def apply_filter_aux(raw, bandpass, notch):
 
     Parameters
     ----------
-    raw : Raw
-        Raw instance modified in-place.
+    %(raw_in_place)s
     bandpass : tuple
         A 2-length tuple (highpass, lowpass), e.g. (1., 40.).
         The lowpass or highpass filter can be disabled by using None.

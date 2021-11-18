@@ -9,19 +9,20 @@ from datetime import datetime, timezone
 import mne
 
 from .. import logger
+from ..io.list_files import raw_fif_selection
+from ..utils.docs import fill_doc
 from ..utils.checks import (_check_type, _check_path, _check_value,
                             _check_n_jobs)
-from ..io.list_files import raw_fif_selection
 
 
-def parse_subject_info(fname):
+@fill_doc
+def parse_subject_info(subject_info_fname):
     """
-    Parse the subject_info file and return the subject ID and sex.
+    Parse the subject info file and return the subject ID, sex and birthday.
 
     Parameters
     ----------
-    fname : str | Path
-        Path to the subject info file.
+    %(subject_info_fname)s
 
     Returns
     -------
@@ -34,7 +35,8 @@ def parse_subject_info(fname):
             birthday : tuple
                 3-length tuple (year, month, day)
     """
-    fname = _check_path(fname, item_name='fname', must_exist=True)
+    fname = _check_path(subject_info_fname, item_name='subject_info_fname',
+                        must_exist=True)
     with open(fname, 'r') as file:
         lines = file.readlines()
     lines = [line.strip().split(';') for line in lines if len(line) > 0]
@@ -43,6 +45,7 @@ def parse_subject_info(fname):
     return {line[0]: (line[1], line[2]) for line in lines}
 
 
+@fill_doc
 def fill_info(raw, input_dir_fif, raw_dir_fif, subject, sex, birthday):
     """
     Fill the measurement info with:
@@ -54,24 +57,16 @@ def fill_info(raw, input_dir_fif, raw_dir_fif, subject, sex, birthday):
 
     Parameters
     ----------
-    raw : Raw
-        Raw instance modified in-place.
-    input_dir_fif : str | Path
-        Path to the input raw directory (parent from fname) (used to set
-        measurement date).
-    raw_dir_fif : str | Path
-        Path to the directory containing raw data with logs files (used to set
-        measurement date).
-    subject : int
-        ID of the subject.
-    sex : int
-        Sex of the subject. 1: Male - 2: Female.
-    birthday : 3-length tuple of int
-        Subject's birthday as (year, month, day).
+    %(raw_in_place)s
+    %(input_dir_fif)s
+    %(raw_dir_fif)s
+    %(subject)s
+    %(sex)s
+    %(birthday)s
 
     Returns
     -------
-    raw : Raw instance modified in-place.
+    %(raw_in_place)s
     """
     _add_description(raw, subject)
     _add_device_info(raw)
@@ -199,38 +194,27 @@ def _check_birthday(birthday):
 
 
 # -----------------------------------------------------------------------------
+@fill_doc
 def pipeline(fname, input_dir_fif, output_dir_fif, raw_dir_fif, subject, sex,
              birthday):
-    """
-    Pipeline function called on each raw file.
+    """%(pipeline_header)s
 
     Add measurement information.
 
     Parameters
     ----------
-    fname : str | Path
-        Path to the input '-raw.fif' file to preprocess.
-    input_dir_fif : str | Path
-        Path to the input raw directory (parent from fname).
-    output_dir_fif : str | Path | None
-        Path used to save raw in MNE format with the same structure as in
-        fname. If None, the input file is overwritten in-place.
-    raw_dir_fif : str | Path
-        Path to the directory containing raw data with logs files (used to set
-        measurement date).
-    subject : int
-        ID of the subject.
-    sex : int
-        Sex of the subject. 1: Male - 2: Female.
-    birthday : 3-length tuple of int
-        Subject's birthday as (year, month, day).
+    %(fname)s
+    %(input_dir_fif)s
+    %(output_dir_fif_with_None)s
+    %(raw_dir_fif)s
+    %(subject)s
+    %(sex)s
+    %(birthday)s
 
     Returns
     -------
-    success : bool
-        False if a step raised an Exception.
-    fname : str
-        Path to the input '-raw.fif' file to preprocess.
+    %(success)s
+    %(fname)s
     """
     logger.info('Processing: %s' % fname)
     try:
@@ -277,35 +261,22 @@ def _create_output_fname(fname, input_dir_fif, output_dir_fif):
     return output_fname
 
 
+@fill_doc
 def main(input_dir_fif, output_dir_fif, raw_dir_fif, subject_info, n_jobs=1,
          participant=None, session=None, fname=None, ignore_existing=True):
-    """
-    CLI processing pipeline.
+    """%(main_header)s
 
     Parameters
     ----------
-    input_dir_fif : str | Path
-        Path to the folder containing the FIF files to preprocess.
-    output_dir_fif : str | Path | None
-        Path to the folder containing the FIF files preprocessed. If None, the
-        input file is overwritten in-place.
-    raw_dir_fif : str | Path
-        Path to the directory containing raw data with logs files (used to set
-        measurement date).
-    subject_info : str | Path
-        Path to the subject_info file.
-    n_jobs : int
-        Number of parallel jobs used. Must not exceed the core count. Can be -1
-        to use all cores.
-    participant : int | None
-        Restricts file selection to this participant.
-    session : int | None
-        Restricts file selection to this session.
-    fname : str | Path | None
-        Restrict file selection to this file (must be inside input_dir_fif).
-    ignore_existing : bool
-        If True, files already preprocessed are not included.
-        If output_dir_fif is None, this is override to False.
+    %(input_dir_fif)s
+    %(output_dir_fif_with_None)s
+    %(raw_dir_fif)s
+    %(subject_info_fname)s
+    %(n_jobs)s
+    %(select_participant)s
+    %(select_session)s
+    %(select_fname)s
+    %(ignore_existing)s
     """
     # check arguments
     input_dir_fif = _check_path(input_dir_fif, item_name='input_dir_fif',

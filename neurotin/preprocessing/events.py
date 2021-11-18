@@ -4,6 +4,7 @@ import mne
 import numpy as np
 from bsl.utils import find_event_channel
 
+from ..utils.docs import fill_doc
 from ..utils.checks import _check_value
 
 
@@ -33,18 +34,18 @@ EVENTS_DURATION_MAPPING = {
 }
 
 
+@fill_doc
 def add_annotations_from_events(raw):
     """
     Add annotations from events to the raw instance.
 
     Parameters
     ----------
-    raw : Raw
-        Raw instance to modify.
+    %(raw_in_place)s
 
     Returns
     -------
-    raw : Raw instance modified in-place.
+    %(raw_in_place)s
     annotations : Annotations
     """
     previous_annotations = raw.annotations
@@ -61,6 +62,7 @@ def add_annotations_from_events(raw):
     return raw, annotations
 
 
+@fill_doc
 def check_events(raw, recording_type):
     """
     Check that the recording has all the expected events.
@@ -79,14 +81,13 @@ def check_events(raw, recording_type):
 
     Parameters
     ----------
-    raw : Raw
-        Raw instance to modify.
+    %(raw_in_place)s
     recording_type : str
         One of 'calibration', 'rs', 'online'.
 
     Returns
     -------
-    raw : Raw instance modified in-place.
+    %(raw_in_place)s
     """
     check_functions = {
         "calibration": _check_events_calibration,
@@ -181,14 +182,14 @@ def _check_events_neurofeedback(raw, events):
         replace_event_value(raw, events[1, 2], EVENTS["regulation"])
 
 
+@fill_doc
 def replace_event_value(raw, old_value, new_value):
     """
     Replace an event value on the trigger channel.
 
     Parameters
     ----------
-    raw : Raw
-        Raw instance to modify.
+    %(raw_in_place)s
     old_value : int
         Event value to replace.
     new_value : int
@@ -196,7 +197,7 @@ def replace_event_value(raw, old_value, new_value):
 
     Returns
     -------
-    raw : Raw instance modified in-place.
+    %(raw_in_place)s
     """
     tch = find_event_channel(inst=raw)
     raw.apply_function(

@@ -12,12 +12,14 @@ from .filters import apply_filter_eeg, apply_filter_aux
 from .events import check_events, add_annotations_from_events
 from ..io import read_raw_fif
 from ..io.list_files import raw_fif_selection, read_exclusion, write_exclusion
+from ..utils.docs import fill_doc
 from ..utils.checks import _check_path, _check_n_jobs
 
 
 mne.set_log_level('ERROR')
 
 
+@fill_doc
 def prepare_raw(raw):
     """
     Prepare raw instance by checking events, adding events as annotations,
@@ -26,15 +28,12 @@ def prepare_raw(raw):
 
     Parameters
     ----------
-    raw : Raw
-        Raw instance (will be modified in-place).
-    bads : list
-        List of interpolated bad channels.
+    %(raw_in_place)s
 
     Returns
     -------
-    raw : Raw
-        Raw instance (modified in-place).
+    %(raw_in_place)s
+    %(bads)s
     """
     # Check sampling frequency
     if raw.info['sfreq'] != 512:
@@ -64,30 +63,23 @@ def prepare_raw(raw):
 
 
 # -----------------------------------------------------------------------------
+@fill_doc
 def pipeline(fname, input_dir_fif, output_dir_fif):
-    """
-    Pipeline function called on each raw file.
+    """%(pipeline_header)s
 
     Prepare and preprocess raw .fif files.
 
     Parameters
     ----------
-    fname : str | Path
-        Path to the input '-raw.fif' file to preprocess.
-    input_dir_fif : str | Path
-        Path to the input raw directory (parent from fname).
-    output_dir_fif : str | Path
-        Path used to save raw in MNE format with the same structure as in
-        fname.
+    %(fname)s
+    %(input_dir_fif)s
+    %(output_dir_fif)s
 
     Returns
     -------
-    success : bool
-        False if a step raised an Exception.
-    fname : str
-        Path to the input '-raw.fif' file to preprocess.
-    bads : list
-        List of interpolated bad channels.
+    %(success)s
+    %(fname)s
+    %(bads)s
     """
     logger.info('Processing: %s' % fname)
     try:
@@ -131,28 +123,20 @@ def _create_output_fname(fname, input_dir_fif, output_dir_fif):
     return output_fname
 
 
+@fill_doc
 def main(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
          session=None, fname=None, ignore_existing=True):
-    """
-    CLI procesisng pipeline.
+    """%(main_header)s
 
     Parameters
     ----------
-    input_dir_fif : str | Path
-        Path to the folder containing the FIF files to preprocess.
-    output_dir_fif : str | Path
-        Path to the folder containing the FIF files preprocessed.
-    n_jobs : int
-        Number of parallel jobs used. Must not exceed the core count. Can be -1
-        to use all cores.
-    participant : int | None
-        Restricts file selection to this participant.
-    session : int | None
-        Restricts file selection to this session.
-    fname : str | Path | None
-        Restrict file selection to this file (must be inside input_dir_fif).
-    ignore_existing : bool
-        If True, files already preprocessed are not included.
+    %(input_dir_fif)s
+    %(output_dir_fif)s
+    %(n_jobs)s
+    %(select_participant)s
+    %(select_session)s
+    %(select_fname)s
+    %(ignore_existing)s
     """
     # check arguments
     input_dir_fif = _check_path(input_dir_fif, item_name='input_dir_fif',

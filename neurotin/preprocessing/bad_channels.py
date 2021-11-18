@@ -24,7 +24,7 @@ def _prepapre_raw(raw):
 
     Parameters
     ----------
-    raw : Raw
+    raw : mne.io.Raw
         Raw instance.
 
     Returns
@@ -74,13 +74,13 @@ def RANSAC_bads_suggestion(raw):
 
     Parameters
     ----------
-    raw : Raw
+    raw : mne.io.Raw
         Raw instance.
 
     Returns
     -------
     bads : list
-        Bad channels.
+        List of bad channels.
     """
     raw = _prepapre_raw(raw)
     epochs = mne.make_fixed_length_epochs(
@@ -104,13 +104,13 @@ def PREP_bads_suggestion(raw):
 
     Parameters
     ----------
-    raw : Raw
+    raw : mne.io.Raw
         Raw instance.
 
     Returns
     -------
     bads : list
-        Bad channels.
+        List of bad channels.
     """
     raw = _prepapre_raw(raw)
     raw.pick_types(eeg=True)
