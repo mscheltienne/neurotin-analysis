@@ -33,7 +33,7 @@ def write_results(results, results_file):
     directory = results_file.parent
     os.makedirs(directory, exist_ok=True)
     appendix = datetime.now().strftime("_%Hh-%Mmn-%d-%m-%Y")
-    results_file = directory / str(results_file.stem) + appendix + '.pcl'
+    results_file = directory / (str(results_file.stem) + appendix + '.pcl')
     results_file = _check_path(results_file, item_name='results_file')
 
     # save
