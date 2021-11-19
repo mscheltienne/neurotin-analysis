@@ -1,6 +1,5 @@
 import os
 import re
-import pickle
 import traceback
 from pathlib import Path
 import multiprocessing as mp
@@ -9,6 +8,7 @@ from datetime import datetime, timezone
 import mne
 
 from .. import logger
+from ..io.cli_results import write_results
 from ..io.list_files import raw_fif_selection
 from ..utils.docs import fill_doc
 from ..utils.checks import (_check_type, _check_path, _check_value,
@@ -308,8 +308,7 @@ def _cli(input_dir_fif, output_dir_fif, raw_dir_fif, subject_info, n_jobs=1,
     with mp.Pool(processes=n_jobs) as p:
         results = p.starmap(_pipeline, input_pool)
 
-    with open(output_dir_fif/'fails.pcl', mode='wb') as f:
-        pickle.dump([file for success, file in results if not success], f, -1)
+    write_results(results, output_dir_fif/'meas_info.pcl')
 
 
 def _create_input_pool(fifs_in, input_dir_fif, output_dir_fif, raw_dir_fif,

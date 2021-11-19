@@ -1,5 +1,4 @@
 import os
-import pickle
 import traceback
 from pathlib import Path
 import multiprocessing as mp
@@ -11,6 +10,7 @@ from .bad_channels import PREP_bads_suggestion
 from .filters import apply_filter_eeg, apply_filter_aux
 from .events import check_events, add_annotations_from_events
 from ..io import read_raw_fif
+from ..io.cli_results import write_results
 from ..io.list_files import raw_fif_selection
 from ..utils.docs import fill_doc
 from ..utils.checks import _check_path, _check_n_jobs
@@ -160,6 +160,4 @@ def _cli(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
     with mp.Pool(processes=n_jobs) as p:
         results = p.starmap(_pipeline, input_pool)
 
-    with open(output_dir_fif/'bads.pcl', mode='wb') as f:
-        pickle.dump([(file, bads) for success, file, bads in results
-                     if success], f, -1)
+    write_results(results, output_dir_fif/'prepare_raw.pcl')

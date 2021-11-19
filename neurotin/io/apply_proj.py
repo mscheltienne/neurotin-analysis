@@ -1,12 +1,12 @@
 """Script to apply projectors on raw .fif files."""
 
 import os
-import pickle
 import traceback
 import multiprocessing as mp
 
 import mne
 
+from .cli_results import write_results
 from .list_files import raw_fif_selection
 from .. import logger
 from ..utils.docs import fill_doc
@@ -103,5 +103,4 @@ def _cli(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
     with mp.Pool(processes=n_jobs) as p:
         results = p.starmap(_pipeline, input_pool)
 
-    with open(output_dir_fif/'fails.pcl', mode='wb') as f:
-        pickle.dump([file for success, file in results if not success], f, -1)
+    write_results(results, output_dir_fif/'apply_proj.pcl')

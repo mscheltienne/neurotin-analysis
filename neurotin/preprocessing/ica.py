@@ -1,11 +1,11 @@
 import os
-import pickle
 import traceback
 import multiprocessing as mp
 
 import mne
 
 from .. import logger
+from ..io.cli_results import write_results
 from ..io.list_files import raw_fif_selection
 from ..utils.docs import fill_doc
 from ..utils.checks import _check_path, _check_n_jobs
@@ -184,7 +184,4 @@ def _cli(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
     with mp.Pool(processes=n_jobs) as p:
         results = p.starmap(_pipeline, input_pool)
 
-    with open(output_dir_fif/'ica.pcl', mode='wb') as f:
-        pickle.dump([(file, eog_scores, ecg_scores)
-                     for success, file, eog_scores, ecg_scores in results
-                     if success], f, -1)
+    write_results(results, output_dir_fif/'ica.pcl')
