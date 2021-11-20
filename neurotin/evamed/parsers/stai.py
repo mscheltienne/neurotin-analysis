@@ -39,7 +39,7 @@ def parse_stai(df, participant):
     questions_weights_1_to_4 = [
         f'{prefix}_STAI'+str(k)
         for k in (3, 4, 6, 7, 9, 12, 13, 14, 17, 18, 22,
-                  24, 25, 28, 29,31, 32, 35, 37, 38, 40)
+                  24, 25, 28, 29, 31, 32, 35, 37, 38, 40)
     ]
     tmp = df_stai[questions_weights_4_to_1].replace({1: 4, 2: 3, 3: 2, 4: 1})
     tmp[questions_weights_1_to_4] = df_stai[questions_weights_1_to_4]

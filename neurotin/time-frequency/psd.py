@@ -122,8 +122,8 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
 
                     _add_data_to_dict(data, participant, session, run, phase,
                                       alpha, delta, ch_names)
-            except:
-                print (f'Skipping {fname}..')
+            except Exception:
+                print(f'Skipping {fname}..')
 
     df = pd.DataFrame.from_dict(data, orient='columns')
 

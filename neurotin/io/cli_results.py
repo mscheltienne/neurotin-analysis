@@ -80,7 +80,7 @@ def read_results(results_file, *, success_only=False, failure_only=False):
 
     # filter
     if success_only:
-        results = list(filter(lambda x:x[0], results))
+        results = list(filter(lambda x: x[0], results))
     if failure_only:
         results = list(filter(lambda x: not x[0], results))
 

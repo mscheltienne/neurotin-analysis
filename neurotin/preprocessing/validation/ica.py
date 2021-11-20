@@ -169,7 +169,7 @@ def _create_key(ica_kwargs, find_bads_kwargs, type_,
     if type_ == 'eog':
         repr_ = f'EOG - {dtype} - {ica_kwargs_repr} - {find_bads_kwargs_repr}'
     elif type_ == 'ecg':
-       repr_ = f'ECG - {dtype} - {ica_kwargs_repr} - {find_bads_kwargs_repr}'
+        repr_ = f'ECG - {dtype} - {ica_kwargs_repr} - {find_bads_kwargs_repr}'
     else:
         raise ValueError('Must be either eog or ecg.')
 

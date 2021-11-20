@@ -67,7 +67,7 @@ def _read_logs(session_dir):
         lines = f.readlines()
 
     lines = [line.split(' - ') for line in lines if len(line.split(' - ')) > 1]
-    logs = [[datetime.strptime(line[0].strip(), "%d/%m/%Y %H:%M")]+
+    logs = [[datetime.strptime(line[0].strip(), "%d/%m/%Y %H:%M")] +
             [line[k].strip() for k in range(1, len(line))] for line in lines]
 
-    return sorted(logs, key=lambda x:x[0], reverse=False)
+    return sorted(logs, key=lambda x: x[0], reverse=False)

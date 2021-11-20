@@ -107,10 +107,10 @@ def raw_fif_selection(input_dir, output_dir, *, participant=None, session=None,
         sessions = [session_id for k, session_id in enumerate(sessions)
                     if participants[k] == participant]
         fifs_in = [file for k, file in enumerate(fifs_in)
-                    if participants[k] == participant]
+                   if participants[k] == participant]
     if session is not None:
         fifs_in = [file for k, file in enumerate(fifs_in)
-                    if sessions[k] == session]
+                   if sessions[k] == session]
     if fname is not None:
         assert fname in fifs_in
         fifs_in = [fname]

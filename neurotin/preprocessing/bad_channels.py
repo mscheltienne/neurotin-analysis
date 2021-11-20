@@ -40,24 +40,24 @@ def _prepapre_raw(raw):
     # Calibration
     if EVENTS['audio'] in unique_events:
         sample_min, _, _ = \
-            events[np.where([ev[2]==EVENTS['rest'] for ev in events])][0]
+            events[np.where([ev[2] == EVENTS['rest'] for ev in events])][0]
         tmin = sample_min / raw.info['sfreq']
         sample_max, _, _ = \
-            events[np.where([ev[2]==EVENTS['audio'] for ev in events])][-1]
+            events[np.where([ev[2] == EVENTS['audio'] for ev in events])][-1]
         tmax = sample_max / raw.info['sfreq'] + 0.8
     # Resting-State
     elif EVENTS['resting-state'] in unique_events:
         sample_min, _, _ = events[np.where(
-            [ev[2]==EVENTS['resting-state'] for ev in events])][0]
+            [ev[2] == EVENTS['resting-state'] for ev in events])][0]
         tmin = sample_min / raw.info['sfreq']
         tmax = tmin + 120
     # Online Run
     elif EVENTS['regulation'] in unique_events:
         sample_min, _, _ = events[np.where(
-            [ev[2]==EVENTS['non-regulation'] for ev in events])][0]
+            [ev[2] == EVENTS['non-regulation'] for ev in events])][0]
         tmin = sample_min / raw.info['sfreq']
         sample_max, _, _ = events[np.where(
-            [ev[2]==EVENTS['regulation'] for ev in events])][-1]
+            [ev[2] == EVENTS['regulation'] for ev in events])][-1]
         tmax = sample_max / raw.info['sfreq'] + 16
 
     assert tmin < tmax

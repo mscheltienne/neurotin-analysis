@@ -40,7 +40,7 @@ def parse_subject_info(subject_info_fname):
     with open(fname, 'r') as file:
         lines = file.readlines()
     lines = [line.strip().split(';') for line in lines if len(line) > 0]
-    lines = [[eval(l.strip()) for l in line]
+    lines = [[eval(line_.strip()) for line_ in line]
              for line in lines if len(line) == 3]
     return {line[0]: (line[1], line[2]) for line in lines}
 
@@ -85,7 +85,7 @@ def _add_description(raw, subject):
     session = int(fname.parent.parent.name.split()[-1])
     recording_type = fname.parent.name
     recording_run = fname.name.split('-')[0]
-    raw.info['description'] = f'Subject {subject} - Session {session} '+\
+    raw.info['description'] = f'Subject {subject} - Session {session} ' + \
                               f'- {recording_type} {recording_run}'
 
 
@@ -317,7 +317,7 @@ def _create_input_pool(fifs_in, input_dir_fif, output_dir_fif, raw_dir_fif,
     Shape: (fname, input_dir_fif, output_dir_fif, subject, sex, birthday)."""
     input_pool = list()
     # pattern to match subject
-    pattern = re.compile('\%s(\d{3})\%s' % (os.sep, os.sep))
+    pattern = re.compile(r'\%s(\d{3})\%s' % (os.sep, os.sep))
     for fname in fifs_in:
         match = re.findall(pattern, str(fname))
         assert len(match) == 1
