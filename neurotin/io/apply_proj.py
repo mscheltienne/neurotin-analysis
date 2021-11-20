@@ -91,7 +91,7 @@ def _cli(input_dir_fif, output_dir_fif, n_jobs=1, participant=None,
     n_jobs = _check_n_jobs(n_jobs)
 
     # list files to process
-    fifs_in = raw_fif_selection(input_dir_fif, output_dir_fif, exclude=[],
+    fifs_in = raw_fif_selection(input_dir_fif, output_dir_fif,
                                 participant=participant, session=session,
                                 fname=fname, ignore_existing=ignore_existing)
 

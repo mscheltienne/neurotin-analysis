@@ -83,7 +83,7 @@ def _main(input_dir_fif, output_dir_set, n_jobs=1, participant=None,
     os.makedirs(output_dir_set, exist_ok=True)
 
     # list files to process
-    fifs_in = raw_fif_selection(input_dir_fif, output_dir_set, exclude=[],
+    fifs_in = raw_fif_selection(input_dir_fif, output_dir_set,
                                 participant=participant, session=session,
                                 fname=fname, ignore_existing=ignore_existing)
 
