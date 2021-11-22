@@ -1,4 +1,4 @@
-# NeuroTinAnalysis
+# NeuroTin
 
 Scripts and programs to analyze the NeuroTin EEG dataset.
 The RAW dataset folder structure is set to:
@@ -28,24 +28,32 @@ session:
 - `model_var_logs.csv`: helmet size (54, 56, 58), model normalization variables
   and bad channels.
 - `scores_logs.csv`: neurofeedback scores displayed.
-- `sound_stimulus_logs.csv`: sound stimulus settings used.
+- `sound_stimulus_logs.csv`: auditory stimulus settings used.
+
+For functions part of the CLI interface, help for the arguments can be obtained
+with the `--help` flag.
 
 ## logs
 
-`logs` contains scripts to process and analyze the 4 logging `.csv` files.
+`neurotin.logs` contains scripts to process and analyze the 4 logging `.csv`
+files.
+
+#### CLI
+
+- `neurotin_logs_mml`: Plot MML for a list of participants.
 
 ## model
 
-`model` contains scripts to analyze the models used in the neurofeedback
-training.
+`neurotin.model` contains scripts to analyze the models used in the
+neurofeedback training.
 
 ## preprocessing
 
-`preprocessing` contains scripts to clean the raw data and to fill missing
-information. The pipeline is splits in different steps creating intermediate
-files.
+`neurotin.preprocessing` contains scripts to clean the raw data and to fill
+missing information. The pipeline is splits in different steps creating
+intermediate files with the same folder structure as the input folder.
 
-### Step 1
+### Step 1: `neurotin.preprocessing.prepare_raw`
 
 - Rename channels and fix channel types.
 - Checks sampling frequency and resample to 512 Hz if needed.
@@ -58,24 +66,28 @@ files.
 - Interpolate bad channels.
 - Apply common average reference (CAR) projector.
 
-It can be called via command-line with `python prepare_raw.py`. Help for the
-arguments can be obtained with the `--help` flag.
-
-### Step 2
+### Step 2: `neurotin.preprocessing.ica`
 
 - Apply ICA and remove occular and heartbeat related components.
 
-It can be called via command-line with `python ica.py`. Help for the arguments
-can be obtained with the `--help` flag.
+Thresholds and methods to select ocular and heartbeat related components have
+been adapted for this dataset.
 
-### Step 3
+TODO:
+- [ ] Replace with a python implementation of ICLabel
+
+### Step 3: `neurotin.preprocessing.meas_info`
 
 - Fill `.info['description']`, `.info['device_info']`, `.info['experimenter']`,
   `.info['meas_date']`, `.info['subject_info']`.
 
-It can be called via command-line with `python meas_info.py`. Help for the
-arguments can be obtained with the `--help` flag.
-Note that this last step can be operated in-place, overwriting existing files.
+Description includes ``subject id``, ``session``, ``recording type`` and
+``recording run``.
+Device information includes ``type``, ``model``, ``serial`` and ``website``.
+Exprimenter includes the experimenter name.
+Measurement date includes the recording datetime (UTC).
+Subject information includes ``subject id``, ``birthday`` (optional) and
+``sex`` (optional).
 
 ## time-frequency
 
@@ -86,3 +98,13 @@ e.g. PSD computation using welch method or multitapers.
 
 `evamed` contains scsripts to parse and analyze the evamed questionnaires.
 The questionnaires are provided as an exported compact .csv file.
+
+## CLI
+
+- `neurotin_pp_prepare_raw`
+- `neurotin_pp_ica`
+- `neurotin_pp_meas_info`
+
+## I/O
+
+`neurotin.io` contains functions for I/O operations.
