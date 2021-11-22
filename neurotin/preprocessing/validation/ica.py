@@ -2,6 +2,7 @@
 heartbeat components detection methods and thresholds."""
 
 import os
+import random
 import pickle
 import traceback
 import multiprocessing as mp
@@ -13,7 +14,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 from ... import logger
-from ...io.list_files import raw_fif_selection
+from ...io.list_files import raw_fif_selection, list_ica_fif
 from ...utils.docs import fill_doc
 from ...utils.checks import _check_path, _check_n_jobs
 
@@ -346,3 +347,80 @@ def _plot_distribution(df, counter, title, swarmplot=False, ax=None):
         n = int(counter[k+1]/(k+1))
         if n != 0:
             ax.text(x=k, y=1.05, s='n=%i' % n, ha='center', va='center')
+
+
+# -----------------------------------------------------------------------------
+def random_plot_sources(prepare_raw_dir, ica_raw_dir):
+    """
+    Randomly pick a processed file and plot the sources (included and excluded)
+    to confirm that the excluded sources are occular or heartbeat related
+    components.
+
+    Parameters
+    ----------
+    prepare_raw_dir : str | Path
+        Path to the folder containing the FIF files processed used to fit the
+        ICA.
+    ica_raw_dir : str | Path
+        Path to the folder containg the FIF files processed on which the ICA
+        has been applied. Contains both the resulting raw instance and the
+        fitted ICA instance.
+    """
+    prepare_raw_dir = _check_path(prepare_raw_dir, item_name='prepare_raw_dir',
+                                  must_exist=True)
+    ica_raw_dir = _check_path(ica_raw_dir, item_name='ica_raw_dir',
+                              must_exist=True)
+
+    logger.info('Listing files..')
+    ica_files = list_ica_fif(ica_raw_dir)
+    logger.info('Listing complete.')
+
+    # Create state
+    state = mp.Value('i', 0)
+
+    # Call loop in second process
+    process = mp.Process(target=_plot_random_ica_sources,
+                         args=(prepare_raw_dir, ica_raw_dir, ica_files, state))
+    process.start()
+    while state.value == 0:
+        pass
+
+    # Wait for user input to change state and interrupt main loop
+    input('Press ENTER to stop the loop.. ')
+    with state.get_lock():
+        state.value = 0
+    process.join(timeout=10)
+    if process.is_alive():
+        logger.warning('Process not completing. Killing..')
+        process.kill()
+
+
+def _plot_random_ica_sources(prepare_raw_dir, ica_raw_dir, ica_files, state):
+    """Loop to load and plot sources from ICA decompositions.
+    TODO: Select and load in a second process while the plot is displayed."""
+    # mne.viz.set_browser_backend('pyqtgraph')
+
+    with state.get_lock():
+        state.value = 1
+
+    while True:
+        if state.value == 0:  # break condition from parent process
+            break
+
+        ica, raw = _select_and_load_files(prepare_raw_dir, ica_raw_dir,
+                                          ica_files)
+        logger.info(raw)
+        ica.plot_sources(raw, show=True, block=True)
+
+
+def _select_and_load_files(prepare_raw_dir, ica_raw_dir, ica_files):
+    """Select and load ICA/Raw files."""
+    ica_file = random.choice(ica_files)
+    relative_path = ica_file.relative_to(ica_raw_dir)
+    relative_path_raw = str(relative_path).replace('-ica.fif', '-raw.fif')
+    raw_file = prepare_raw_dir / relative_path_raw
+
+    ica = mne.preprocessing.read_ica(ica_file, verbose=False)
+    raw = mne.io.read_raw_fif(raw_file, preload=True, verbose=False)
+
+    return ica, raw
