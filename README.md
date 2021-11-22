@@ -81,13 +81,13 @@ TODO:
 - Fill `.info['description']`, `.info['device_info']`, `.info['experimenter']`,
   `.info['meas_date']`, `.info['subject_info']`.
 
-Description includes ``subject id``, ``session``, ``recording type`` and
-``recording run``.
-Device information includes ``type``, ``model``, ``serial`` and ``website``.
+Description includes `subject id`, `session`, `recording type` and
+`recording run`.
+Device information includes `type`, `model`, `serial` and `website`.
 Exprimenter includes the experimenter name.
 Measurement date includes the recording datetime (UTC).
-Subject information includes ``subject id``, ``birthday`` (optional) and
-``sex`` (optional).
+Subject information includes `subject id`, `birthday` (optional) and
+`sex` (optional).
 
 ## time-frequency
 
