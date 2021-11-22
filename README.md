@@ -89,6 +89,12 @@ Measurement date includes the recording datetime (UTC).
 Subject information includes `subject id`, `birthday` (optional) and
 `sex` (optional).
 
+### CLI
+
+- `neurotin_pp_prepare_raw`
+- `neurotin_pp_ica`
+- `neurotin_pp_meas_info`
+
 ## time-frequency
 
 `time-frequency` contains scripts for sensor-level time-frequency analysis,
@@ -98,12 +104,6 @@ e.g. PSD computation using welch method or multitapers.
 
 `evamed` contains scsripts to parse and analyze the evamed questionnaires.
 The questionnaires are provided as an exported compact .csv file.
-
-## CLI
-
-- `neurotin_pp_prepare_raw`
-- `neurotin_pp_ica`
-- `neurotin_pp_meas_info`
 
 ## I/O
 
