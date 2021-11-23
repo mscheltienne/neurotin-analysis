@@ -288,6 +288,8 @@ def _cli(input_dir_fif, output_dir_fif, raw_dir_fif, subject_info, n_jobs=1,
     else:
         output_dir_fif = input_dir_fif
         ignore_existing = False  # overwrite existing files
+    raw_dir_fif = _check_path(raw_dir_fif, item_name='raw_dir_fif',
+                              must_exist=True)
     subject_info = _check_path(subject_info, item_name='subject_info',
                                must_exist=True)
     n_jobs = _check_n_jobs(n_jobs)
