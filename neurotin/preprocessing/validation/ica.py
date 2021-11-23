@@ -366,6 +366,8 @@ def random_plot_sources(prepare_raw_dir, ica_raw_dir):
         has been applied. Contains both the resulting raw instance and the
         fitted ICA instance.
     """
+    # mne.viz.set_browser_backend('pyqtgraph')
+
     prepare_raw_dir = _check_path(prepare_raw_dir, item_name='prepare_raw_dir',
                                   must_exist=True)
     ica_raw_dir = _check_path(ica_raw_dir, item_name='ica_raw_dir',
@@ -375,38 +377,8 @@ def random_plot_sources(prepare_raw_dir, ica_raw_dir):
     ica_files = list_ica_fif(ica_raw_dir)
     logger.info('Listing complete.')
 
-    # Create state
-    state = mp.Value('i', 0)
-
-    # Call loop in second process
-    process = mp.Process(target=_plot_random_ica_sources,
-                         args=(prepare_raw_dir, ica_raw_dir, ica_files, state))
-    process.start()
-    while state.value == 0:
-        pass
-
-    # Wait for user input to change state and interrupt main loop
-    input('Press ENTER to stop the loop.. ')
-    with state.get_lock():
-        state.value = 0
-    process.join(timeout=10)
-    if process.is_alive():
-        logger.warning('Process not completing. Killing..')
-        process.kill()
-
-
-def _plot_random_ica_sources(prepare_raw_dir, ica_raw_dir, ica_files, state):
-    """Loop to load and plot sources from ICA decompositions.
-    TODO: Select and load in a second process while the plot is displayed."""
-    # mne.viz.set_browser_backend('pyqtgraph')
-
-    with state.get_lock():
-        state.value = 1
-
+    # Infinite loop
     while True:
-        if state.value == 0:  # break condition from parent process
-            break
-
         ica, raw = _select_and_load_files(prepare_raw_dir, ica_raw_dir,
                                           ica_files)
         logger.info(raw)
