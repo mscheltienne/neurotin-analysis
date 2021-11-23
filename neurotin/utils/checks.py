@@ -175,7 +175,7 @@ def _check_path(item, *, item_name=None, must_exist=False):
     logger.debug("Checking path '%s'.", item)
     if must_exist:
         assert item.exists(), 'The path does not exists.'
-    return item
+    return item.expanduser().absolute()
 
 
 def _check_n_jobs(n_jobs):
