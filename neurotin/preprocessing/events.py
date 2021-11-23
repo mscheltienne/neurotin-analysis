@@ -6,32 +6,7 @@ from bsl.utils import find_event_channel
 
 from ..utils.docs import fill_doc
 from ..utils.checks import _check_value
-
-
-EVENTS = {
-    "rest": 1,
-    "blink": 2,
-    "resting-state": 3,
-    "audio": 4,
-    "regulation": 5,
-    "non-regulation": 6,
-}
-EVENTS_MAPPING = {
-    1: "rest",
-    2: "blink",
-    3: "resting-state",
-    4: "audio",
-    5: "regulation",
-    6: "non-regulation",
-}
-EVENTS_DURATION_MAPPING = {
-    1: 1,
-    2: 60,
-    3: 120,
-    4: 0.8,
-    5: 16,
-    6: 8,
-}
+from ..config.events import EVENTS, EVENTS_MAPPING, EVENTS_DURATION_MAPPING
 
 
 @fill_doc

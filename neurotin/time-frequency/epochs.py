@@ -1,35 +1,9 @@
-from pathlib import Path
-
 import mne
 import numpy as np
 from autoreject import AutoReject, get_rejection_threshold
 
-
-EVENTS = {
-    "rest": 1,
-    "blink": 2,
-    "resting-state": 3,
-    "audio": 4,
-    "regulation": 5,
-    "non-regulation": 6,
-}
-EVENTS_MAPPING = {
-    1: "rest",
-    2: "blink",
-    3: "resting-state",
-    4: "audio",
-    5: "regulation",
-    6: "non-regulation",
-}
-EVENTS_DURATION_MAPPING = {
-    1: 1,
-    2: 60,
-    3: 120,
-    4: 0.8,
-    5: 16,
-    6: 8,
-}
-FIRST_REST_PHASE_EXT = 7  # extension of the first rest phase in seconds.
+from ..config.events import (EVENTS, EVENTS_MAPPING, EVENTS_DURATION_MAPPING,
+                             FIRST_REST_PHASE_EXT)
 
 
 def make_fixed_length_epochs(raw, duration=1., overlap=0.):

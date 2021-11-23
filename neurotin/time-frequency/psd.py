@@ -4,8 +4,6 @@ from pathlib import Path
 import mne
 import numpy as np
 import pandas as pd
-import seaborn as sns
-from matplotlib import pyplot as plt
 from mne.time_frequency import psd_welch, psd_multitaper
 
 from utils import make_epochs
