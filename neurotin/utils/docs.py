@@ -80,6 +80,17 @@ docdict['bads'] = """
 bads : list
     List of selected and interpolated bad channels."""
 
+# ----------------------------------- model ----------------------------------
+docdict['folder'] = """
+folder : str | Path
+    Path to the directory containing raw data with logs files and models."""
+docdict['participant'] = """
+participant : int
+    ID of the participant."""
+docdict['session'] = """
+session : int
+    ID of the session."""
+
 # ------------------------- Documentation functions --------------------------
 docdict_indented = dict()
 

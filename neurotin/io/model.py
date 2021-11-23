@@ -1,15 +1,35 @@
 import pickle
 import datetime
 
-from ..utils.checks import _check_type, _check_path
+from ..utils.docs import fill_doc
+from ..utils.checks import (_check_type, _check_path, _check_participant,
+                            _check_session)
 
 
+@fill_doc
 def load_model(folder, participant, session, model_idx='auto'):
     """
     Load a saved model for a given participant/session.
+
+    Parameters
+    ----------
+    %(folder)s
+    %(participant)s
+    %(session)s
+
+    Returns
+    -------
+    weights : array of shape (channels, ) -> (64, )
+    info : mne.Info
+    reject : dict
+        Global peak-to-peak rejection threshold. Only key should be 'eeg'.
+    reject_local : array of shape (channels, ) -> (64, )
+        Local peak-topeak rejection threshold.
+    calib_idx : int
     """
     folder = _check_path(folder, item_name='folder', must_exist=True)
-    participant, participant_folder = _check_participant(participant)
+    participant = _check_participant(participant)
+    participant_folder = str(participant).zfill(3)
     session = _check_session(session)
     model_idx = _check_model_idx(model_idx)
 
@@ -29,20 +49,6 @@ def load_model(folder, participant, session, model_idx='auto'):
         weights, info, reject, reject_local, calib_idx = pickle.load(f)
 
     return weights, info, reject, reject_local, calib_idx
-
-
-def _check_participant(participant):
-    """Check argument participant."""
-    _check_type(participant, ('int', ), item_name='participant')
-    assert 50 <= participant <= 150, 'Invalid participant ID.'
-    return participant, str(participant).zfill(3)
-
-
-def _check_session(session):
-    """Check argument session."""
-    _check_type(session, ('int', ), item_name='session')
-    assert 1 <= session <= 15, 'Invalid session ID.'
-    return session
 
 
 def _check_model_idx(model_idx):
@@ -71,3 +77,20 @@ def _read_logs(session_dir):
             [line[k].strip() for k in range(1, len(line))] for line in lines]
 
     return sorted(logs, key=lambda x: x[0], reverse=False)
+
+
+@fill_doc
+def load_session_weights(folder, participant, session):
+    """Load the weights used during that session and return them as Dataframe.
+
+    Parameters
+    ----------
+    %(folder)s
+    %(participant)s
+    %(session)s
+
+    Returns
+    -------
+    weights : Dataframe
+    """
+    weights, info, _, _, _ = load_model(folder, participant, session)
