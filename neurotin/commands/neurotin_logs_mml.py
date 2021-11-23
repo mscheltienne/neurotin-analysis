@@ -2,6 +2,7 @@ import argparse
 
 from matplotlib import pyplot as plt
 
+from neurotin import set_log_level
 from neurotin.logs import plot_mml_across_participants
 
 
@@ -16,7 +17,12 @@ def run():
     parser.add_argument(
         '-p',
         help='participant id(s) to include.', nargs='+', required=True)
+    parser.add_argument(
+        '--loglevel', type=str, metavar='str', help=helpdict['loglevel'],
+        default='info')
 
     args = parser.parse_args()
+    set_log_level(args.loglevel.upper().strip())
+
     plot_mml_across_participants(args.csv, [int(x) for x in args.p])
     plt.show(block=True)

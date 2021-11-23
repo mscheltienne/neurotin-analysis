@@ -16,3 +16,4 @@ helpdict['session'] = 'restrict processing to files with this session ID.'
 helpdict['fname'] = 'restrict processing to this file.'
 helpdict['ignore_existing'] = \
     'ignore files already processed and saved in output_dir_fif.'
+helpdict['loglevel'] = 'set the log level to one of info, warning, debug.'

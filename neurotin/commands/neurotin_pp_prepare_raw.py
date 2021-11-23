@@ -1,5 +1,6 @@
 import argparse
 
+from neurotin import set_log_level
 from neurotin.commands import helpdict
 from neurotin.preprocessing.prepare_raw import _cli
 
@@ -28,8 +29,12 @@ def run():
     parser.add_argument(
         '--ignore_existing', action='store_true',
         help=helpdict['ignore_existing'])
+    parser.add_argument(
+        '--loglevel', type=str, metavar='str', help=helpdict['loglevel'],
+        default='info')
 
     args = parser.parse_args()
+    set_log_level(args.loglevel.upper().strip())
 
     _cli(args.input_dir_fif, args.output_dir_fif, args.n_jobs,
          args.participant, args.session, args.fname, args.ignore_existing)

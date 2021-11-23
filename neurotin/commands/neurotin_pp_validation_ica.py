@@ -1,5 +1,6 @@
 import argparse
 
+from neurotin import set_log_level
 from neurotin.commands import helpdict
 from neurotin.preprocessing.validation.ica import _cli
 
@@ -27,8 +28,12 @@ def run():
     parser.add_argument(
         '--fname', type=str, metavar='path', help=helpdict['fname'],
         default=None)
+    parser.add_argument(
+        '--loglevel', type=str, metavar='str', help=helpdict['loglevel'],
+        default='info')
 
     args = parser.parse_args()
+    set_log_level(args.loglevel.upper().strip())
 
     _cli(args.input_dir_fif, args.result_file, args.n_jobs, args.participant,
          args.session, args.fname)
