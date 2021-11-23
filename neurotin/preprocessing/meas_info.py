@@ -325,7 +325,7 @@ def _create_input_pool(fifs_in, input_dir_fif, output_dir_fif, raw_dir_fif,
         try:
             sex, birthday = subject_info_dict[subject]
         except KeyError:
-            sex, birthday = None
+            sex, birthday = None, None
         input_pool.append(
             (fname, input_dir_fif, output_dir_fif, raw_dir_fif,
              subject, sex, birthday))
