@@ -1,9 +1,5 @@
 """Parser of visit evaluation (participant) Evamed questionnaires."""
 
-import re
-
-import pandas as pd
-
 from ...utils.checks import _check_participant
 
 
