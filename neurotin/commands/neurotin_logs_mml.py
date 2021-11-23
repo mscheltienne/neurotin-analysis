@@ -3,6 +3,7 @@ import argparse
 from matplotlib import pyplot as plt
 
 from neurotin import set_log_level
+from neurotin.commands import helpdict
 from neurotin.logs import plot_mml_across_participants
 
 
