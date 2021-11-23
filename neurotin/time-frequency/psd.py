@@ -1,13 +1,15 @@
 import re
-from pathlib import Path
+import traceback
 
 import mne
 import numpy as np
 import pandas as pd
 from mne.time_frequency import psd_welch, psd_multitaper
 
-from utils import make_epochs
-from ..ui.list_files import list_raw_fif
+from .epochs import make_epochs
+from .. import logger
+from ..io.list_files import list_raw_fif
+from ..utils.checks import _check_path, _check_participants
 
 mne.set_log_level('WARNING')
 
@@ -57,7 +59,7 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
     ----------
     folder : str | Path
         Path to the folder containing preprocessed files.
-    participants : int | list of int
+    participants : int | list | tuple
         Participant ID or list of participant IDs to analyze.
     method : str
         Either 'welch' for psd_welch or 'multitaper' for psd_multitaper.
@@ -76,16 +78,17 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
             alpha_ch : float - Averaged alpha PSD (1 per channel).
             delta_ch : float - Averaged delta PSD (1 per channel).
     """
-    folder = _check_folder(folder)
+    folder = _check_path(folder, item_name='folder', must_exit=True)
     participants = _check_participants(participants)
 
     data = dict()
     for participant in participants:
-        fnames = list_raw_fif(folder/str(participant).zfill(3))
+        fnames = list_raw_fif(folder / str(participant).zfill(3))
         for fname in fnames:
             if fname.parent.name != 'Online':
                 continue
 
+            logger.info('Processing: %s' % fname)
             try:
                 raw = mne.io.read_raw_fif(fname, preload=True)
 
@@ -120,8 +123,13 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
 
                     _add_data_to_dict(data, participant, session, run, phase,
                                       alpha, delta, ch_names)
+
+                # clean up
+                del raw
+
             except Exception:
-                print(f'Skipping {fname}..')
+                logger.warning('FAILED: %s -> Skip.' % fname)
+                logger.debug(traceback.format_exc())
 
     df = pd.DataFrame.from_dict(data, orient='columns')
 
@@ -156,20 +164,3 @@ def _add_data_to_dict(data, participant, session, run, phase, alpha, delta,
     # sanity check
     entries = len(data['participant'])
     assert all(len(data[key]) == entries for key in keys)
-
-
-def _check_folder(folder):
-    """Check argument folder."""
-    folder = Path(folder)
-    assert folder.exists()
-    return folder
-
-
-def _check_participants(participants):
-    """Check argument participants."""
-    if isinstance(participants, (int, float)):
-        participants = [int(participants)]
-    else:
-        participants = [int(participant) for participant in participants]
-    assert all(50 <= participant <= 150 for participant in participants)
-    return participants

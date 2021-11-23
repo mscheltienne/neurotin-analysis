@@ -227,6 +227,39 @@ def _check_participant(participant):
     return participant
 
 
+def _check_participants(participants):
+    """Checks that the participant IDs are valid and return them as a list.
+
+    Parameters
+    ----------
+    participants : int | list | tuple
+        Participant ID(s).
+
+    Returns
+    -------
+    participants : list
+        Participant ID(s).
+
+    Raises
+    ------
+    TypeError
+        When the participant ID is not an int.
+    AssertionError
+        When the participant ID is not a strictly positive integer.
+    """
+    _check_type(participants, ('int', list, tuple), item_name='participants')
+
+    if isinstance(participants, (int, )):
+        participants = [participants]
+    elif isinstance(participants, (tuple, )):
+        participants = list(participants)
+
+    for participant in participants:
+        _check_participant(participant)
+
+    return participants
+
+
 def _check_session(session):
     """Checks that the session ID is valid.
 

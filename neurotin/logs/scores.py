@@ -6,9 +6,8 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from . import _check_participants
 from ..io.csv import read_csv
-from ..utils.checks import _check_type, _check_participant
+from ..utils.checks import _check_type, _check_participant, _check_participants
 
 
 def plot_score_evolution_per_participant(

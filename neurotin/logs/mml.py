@@ -7,9 +7,8 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from . import _check_participants
 from ..io.csv import read_csv
-from ..utils.checks import _check_type
+from ..utils.checks import _check_type, _check_participants
 
 
 def plot_mml_across_participants(csv, participants, figsize=(10, 5)):
