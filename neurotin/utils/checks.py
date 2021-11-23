@@ -7,6 +7,8 @@ import multiprocessing
 
 import numpy as np
 
+from .. import logger
+
 
 def _ensure_int(item, *, item_name=None):
     """
@@ -170,6 +172,7 @@ def _check_path(item, *, item_name=None, must_exist=False):
     """
     _check_type(item, ('path-like', ), item_name=item_name)
     item = Path(item)
+    logger.debug("Checking path '%s'.", item)
     if must_exist:
         assert item.exists(), 'The path does not exists.'
     return item
@@ -196,6 +199,8 @@ def _check_n_jobs(n_jobs):
     """
     _check_type(n_jobs, ('int', ), item_name='n_jobs')
     n_cores = multiprocessing.cpu_count()
+    logger.debug("Checking n_jobs '%i'.", n_jobs)
+    logger.debug("Number of cores found: %s", n_cores)
     if n_jobs == -1:
         n_jobs = n_cores
     _check_value(n_jobs, tuple(range(n_cores+1)), item_name='n_jobs')
