@@ -1,11 +1,11 @@
 import argparse
 
-from neurotin.commands import helpdict
 from neurotin.preprocessing.validation.ica import random_plot_sources
 
 
 def run():
-    """Entrypoint for neurotin.preprocessing.validation.ica.random_plot_sources
+    """
+    Entrypoint for neurotin.preprocessing.validation.ica.random_plot_sources
     """
     parser = argparse.ArgumentParser(
         prog='NeuroTin',
