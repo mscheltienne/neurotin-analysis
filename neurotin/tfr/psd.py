@@ -19,7 +19,7 @@ def _compute_psd(raw, method='welch', **kwargs):
     Compute the power spectral density on the regulation and non-regulation
     phase of the raw instance.
     """
-    method = _check_value(method, ('welch', 'multitaper'), item_name='method')
+    _check_value(method, ('welch', 'multitaper'), item_name='method')
     epochs = make_epochs(raw)
 
     # select all channels
@@ -70,7 +70,7 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
             alpha_ch : float - Averaged alpha PSD (1 per channel).
             delta_ch : float - Averaged delta PSD (1 per channel).
     """
-    folder = _check_path(folder, item_name='folder', must_exit=True)
+    folder = _check_path(folder, item_name='folder', must_exist=True)
     participants = _check_participants(participants)
 
     data = dict()
