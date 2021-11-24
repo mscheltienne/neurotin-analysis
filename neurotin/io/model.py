@@ -1,5 +1,7 @@
 import pickle
-import datetime
+from datetime import datetime
+
+import pandas as pd
 
 from ..utils.docs import fill_doc
 from ..utils.checks import (_check_type, _check_path, _check_participant,
@@ -94,3 +96,5 @@ def load_session_weights(folder, participant, session):
     weights : Dataframe
     """
     weights, info, _, _, _ = load_model(folder, participant, session)
+    weights = {'channel': info.ch_names, 'weight': list(weights)}
+    return pd.DataFrame.from_dict(weights, orient='columns')
