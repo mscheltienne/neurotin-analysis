@@ -9,7 +9,7 @@ from mne.time_frequency import psd_welch, psd_multitaper
 from .epochs import make_epochs
 from .. import logger
 from ..io.list_files import list_raw_fif
-from ..utils.checks import _check_path, _check_participants
+from ..utils.checks import _check_value, _check_path, _check_participants
 
 mne.set_log_level('WARNING')
 
@@ -19,7 +19,7 @@ def _compute_psd(raw, method='welch', **kwargs):
     Compute the power spectral density on the regulation and non-regulation
     phase of the raw instance.
     """
-    method = _check_method(method)
+    method = _check_value(method, ('welch', 'multitaper'), item_name='method')
     epochs = make_epochs(raw)
 
     # select all channels
@@ -40,14 +40,6 @@ def _compute_psd(raw, method='welch', **kwargs):
             psds[phase], freqs[phase] = psd_multitaper(epochs[phase], **kwargs)
 
     return psds, freqs
-
-
-def _check_method(method):
-    """Check argument method."""
-    method = method.lower().strip()
-    assert method in ('welch', 'multitaper'), 'Supported: welch, multitaper.'
-
-    return method
 
 
 def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
