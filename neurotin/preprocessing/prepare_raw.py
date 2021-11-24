@@ -99,7 +99,7 @@ def _pipeline(fname, input_dir_fif, output_dir_fif):
         # preprocess
         raw = read_raw_fif(fname)
         raw, bads = prepare_raw(raw)
-        raw.apply_proj()
+        raw.apply_proj()  # sanity-check
 
         # export
         raw.save(output_fname, fmt="double", overwrite=True)

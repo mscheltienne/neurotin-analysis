@@ -38,7 +38,7 @@ def _apply_notch_filter(raw, picks):
     raw.notch_filter(np.arange(50, 151, 50), picks=picks)
 
 
-def _apply_car(raw, *, projection=True):
+def _apply_car(raw, *, projection=False):
     """
     Adds a CAR projector based on the good EEG channels.
     """
@@ -63,7 +63,7 @@ def apply_filter_eeg(raw, bandpass, notch, car):
     notch : bool
         If True, a notch filter at (50, 100, 150) Hz  is applied.
     car : bool
-        If True, a CAR projector based on the good channels is added.
+        If True, a CAR reference based on the good channels is added.
     """
     if car:
         _apply_car(raw)
