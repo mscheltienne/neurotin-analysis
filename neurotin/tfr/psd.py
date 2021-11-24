@@ -44,7 +44,7 @@ def _compute_psd(raw, method='welch', **kwargs):
 
 def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
     """
-    Compute the PSD and average by frequency bin for the given participants.
+    Compute the PSD and average by frequency band for the given participants.
     Takes about 7.45 s ± 323 ms / session on MacBook.
 
     Parameters
