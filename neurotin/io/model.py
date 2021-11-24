@@ -26,7 +26,7 @@ def load_model(folder, participant, session, model_idx='auto'):
     reject : dict
         Global peak-to-peak rejection threshold. Only key should be 'eeg'.
     reject_local : array of shape (channels, ) -> (64, )
-        Local peak-topeak rejection threshold.
+        Local peak-to-peak rejection threshold.
     calib_idx : int
     """
     folder = _check_path(folder, item_name='folder', must_exist=True)
