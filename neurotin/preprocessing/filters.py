@@ -19,7 +19,6 @@ def _apply_bandpass_filter(raw, bandpass, picks):
     """
     Apply a bandpass FIR acausal filter.
     """
-    bandpass = _check_bandpass(bandpass)
     raw.filter(
         l_freq=bandpass[0],
         h_freq=bandpass[1],
@@ -47,7 +46,7 @@ def _apply_car(raw, *, projection=False):
 
 
 @fill_doc
-def apply_filter_eeg(raw, bandpass, notch, car):
+def apply_filter_eeg(raw, *, bandpass=(None, None), notch=False, car=False):
     """
     Apply filters in-place to the EEG channels:
         - Bandpass
@@ -65,8 +64,9 @@ def apply_filter_eeg(raw, bandpass, notch, car):
     car : bool
         If True, a CAR reference based on the good channels is added.
     """
-    if car:
-        _apply_car(raw)
+    bandpass = _check_bandpass(bandpass)
+    notch = _check_type(notch, (bool, ), item_name='notch')
+    car = _check_type(car, (bool, ), item_name='car')
 
     if not all(bp is None for bp in bandpass):
         _apply_bandpass_filter(raw, bandpass, 'eeg')
@@ -74,9 +74,12 @@ def apply_filter_eeg(raw, bandpass, notch, car):
     if notch:
         _apply_notch_filter(raw, 'eeg')
 
+    if car:
+        _apply_car(raw, projection=False)
+
 
 @fill_doc
-def apply_filter_aux(raw, bandpass, notch):
+def apply_filter_aux(raw, *, bandpass=(None, None), notch=False):
     """
     Apply filters in-place to the AUX channels:
         - Bandpass
@@ -91,6 +94,9 @@ def apply_filter_aux(raw, bandpass, notch):
     notch : bool
         If True, a notch filter at (50, 100, 150) Hz  is applied.
     """
+    bandpass = _check_bandpass(bandpass)
+    notch = _check_type(notch, (bool, ), item_name='notch')
+
     if not all(bp is None for bp in bandpass):
         _apply_bandpass_filter(raw, bandpass, ['eog', 'ecg'])
 
