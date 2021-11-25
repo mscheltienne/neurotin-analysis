@@ -33,7 +33,7 @@ def _prepapre_raw(raw):
         Copied and modified raw instance.
     """
     raw = raw.copy()
-    apply_filter_eeg(raw, bandpass=(1., 40.), notch=True, car=False)
+    apply_filter_eeg(raw, notch=True)
     events = mne.find_events(raw, stim_channel='TRIGGER')
     unique_events = list(set(event[2] for event in events))
 

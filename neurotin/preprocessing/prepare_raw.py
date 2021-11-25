@@ -44,17 +44,17 @@ def prepare_raw(raw):
     check_events(raw, recording_type)  # raise if there is a problem
     raw, _ = add_annotations_from_events(raw)
 
-    # Filter AUX
+    # Filter
     apply_filter_aux(raw, bandpass=(1., 45.), notch=True)
+    apply_filter_eeg(raw, bandpass=(1., 45.))
 
     # Mark bad channels
-    bads = PREP_bads_suggestion(raw)  # operates on a copy
+    bads = PREP_bads_suggestion(raw)  # operates on a copy and applies notch
     raw.info['bads'] = bads
 
-    # Reference (projector) and filter EEG
+    # Add montage
     raw.add_reference_channels(ref_channels='CPz')
     raw.set_montage('standard_1020')  # only after adding ref channel
-    apply_filter_eeg(raw, bandpass=(1., 45.))
 
     # Interpolate bad channels
     raw.interpolate_bads(reset_bads=True, mode='accurate')
