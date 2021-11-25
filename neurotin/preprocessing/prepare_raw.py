@@ -54,10 +54,13 @@ def prepare_raw(raw):
     # Reference (projector) and filter EEG
     raw.add_reference_channels(ref_channels='CPz')
     raw.set_montage('standard_1020')  # only after adding ref channel
-    apply_filter_eeg(raw, bandpass=(1., 45.), notch=False, car=True)
+    apply_filter_eeg(raw, bandpass=(1., 45.))
 
     # Interpolate bad channels
     raw.interpolate_bads(reset_bads=True, mode='accurate')
+
+    # CAR
+    apply_filter_eeg(raw, car=True)
 
     return raw, bads
 
