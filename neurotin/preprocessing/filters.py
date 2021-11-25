@@ -56,11 +56,8 @@ def apply_filter_eeg(raw, *, bandpass=(None, None), notch=False, car=False):
     Parameters
     ----------
     %(raw_in_place)s
-    bandpass : tuple
-        A 2-length tuple (highpass, lowpass), e.g. (1., 40.).
-        The lowpass or highpass filter can be disabled by using None.
-    notch : bool
-        If True, a notch filter at (50, 100, 150) Hz  is applied.
+    %(bandpass)s
+    %(notch)s
     car : bool
         If True, a CAR reference based on the good channels is added.
     """
@@ -88,11 +85,8 @@ def apply_filter_aux(raw, *, bandpass=(None, None), notch=False):
     Parameters
     ----------
     %(raw_in_place)s
-    bandpass : tuple
-        A 2-length tuple (highpass, lowpass), e.g. (1., 40.).
-        The lowpass or highpass filter can be disabled by using None.
-    notch : bool
-        If True, a notch filter at (50, 100, 150) Hz  is applied.
+    %(bandpass)s
+    %(notch)s
     """
     bandpass = _check_bandpass(bandpass)
     notch = _check_type(notch, (bool, ), item_name='notch')

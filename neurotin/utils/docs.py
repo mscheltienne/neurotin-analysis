@@ -79,6 +79,13 @@ subject_info_fname : str | Path
 docdict['bads'] = """
 bads : list
     List of selected and interpolated bad channels."""
+docdict['bandpass'] = """
+bandpass : tuple
+    A 2-length tuple (highpass, lowpass), e.g. (1., 40.).
+    The lowpass or highpass filter can be disabled by using None."""
+docdict['notch'] = """
+notch : bool
+    If True, a notch filter at (50, 100, 150) Hz  is applied."""
 
 # ----------------------------------- model ----------------------------------
 docdict['folder'] = """
