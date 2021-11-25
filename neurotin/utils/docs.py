@@ -98,6 +98,19 @@ docdict['session'] = """
 session : int
     ID of the session."""
 
+# ------------------------------------ psd -----------------------------------
+docdict['_psd_df'] = """
+df_{0} : DataFrame
+    PSD in {0} band averaged by bin. Columns:
+        participant : int - Participant ID
+        session : int - Session ID (1 to 15)
+        run : int - Run ID
+        phase : str - 'regulation' or 'non-regulation'
+        idx : ID of the phase within the run (1 to 10)
+        ch : float - Averaged {0} PSD (1 per channel)."""
+docdict['psd_df_alpha'] = docdict['_psd_df'].format('alpha')
+docdict['psd_df_delta'] = docdict['_psd_df'].format('delta')
+
 # ------------------------- Documentation functions --------------------------
 docdict_indented = dict()
 

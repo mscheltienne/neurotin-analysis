@@ -9,6 +9,7 @@ from mne.time_frequency import psd_welch, psd_multitaper
 from .epochs import make_epochs
 from .. import logger
 from ..io.list_files import list_raw_fif
+from ..utils.docs import fill_doc
 from ..utils.checks import _check_value, _check_path, _check_participants
 
 mne.set_log_level('WARNING')
@@ -42,6 +43,7 @@ def _compute_psd(raw, method='welch', **kwargs):
     return psds, freqs
 
 
+@fill_doc
 def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
     """
     Compute the PSD and average by frequency band for the given participants.
@@ -60,20 +62,13 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
 
     Returns
     -------
-    df : DataFrame
-        PSD in alpha and delta band averaged by bin and channels. Columns:
-            participant : int - Participant ID
-            session : int - Session ID (1 to 15)
-            run : int - Run ID
-            phase : str - 'regulation' or 'non-regulation'
-            idx : ID of the phase within the run (1 to 10)
-            alpha_ch : float - Averaged alpha PSD (1 per channel).
-            delta_ch : float - Averaged delta PSD (1 per channel).
+    %(psd_df_alpha)s
+    %(psd_df_delta)s
     """
     folder = _check_path(folder, item_name='folder', must_exist=True)
     participants = _check_participants(participants)
 
-    data = dict()
+    alpha_dict, delta_dict = dict(), dict()
     for participant in participants:
         fnames = list_raw_fif(folder / str(participant).zfill(3))
         for fname in fnames:
@@ -108,13 +103,15 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
                 assert len(ch_names) == 64  # sanity check
 
                 for phase in ('regulation', 'non-regulation'):
-                    alpha = np.average(psds_alpha[phase], axis=2)
-                    delta = np.average(psds_delta[phase], axis=2)
+                    alpha = np.average(psds_alpha[phase], axis=-1)
+                    delta = np.average(psds_delta[phase], axis=-1)
                     # sanity check
                     assert alpha.shape == delta.shape == (10, 64)
 
-                    _add_data_to_dict(data, participant, session, run, phase,
-                                      alpha, delta, ch_names)
+                    _add_data_to_dict(alpha_dict, participant, session, run,
+                                      phase, alpha, ch_names)
+                    _add_data_to_dict(delta_dict, participant, session, run,
+                                      phase, delta, ch_names)
 
                 # clean up
                 del raw
@@ -123,36 +120,34 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
                 logger.warning('FAILED: %s -> Skip.' % fname)
                 logger.debug(traceback.format_exc())
 
-    df = pd.DataFrame.from_dict(data, orient='columns')
+    df_alpha = pd.DataFrame.from_dict(alpha_dict, orient='columns')
+    df_delta = pd.DataFrame.from_dict(delta_dict, orient='columns')
 
-    return df
+    return df_alpha, df_delta
 
 
-def _add_data_to_dict(data, participant, session, run, phase, alpha, delta,
+def _add_data_to_dict(data_dict, participant, session, run, phase, data,
                       ch_names):
     """Add PSD to data dictionary."""
-    keys = ['participant', 'session', 'run', 'phase', 'idx'] + \
-           [f'alpha_{ch}' for ch in ch_names] + \
-           [f'delta_{ch}' for ch in ch_names]
+    keys = ['participant', 'session', 'run', 'phase', 'idx'] + ch_names
 
     # init
     for key in keys:
-        if key not in data:
-            data[key] = list()
+        if key not in data_dict:
+            data_dict[key] = list()
 
     # fill data
-    for k in range(alpha.shape[0]):
-        data['participant'].append(participant)
-        data['session'].append(session)
-        data['run'].append(run)
-        data['phase'].append(phase)
-        data['idx'].append(k+1)  # idx of the phase within the run
+    for k in range(data.shape[0]):
+        data_dict['participant'].append(participant)
+        data_dict['session'].append(session)
+        data_dict['run'].append(run)
+        data_dict['phase'].append(phase)
+        data_dict['idx'].append(k+1)  # idx of the phase within the run
 
         # channel psd
-        for j in range(alpha.shape[1]):
-            data[f'alpha_{ch_names[j]}'].append(alpha[k, j])
-            data[f'delta_{ch_names[j]}'].append(delta[k, j])
+        for j in range(data.shape[1]):
+            data_dict[f'{ch_names[j]}'].append(data[k, j])
 
     # sanity check
-    entries = len(data['participant'])
-    assert all(len(data[key]) == entries for key in keys)
+    entries = len(data_dict['participant'])
+    assert all(len(data_dict[key]) == entries for key in keys)
