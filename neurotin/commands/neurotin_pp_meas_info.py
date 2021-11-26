@@ -15,7 +15,7 @@ def run():
     parser.add_argument(
         'output_dir_fif', type=str, help=helpdict['output_dir_fif_with_None'])
     parser.add_argument(
-        'raw_dir_fif', type=str,
+        'raw_folder', type=str,
         help='folder containing raw FIF files with session logs.')
     parser.add_argument(
         'subject_info', type=str,
@@ -44,6 +44,6 @@ def run():
 
     output_dir_fif = None if args.output_dir_fif.lower().strip() == 'none' \
         else args.output_dir_fif
-    _cli(args.input_dir_fif, output_dir_fif, args.raw_dir_fif,
+    _cli(args.input_dir_fif, output_dir_fif, args.raw_folder,
          args.subject_info, args.n_jobs, args.participant, args.session,
          args.fname, args.ignore_existing)

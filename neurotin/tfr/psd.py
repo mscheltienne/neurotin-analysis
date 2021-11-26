@@ -155,9 +155,15 @@ def _add_data_to_dict(data_dict, participant, session, run, phase, data,
     assert all(len(data_dict[key]) == entries for key in keys)
 
 
+@fill_doc
 def apply_weights_session(df, raw_folder):
     """
     Apply the weights used during a given session to the PSD dataframe.
+
+    Parameters
+    ----------
+    %(psd_df)s
+    %(raw_folder)s
     """
     _check_type(df, (pd.DataFrame, ), item_name='df')
     raw_folder = _check_path(raw_folder, item_name='raw_folder',
@@ -177,14 +183,15 @@ def apply_weights_session(df, raw_folder):
     return df
 
 
+@fill_doc
 def apply_weights_mask(df, weights):
     """
     Apply the weights mask to the PSD dataframe.
 
     Parameters
     ----------
-    df : DataFrame
-    weights : DataFrame
+    %(psd_df)s
+    %(df_weights)s
     """
     _check_type(df, (pd.DataFrame, ), item_name='df')
     _check_type(weights, (pd.DataFrame, ), item_name='weights')

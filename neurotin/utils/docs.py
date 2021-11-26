@@ -13,6 +13,9 @@ docdict = dict()
 docdict['raw_in_place'] = """
 raw : mne.io.Raw
     Raw instance (modified in-place)."""
+docdict['raw_folder'] = """
+raw_folder : str | Path
+    Path to the directory containing raw data with fif, logs, models, plots."""
 
 # --------------------------------- pipeline ---------------------------------
 docdict['pipeline_header'] = """Pipeline function called on each raw file."""
@@ -58,10 +61,6 @@ ignore_existing : bool
     If True, files already processed are not included."""
 
 # --------------------------------- meas_info --------------------------------
-docdict['raw_dir_fif'] = """
-raw_dir_fif : str | Path
-    Path to the directory containing raw data with logs files (used to set
-    measurement date)."""
 docdict['subject'] = """
 subject : int
     ID of the subject."""
@@ -97,19 +96,25 @@ participant : int
 docdict['session'] = """
 session : int
     ID of the session."""
+docdict['df_weights'] = """
+weights : DataFrame
+    Weights used during the online neurofeedback (1 per channel, bads inc.)."""
 
 # ------------------------------------ psd -----------------------------------
 docdict['_psd_df'] = """
-df_{0} : DataFrame
-    PSD in {0} band averaged by bin. Columns:
+df{0} : DataFrame
+    PSD in {1} band averaged by bin. Columns:
         participant : int - Participant ID
         session : int - Session ID (1 to 15)
         run : int - Run ID
         phase : str - 'regulation' or 'non-regulation'
         idx : ID of the phase within the run (1 to 10)
-        ch : float - Averaged {0} PSD (1 per channel)."""
-docdict['psd_df_alpha'] = docdict['_psd_df'].format('alpha')
-docdict['psd_df_delta'] = docdict['_psd_df'].format('delta')
+        ch : float - Averaged{2} PSD (1 per channel)."""
+docdict['psd_df'] = docdict['_psd_df'].format('', 'frequency', '')
+docdict['psd_df_alpha'] = docdict['_psd_df'].format('_alpha', 'alpha',
+                                                    ' alpha')
+docdict['psd_df_delta'] = docdict['_psd_df'].format('_delta', 'delta',
+                                                    ' delta')
 
 # ------------------------- Documentation functions --------------------------
 docdict_indented = dict()

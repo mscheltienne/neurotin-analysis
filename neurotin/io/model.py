@@ -93,7 +93,7 @@ def load_session_weights(folder, participant, session):
 
     Returns
     -------
-    weights : Dataframe
+    %(df_weights)s
     """
     weights, info, _, _, _ = load_model(folder, participant, session)
 
