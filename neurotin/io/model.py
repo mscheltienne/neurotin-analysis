@@ -96,5 +96,17 @@ def load_session_weights(folder, participant, session):
     weights : Dataframe
     """
     weights, info, _, _, _ = load_model(folder, participant, session)
-    weights = {'channel': info.ch_names, 'weight': list(weights)}
-    return pd.DataFrame.from_dict(weights, orient='columns')
+
+    # weights is missing the channels set as bads in info
+    weights_with_bads = list()
+    idx = 0
+    for ch in info.ch_names:
+        if ch in info['bads']:
+            weights_with_bads.append(0)
+        else:
+            weights_with_bads.append(weights[idx])
+            idx += 1
+
+    return pd.DataFrame.from_dict(
+        {'channel': info.ch_names, 'weight': weights_with_bads},
+        orient='columns')
