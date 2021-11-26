@@ -9,8 +9,10 @@ from mne.time_frequency import psd_welch, psd_multitaper
 from .epochs import make_epochs
 from .. import logger
 from ..io.list_files import list_raw_fif
+from ..io.model import load_session_weights
 from ..utils.docs import fill_doc
-from ..utils.checks import _check_value, _check_path, _check_participants
+from ..utils.checks import (_check_value, _check_path, _check_participants,
+                            _check_type)
 
 mne.set_log_level('WARNING')
 
@@ -20,7 +22,6 @@ def _compute_psd(raw, method='welch', **kwargs):
     Compute the power spectral density on the regulation and non-regulation
     phase of the raw instance.
     """
-    _check_value(method, ('welch', 'multitaper'), item_name='method')
     epochs = make_epochs(raw)
 
     # select all channels
@@ -67,6 +68,7 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
     """
     folder = _check_path(folder, item_name='folder', must_exist=True)
     participants = _check_participants(participants)
+    _check_value(method, ('welch', 'multitaper'), item_name='method')
 
     alpha_dict, delta_dict = dict(), dict()
     for participant in participants:
@@ -151,3 +153,43 @@ def _add_data_to_dict(data_dict, participant, session, run, phase, data,
     # sanity check
     entries = len(data_dict['participant'])
     assert all(len(data_dict[key]) == entries for key in keys)
+
+
+def apply_weights_session(df, raw_folder):
+    """
+    Apply the weights used during a given session to the PSD dataframe.
+    """
+    _check_type(df, (pd.DataFrame, ), item_name='df')
+    raw_folder = _check_path(raw_folder, item_name='raw_folder',
+                             must_exist=True)
+
+    participant_session = None
+    for index, row in df.iterrows():
+        # load weights if needed
+        if participant_session != (row['participant'], row['session']):
+            weights = load_session_weights(raw_folder, row['participant'],
+                                           row['session'])
+            participant_session = (row['participant'], row['session'])
+            ch_names = weights['channel']
+
+        df.loc[index, ch_names] = row[ch_names] * weights['weight'].values
+
+    return df
+
+
+def apply_weights_mask(df, weights):
+    """
+    Apply the weights mask to the PSD dataframe.
+
+    Parameters
+    ----------
+    df : DataFrame
+    weights : DataFrame
+    """
+    _check_type(df, (pd.DataFrame, ), item_name='df')
+    _check_type(weights, (pd.DataFrame, ), item_name='weights')
+
+    ch_names = weights['channel']
+    df.loc[:, ch_names] = df[ch_names] * weights['weight'].values
+
+    return df
