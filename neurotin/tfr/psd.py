@@ -57,6 +57,10 @@ def compute_psd_average_bins(folder, participants, fmin, fmax, method='welch',
         Path to the folder containing preprocessed files.
     participants : int | list | tuple
         Participant ID or list of participant IDs to analyze.
+    fmin : int | float
+        Min frequency of interest.
+    fmax : int | float
+        Max frequency of interest.
     method : str
         Either 'welch' for psd_welch or 'multitaper' for psd_multitaper.
     **kwargs : dict
