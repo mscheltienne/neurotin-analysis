@@ -45,7 +45,8 @@ def _compute_psd(raw, method='welch', **kwargs):
 
 
 @fill_doc
-def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
+def compute_psd_average_bins(folder, participants, fmin, fmax, method='welch',
+                             **kwargs):
     """
     Compute the PSD and average by frequency band for the given participants.
     Takes about 7.45 s ± 323 ms / session on MacBook.
@@ -63,14 +64,16 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
 
     Returns
     -------
-    %(psd_df_alpha)s
-    %(psd_df_delta)s
+    %(psd_df)s
     """
     folder = _check_path(folder, item_name='folder', must_exist=True)
     participants = _check_participants(participants)
+    _check_type(fmin, ('numeric', ), item_name='fmin')
+    _check_type(fmax, ('numeric', ), item_name='fmax')
+    assert 'fmin' not in kwargs and 'fmax' not in kwargs
     _check_value(method, ('welch', 'multitaper'), item_name='method')
 
-    alpha_dict, delta_dict = dict(), dict()
+    psd_dict = dict()
     for participant in participants:
         fnames = list_raw_fif(folder / str(participant).zfill(3))
         for fname in fnames:
@@ -80,7 +83,6 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
             logger.info('Processing: %s' % fname)
             try:
                 raw = mne.io.read_raw_fif(fname, preload=True)
-
                 # find session id
                 pattern = re.compile(r'Session (\d{1,2})')
                 session = re.findall(pattern, str(fname))
@@ -88,32 +90,20 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
                 session = int(session[0])
                 # find run id
                 run = int(fname.name.split('-')[0])
-
-                # alpha
-                kwargs['fmin'], kwargs['fmax'] = 8., 13.
-                psds_alpha, _ = _compute_psd(raw, method, **kwargs)
-                # delta
-                kwargs['fmin'], kwargs['fmax'] = 1., 4.
-                psds_delta, _ = _compute_psd(raw, method, **kwargs)
+                # compute psds
+                psds, _ = _compute_psd(raw, method, fmin=fmin, fmax=fmax)
+                # find channel names
+                ch_names = raw.pick_types(eeg=True, exclude=[]).ch_names
 
                 # sanity check
-                assert sorted(list(psds_alpha)) == sorted(list(psds_delta)) \
-                    == ['non-regulation', 'regulation']
-
-                # find ch_names
-                ch_names = raw.pick_types(eeg=True, exclude=[]).ch_names
-                assert len(ch_names) == 64  # sanity check
+                assert sorted(list(psds)) == ['non-regulation', 'regulation']
+                assert len(ch_names) == 64
 
                 for phase in ('regulation', 'non-regulation'):
-                    alpha = np.average(psds_alpha[phase], axis=-1)
-                    delta = np.average(psds_delta[phase], axis=-1)
-                    # sanity check
-                    assert alpha.shape == delta.shape == (10, 64)
-
-                    _add_data_to_dict(alpha_dict, participant, session, run,
-                                      phase, alpha, ch_names)
-                    _add_data_to_dict(delta_dict, participant, session, run,
-                                      phase, delta, ch_names)
+                    psds_ = np.average(psds[phase], axis=-1)
+                    assert psds_.shape == (10, 64)  # sanity check
+                    _add_data_to_dict(psd_dict, participant, session, run,
+                                      phase, psds_, ch_names)
 
                 # clean up
                 del raw
@@ -122,10 +112,9 @@ def compute_psd_average_bins(folder, participants, method='welch', **kwargs):
                 logger.warning('FAILED: %s -> Skip.' % fname)
                 logger.debug(traceback.format_exc())
 
-    df_alpha = pd.DataFrame.from_dict(alpha_dict, orient='columns')
-    df_delta = pd.DataFrame.from_dict(delta_dict, orient='columns')
+    df = pd.DataFrame.from_dict(psd_dict, orient='columns')
 
-    return df_alpha, df_delta
+    return df
 
 
 def _add_data_to_dict(data_dict, participant, session, run, phase, data,

@@ -101,20 +101,15 @@ weights : DataFrame
     Weights used during the online neurofeedback (1 per channel, bads inc.)."""
 
 # ------------------------------------ psd -----------------------------------
-docdict['_psd_df'] = """
-df{0} : DataFrame
-    PSD in {1} band averaged by bin. Columns:
+docdict['psd_df'] = """
+df : DataFrame
+    PSD in frequency band (fmin, fmax) averaged by bin. Columns:
         participant : int - Participant ID
         session : int - Session ID (1 to 15)
         run : int - Run ID
         phase : str - 'regulation' or 'non-regulation'
         idx : ID of the phase within the run (1 to 10)
-        ch : float - Averaged{2} PSD (1 per channel)."""
-docdict['psd_df'] = docdict['_psd_df'].format('', 'frequency', '')
-docdict['psd_df_alpha'] = docdict['_psd_df'].format('_alpha', 'alpha',
-                                                    ' alpha')
-docdict['psd_df_delta'] = docdict['_psd_df'].format('_delta', 'delta',
-                                                    ' delta')
+        ch : float - Averaged PSD (1 per channel)."""
 
 # ------------------------- Documentation functions --------------------------
 docdict_indented = dict()
