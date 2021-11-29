@@ -2,6 +2,7 @@ import mne
 import numpy as np
 from autoreject import AutoReject, get_rejection_threshold
 
+from ..utils.checks import _check_value
 from ..config.events import (EVENTS, EVENTS_MAPPING, EVENTS_DURATION_MAPPING,
                              FIRST_REST_PHASE_EXT)
 
@@ -142,6 +143,9 @@ def repair_epochs(epochs, thresh_method='random_search'):
     epochs : Epochs
         Epochs repaired by the model.
     """
+    _check_value(thresh_method, ('random_search', 'bayesian_optimization'),
+                 item_name='thresh_method')
+
     n_interpolates = np.array([1, 4, 32])
     consensus_percs = np.linspace(0, 1.0, 11)
 
