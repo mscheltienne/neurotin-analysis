@@ -4,52 +4,24 @@ import traceback
 import mne
 import numpy as np
 import pandas as pd
-from mne.time_frequency import psd_welch, psd_multitaper
+from mne.time_frequency import psd_welch
 
-from .epochs import make_epochs
+from .epochs import make_fixed_length_epochs, reject_epochs
 from .. import logger
 from ..io.list_files import list_raw_fif
 from ..io.model import load_session_weights
 from ..utils.docs import fill_doc
-from ..utils.checks import (_check_value, _check_path, _check_participants,
-                            _check_type)
+from ..utils.checks import (_check_path, _check_participants, _check_type)
 
 mne.set_log_level('WARNING')
 
 
-def _compute_psd(raw, method='welch', **kwargs):
-    """
-    Compute the power spectral density on the regulation and non-regulation
-    phase of the raw instance.
-    """
-    epochs = make_epochs(raw)
-
-    # select all channels
-    if 'picks' not in kwargs:
-        picks_reg = mne.pick_types(epochs['regulation'].info,
-                                   eeg=True, exclude=[])
-        picks_rest = mne.pick_types(epochs['non-regulation'].info,
-                                    eeg=True, exclude=[])
-        assert (picks_reg == picks_rest).all()  # sanity check
-        kwargs['picks'] = picks_reg
-
-    psds, freqs = dict(), dict()
-    if method == 'welch':
-        for phase in epochs:
-            psds[phase], freqs[phase] = psd_welch(epochs[phase], **kwargs)
-    elif method == 'multitaper':
-        for phase in epochs:
-            psds[phase], freqs[phase] = psd_multitaper(epochs[phase], **kwargs)
-
-    return psds, freqs
-
-
 @fill_doc
-def compute_psd_average_bins(folder, participants, fmin, fmax, method='welch',
-                             **kwargs):
+def compute_psd_average_bins(folder, participants, duration, overlap, reject,
+                             fmin, fmax, **kwargs):
     """
-    Compute the PSD and average by frequency band for the given participants.
-    Takes about 7.45 s ± 323 ms / session on MacBook.
+    Compute the PSD and average by frequency band for the given participants
+    using the welch method.
 
     Parameters
     ----------
@@ -57,12 +29,13 @@ def compute_psd_average_bins(folder, participants, fmin, fmax, method='welch',
         Path to the folder containing preprocessed files.
     participants : int | list | tuple
         Participant ID or list of participant IDs to analyze.
+    %(psd_duration)s
+    %(psd_overlap)s
+    %(psd_reject)s
     fmin : int | float
         Min frequency of interest.
     fmax : int | float
         Max frequency of interest.
-    method : str
-        Either 'welch' for psd_welch or 'multitaper' for psd_multitaper.
     **kwargs : dict
         kwargs are passed to MNE PSD function.
 
@@ -75,7 +48,6 @@ def compute_psd_average_bins(folder, participants, fmin, fmax, method='welch',
     _check_type(fmin, ('numeric', ), item_name='fmin')
     _check_type(fmax, ('numeric', ), item_name='fmax')
     assert 'fmin' not in kwargs and 'fmax' not in kwargs
-    _check_value(method, ('welch', 'multitaper'), item_name='method')
 
     psd_dict = dict()
     for participant in participants:
@@ -95,17 +67,15 @@ def compute_psd_average_bins(folder, participants, fmin, fmax, method='welch',
                 # find run id
                 run = int(fname.name.split('-')[0])
                 # compute psds
-                psds, _ = _compute_psd(raw, method, fmin=fmin, fmax=fmax)
+                psds, _ = _compute_psd_welch(raw, duration, overlap, reject,
+                                             fmin=fmin, fmax=fmax)
                 # find channel names
                 ch_names = raw.pick_types(eeg=True, exclude=[]).ch_names
+                assert len(ch_names) == 64  # sanity check
 
-                # sanity check
-                assert sorted(list(psds)) == ['non-regulation', 'regulation']
-                assert len(ch_names) == 64
-
-                for phase in ('regulation', 'non-regulation'):
+                for phase in psds:
                     psds_ = np.average(psds[phase], axis=-1)
-                    assert psds_.shape == (10, 64)  # sanity check
+                    assert psds_.shape == (64, )  # sanity check
                     _add_data_to_dict(psd_dict, participant, session, run,
                                       phase, psds_, ch_names)
 
@@ -121,6 +91,48 @@ def compute_psd_average_bins(folder, participants, fmin, fmax, method='welch',
     return df
 
 
+def _compute_psd_welch(raw, duration, overlap, reject, **kwargs):
+    """
+    Compute the power spectral density on the regulation and non-regulation
+    phase of the raw instance using welch method.
+    """
+    epochs = make_fixed_length_epochs(raw, duration, overlap)
+    kwargs = _check_kwargs(kwargs, epochs)
+    epochs, reject = reject_epochs(epochs, reject)
+
+    psds, freqs = dict(), dict()
+    for phase in epochs.event_id:
+        psds[phase], freqs[phase] = psd_welch(epochs[phase], **kwargs)
+        psds[phase] = np.average(psds[phase], axis=0)
+
+    return psds, freqs
+
+
+def _check_kwargs(kwargs, epochs):
+    """Check kwargs provided to _compute_psd_welch."""
+    if 'picks' not in kwargs:
+        kwargs['picks'] = mne.pick_types(epochs.info, eeg=True, exclude=[])
+    if 'n_fft' not in kwargs:
+        kwargs['n_fft'] = epochs._data.shape[-1]
+        logger.info("Argument 'n_fft' set to %i", epochs._data.shape[-1])
+    else:
+        logger.warning("Argument 'n_fft' was provided and is set to %i",
+                       kwargs['n_fft'])
+    if 'n_overlap' not in kwargs:
+        kwargs['n_overlap'] = 0
+        logger.info("Argument 'n_overlap' set to 0")
+    else:
+        logger.warning("Argument 'n_overlap' was provided and is set to %i",
+                       kwargs['n_overlap'])
+    if 'n_per_seg' not in kwargs:
+        kwargs['n_per_seg'] = epochs._data.shape[-1]
+        logger.info("Argument 'n_per_seg' set to %i", epochs._data.shape[-1])
+    else:
+        logger.warning("Argument 'n_per_seg' was provided and is set to %i",
+                       kwargs['n_per_seg'])
+    return kwargs
+
+
 def _add_data_to_dict(data_dict, participant, session, run, phase, data,
                       ch_names):
     """Add PSD to data dictionary."""
@@ -132,16 +144,15 @@ def _add_data_to_dict(data_dict, participant, session, run, phase, data,
             data_dict[key] = list()
 
     # fill data
-    for k in range(data.shape[0]):
-        data_dict['participant'].append(participant)
-        data_dict['session'].append(session)
-        data_dict['run'].append(run)
-        data_dict['phase'].append(phase)
-        data_dict['idx'].append(k+1)  # idx of the phase within the run
+    data_dict['participant'].append(participant)
+    data_dict['session'].append(session)
+    data_dict['run'].append(run)
+    data_dict['phase'].append(phase[:-2])
+    data_dict['idx'].append(int(phase[-1]))  # idx of the phase within the run
 
-        # channel psd
-        for j in range(data.shape[1]):
-            data_dict[f'{ch_names[j]}'].append(data[k, j])
+    # channel psd
+    for k in range(data.shape[0]):
+        data_dict[f'{ch_names[k]}'].append(data[k])
 
     # sanity check
     entries = len(data_dict['participant'])

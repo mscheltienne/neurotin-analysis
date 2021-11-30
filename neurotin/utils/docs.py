@@ -110,6 +110,16 @@ df : DataFrame
         phase : str - 'regulation' or 'non-regulation'
         idx : ID of the phase within the run (1 to 10)
         ch : float - Averaged PSD (1 per channel)."""
+docdict['psd_duration'] = """
+duration : int | float
+    Duration of an epoch in seconds."""
+docdict['psd_overlap'] = """
+overlap : int | float
+    Duration of epoch overlap in seconds."""
+docdict['psd_reject'] = """
+reject : dict | 'auto' | None
+    MNE-compatible rejection dictionary or 'auto' to compute it with
+    autoreject. If set to None, rejection is skipped."""
 
 # ------------------------- Documentation functions --------------------------
 docdict_indented = dict()

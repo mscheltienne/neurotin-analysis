@@ -1,30 +1,45 @@
+from itertools import chain
+
 import mne
 import numpy as np
+from mne import BaseEpochs
+from mne.io import BaseRaw
 from autoreject import AutoReject, get_rejection_threshold
 
-from ..utils.checks import _check_value
+from ..utils.docs import fill_doc
+from ..utils.checks import _check_value, _check_type
 from ..config.events import (EVENTS, EVENTS_MAPPING, EVENTS_DURATION_MAPPING,
                              FIRST_REST_PHASE_EXT)
 
 
-def make_fixed_length_epochs(raw, duration=1., overlap=0.):
+@fill_doc
+def make_fixed_length_epochs(raw, duration=4., overlap=3.):
     """
     Create fixed length epochs for neurofeedback runs and aggregate epochs
-    together in 2 categories: regulation and non-regulation.
+    together from the same phase together.
+        non-regulation-0:   60
+        regulation-0:       50
+        non-regulation-1:   61
+        regulation-1:       51
+        ...                 ..
+        non-regulation-9:   69
+        regulation-9:       59
 
     Parameters
     ----------
     raw : Raw
         Preprocessed raw instance.
-    duration : float
-        Duration of an epoch in seconds.
-    overlap : float
-        Duration of epoch overlap in seconds.
+    %(psd_duration)s
+    %(psd_overlap)s
 
     Returns
     -------
     epochs : Epochs
     """
+    _check_type(raw, (BaseRaw, ), item_name='raw')
+    _check_type(duration, ('numeric', ), item_name='duration')
+    _check_type(overlap, ('numeric', ), item_name='overlap')
+
     # load events
     events, event_id = _load_events(raw)
 
@@ -41,15 +56,18 @@ def make_fixed_length_epochs(raw, duration=1., overlap=0.):
         if k == 0:
             stop += FIRST_REST_PHASE_EXT  # first rest phase extension
         epoch_events = mne.make_fixed_length_events(
-            raw, id=int(event[2]), start=start, stop=stop,
+            raw, id=int(event[2]*10+k//2), start=start, stop=stop,
             duration=duration, first_samp=False, overlap=overlap)
         raw.add_events(epoch_events, stim_channel='STI', replace=False)
 
     # create epochs from the new stim channel
+    event_ids = [{key + f'-{k // 2}': event_id[key] * 10 + k // 2
+                 for k in range(events.shape[0])} for key in event_id]
+    event_ids = dict(chain(*map(dict.items, event_ids)))
     events = mne.find_events(raw, stim_channel='STI')
-    epochs = mne.Epochs(raw, events=events, event_id=event_id, tmin=0.,
-                        tmax=duration, baseline=None, picks='eeg',
-                        preload=True, reject=None, flat=None)
+    epochs = mne.Epochs(raw, events=events, event_id=event_ids, tmin=0.,
+                        tmax=duration-1/raw.info['sfreq'], baseline=None,
+                        picks='eeg', preload=True, reject=None, flat=None)
 
     return epochs
 
@@ -71,6 +89,8 @@ def make_epochs(raw):
     epochs : dict of Epochs
         Epochs for 'regulation' and for 'non-regulation'.
     """
+    _check_type(raw, (BaseRaw, ), item_name='raw')
+
     # load events
     events, event_id = _load_events(raw)
 
@@ -102,6 +122,7 @@ def _load_events(raw):
     return events, event_id
 
 
+@fill_doc
 def reject_epochs(epochs, reject=None):
     """
     Reject bad epochs with a global rejection threshold.
@@ -110,9 +131,7 @@ def reject_epochs(epochs, reject=None):
     ----------
     epochs : Epochs
         Raw epochs, before peak-to-peak rejection.
-    reject : dict | None
-        MNE-compatible rejection dictionary or None to compute it with
-        autoreject.
+    %(psd_reject)s
 
     Returns
     -------
@@ -121,9 +140,18 @@ def reject_epochs(epochs, reject=None):
     reject : dict
         Rejection dictionary used to drop epochs.
     """
-    if reject is None:
+    _check_type(epochs, (BaseEpochs, ), item_name='epochs')
+    _check_type(reject, (dict, str, None), item_name='reject')
+    if isinstance(reject, str):
+        _check_value(reject, ('auto', ), item_name='reject')
+    elif isinstance(reject, dict):
+        assert len(reject) == 1 and 'eeg' in reject
+
+    if reject == 'auto':
         reject = get_rejection_threshold(epochs, decim=1)
-    epochs.drop_bad(reject=reject)
+    if reject is not None:
+        epochs.drop_bad(reject=reject)
+
     return epochs, reject
 
 
@@ -143,6 +171,7 @@ def repair_epochs(epochs, thresh_method='random_search'):
     epochs : Epochs
         Epochs repaired by the model.
     """
+    _check_type(epochs, (BaseEpochs, ), item_name='epochs')
     _check_value(thresh_method, ('random_search', 'bayesian_optimization'),
                  item_name='thresh_method')
 
