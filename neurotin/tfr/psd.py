@@ -4,6 +4,7 @@ import traceback
 import mne
 import numpy as np
 import pandas as pd
+from scipy.integrate import simpson
 from mne.time_frequency import psd_welch
 
 from .epochs import make_fixed_length_epochs, reject_epochs
@@ -11,14 +12,15 @@ from .. import logger
 from ..io.list_files import list_raw_fif
 from ..io.model import load_session_weights
 from ..utils.docs import fill_doc
-from ..utils.checks import (_check_path, _check_participants, _check_type)
+from ..utils.checks import (_check_path, _check_participants, _check_type,
+                            _check_value)
 
 mne.set_log_level('WARNING')
 
 
 @fill_doc
 def compute_psd_average_bins(folder, participants, duration, overlap, reject,
-                             fmin, fmax, **kwargs):
+                             fmin, fmax, average='mean', **kwargs):
     """
     Compute the PSD and average by frequency band for the given participants
     using the welch method.
@@ -36,6 +38,10 @@ def compute_psd_average_bins(folder, participants, duration, overlap, reject,
         Min frequency of interest.
     fmax : int | float
         Max frequency of interest.
+    average : 'mean' | 'integrate'
+        How to average the frequency bin/spectrum. Either 'mean' to calculate
+        the arithmetic mean of all bins or 'integrate' to use Simpson's rule to
+        compute integral from samples.
     **kwargs : dict
         kwargs are passed to MNE PSD function.
 
@@ -48,6 +54,8 @@ def compute_psd_average_bins(folder, participants, duration, overlap, reject,
     _check_type(fmin, ('numeric', ), item_name='fmin')
     _check_type(fmax, ('numeric', ), item_name='fmax')
     assert 'fmin' not in kwargs and 'fmax' not in kwargs
+    _check_type(average, (str, ), item_name='average')
+    _check_value(average, ('mean', 'integrate'), item_name='average')
 
     psd_dict = dict()
     for participant in participants:
@@ -67,14 +75,17 @@ def compute_psd_average_bins(folder, participants, duration, overlap, reject,
                 # find run id
                 run = int(fname.name.split('-')[0])
                 # compute psds
-                psds, _ = _compute_psd_welch(raw, duration, overlap, reject,
-                                             fmin=fmin, fmax=fmax)
+                psds, freqs = _compute_psd_welch(raw, duration, overlap,
+                                                 reject, fmin=fmin, fmax=fmax)
                 # find channel names
                 ch_names = raw.pick_types(eeg=True, exclude=[]).ch_names
                 assert len(ch_names) == 64  # sanity check
 
                 for phase in psds:
-                    psds_ = np.average(psds[phase], axis=-1)
+                    if average == 'mean':
+                        psds_ = np.average(psds[phase], axis=-1)
+                    elif average == 'integrate':
+                        psds_ = simpson(psds[phase], freqs[phase], axis=-1)
                     assert psds_.shape == (64, )  # sanity check
                     _add_data_to_dict(psd_dict, participant, session, run,
                                       phase, psds_, ch_names)
@@ -114,19 +125,19 @@ def _check_kwargs(kwargs, epochs):
         kwargs['picks'] = mne.pick_types(epochs.info, eeg=True, exclude=[])
     if 'n_fft' not in kwargs:
         kwargs['n_fft'] = epochs._data.shape[-1]
-        logger.info("Argument 'n_fft' set to %i", epochs._data.shape[-1])
+        logger.debug("Argument 'n_fft' set to %i", epochs._data.shape[-1])
     else:
         logger.warning("Argument 'n_fft' was provided and is set to %i",
                        kwargs['n_fft'])
     if 'n_overlap' not in kwargs:
         kwargs['n_overlap'] = 0
-        logger.info("Argument 'n_overlap' set to 0")
+        logger.debug("Argument 'n_overlap' set to 0")
     else:
         logger.warning("Argument 'n_overlap' was provided and is set to %i",
                        kwargs['n_overlap'])
     if 'n_per_seg' not in kwargs:
         kwargs['n_per_seg'] = epochs._data.shape[-1]
-        logger.info("Argument 'n_per_seg' set to %i", epochs._data.shape[-1])
+        logger.debug("Argument 'n_per_seg' set to %i", epochs._data.shape[-1])
     else:
         logger.warning("Argument 'n_per_seg' was provided and is set to %i",
                        kwargs['n_per_seg'])
