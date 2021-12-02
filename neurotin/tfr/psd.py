@@ -1,5 +1,6 @@
 import re
 import traceback
+import multiprocessing as mp
 
 import mne
 import numpy as np
@@ -13,14 +14,14 @@ from ..io.list_files import list_raw_fif
 from ..io.model import load_session_weights
 from ..utils.docs import fill_doc
 from ..utils.checks import (_check_path, _check_participants, _check_type,
-                            _check_value)
+                            _check_value, _check_n_jobs)
 
 mne.set_log_level('WARNING')
 
 
 @fill_doc
 def compute_psd_average_bins(folder, participants, duration, overlap, reject,
-                             fmin, fmax, average='mean', **kwargs):
+                             fmin, fmax, average='mean', n_jobs=1, **kwargs):
     """
     Compute the PSD and average by frequency band for the given participants
     using the welch method.
@@ -42,6 +43,7 @@ def compute_psd_average_bins(folder, participants, duration, overlap, reject,
         How to average the frequency bin/spectrum. Either 'mean' to calculate
         the arithmetic mean of all bins or 'integrate' to use Simpson's rule to
         compute integral from samples.
+    %(n_jobs)s
     **kwargs : dict
         kwargs are passed to MNE PSD function.
 
@@ -56,50 +58,73 @@ def compute_psd_average_bins(folder, participants, duration, overlap, reject,
     assert 'fmin' not in kwargs and 'fmax' not in kwargs
     _check_type(average, (str, ), item_name='average')
     _check_value(average, ('mean', 'integrate'), item_name='average')
+    n_jobs = _check_n_jobs(n_jobs)
 
-    psd_dict = dict()
+    # create input_pool
+    input_pool = list()
     for participant in participants:
         fnames = list_raw_fif(folder / str(participant).zfill(3))
         for fname in fnames:
             if fname.parent.name != 'Online':
                 continue
+            input_pool.append((participant, fname, duration, overlap, reject,
+                               fmin, fmax, average))
+    assert 0 < len(input_pool)  # sanity check
 
-            logger.info('Processing: %s' % fname)
-            try:
-                raw = mne.io.read_raw_fif(fname, preload=True)
-                # find session id
-                pattern = re.compile(r'Session (\d{1,2})')
-                session = re.findall(pattern, str(fname))
-                assert len(session) == 1
-                session = int(session[0])
-                # find run id
-                run = int(fname.name.split('-')[0])
-                # compute psds
-                psds, freqs = _compute_psd_welch(raw, duration, overlap,
-                                                 reject, fmin=fmin, fmax=fmax)
-                # find channel names
-                ch_names = raw.pick_types(eeg=True, exclude=[]).ch_names
-                assert len(ch_names) == 64  # sanity check
+    # compute psds
+    with mp.Pool(processes=n_jobs) as p:
+        results = p.starmap(_compute_psd_average_bins, input_pool)
 
-                for phase in psds:
-                    if average == 'mean':
-                        psds_ = np.average(psds[phase], axis=-1)
-                    elif average == 'integrate':
-                        psds_ = simpson(psds[phase], freqs[phase], axis=-1)
-                    assert psds_.shape == (64, )  # sanity check
-                    _add_data_to_dict(psd_dict, participant, session, run,
-                                      phase, psds_, ch_names)
-
-                # clean up
-                del raw
-
-            except Exception:
-                logger.warning('FAILED: %s -> Skip.' % fname)
-                logger.debug(traceback.format_exc())
-
+    # construct dataframe
+    psd_dict = dict()
+    for participant, session, run, psds, ch_names in results:
+        for phase in psds:
+            _add_data_to_dict(psd_dict, participant, session, run,
+                              phase, psds[phase], ch_names)
     df = pd.DataFrame.from_dict(psd_dict, orient='columns')
 
     return df
+
+
+def _compute_psd_average_bins(participant, fname, duration, overlap, reject,
+                              fmin, fmax, average):
+    """
+    Compute the PSD and average by frequency band for the given participants
+    using the welch method.
+    """
+    logger.info('Processing: %s' % fname)
+    try:
+        raw = mne.io.read_raw_fif(fname, preload=True)
+        # find session id
+        pattern = re.compile(r'Session (\d{1,2})')
+        session = re.findall(pattern, str(fname))
+        assert len(session) == 1
+        session = int(session[0])
+        # find run id
+        run = int(fname.name.split('-')[0])
+        # compute psds
+        psds, freqs = _compute_psd_welch(raw, duration, overlap,
+                                         reject, fmin=fmin, fmax=fmax)
+        # find channel names
+        ch_names = raw.pick_types(eeg=True, exclude=[]).ch_names
+        assert len(ch_names) == 64  # sanity check
+
+        psds_ = dict()
+        for phase in psds:
+            if average == 'mean':
+                psds_[phase] = np.average(psds[phase], axis=-1)
+            elif average == 'integrate':
+                psds_[phase] = simpson(psds[phase], freqs[phase], axis=-1)
+            assert psds_[phase].shape == (64, )  # sanity check
+
+        # clean up
+        del raw
+
+    except Exception:
+        logger.warning('FAILED: %s -> Skip.' % fname)
+        logger.debug(traceback.format_exc())
+
+    return participant, session, run, psds_, ch_names
 
 
 def _compute_psd_welch(raw, duration, overlap, reject, **kwargs):
