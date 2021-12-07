@@ -16,8 +16,8 @@ def run():
         'csv', type=str,
         help='path to the .csv file containing the MML logs.')
     parser.add_argument(
-        '-p',
-        help='participant id(s) to include.', nargs='+', required=True)
+        '-p', '--participants',
+        help=helpdict['participants'], nargs='+', required=True)
     parser.add_argument(
         '--loglevel', type=str, metavar='str', help=helpdict['loglevel'],
         default='info')
