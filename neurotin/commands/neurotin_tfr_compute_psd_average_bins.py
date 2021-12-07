@@ -1,8 +1,6 @@
 import pickle
 import argparse
 
-import pandas as pd
-
 from neurotin import set_log_level
 from neurotin.commands import helpdict
 from neurotin.time_frequency.psd import compute_psd_average_bins
