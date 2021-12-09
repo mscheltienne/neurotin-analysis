@@ -204,6 +204,10 @@ def apply_weights_session(df, raw_folder):
     ----------
     %(psd_df)s
     %(raw_folder)s
+
+    Returns
+    -------
+    %(psd_df)s
     """
     _check_type(df, (pd.DataFrame, ), item_name='df')
     raw_folder = _check_path(raw_folder, item_name='raw_folder',
@@ -232,6 +236,10 @@ def apply_weights_mask(df, weights):
     ----------
     %(psd_df)s
     %(df_weights)s
+
+    Returns
+    -------
+    %(psd_df)s
     """
     _check_type(df, (pd.DataFrame, ), item_name='df')
     _check_type(weights, (pd.DataFrame, ), item_name='weights')
@@ -239,4 +247,20 @@ def apply_weights_mask(df, weights):
     ch_names = weights['channel']
     df.loc[:, ch_names] = df[ch_names] * weights['weight'].values
 
+    return df
+
+
+def add_average_column(df):
+    """
+    Add a column averaging the power on all channels.
+
+    Parameters
+    ----------
+    %(psd_df)s
+        An 'avg' column is added averaging the power on all channels.
+    """
+    ch_names = [
+        col for col in df.columns
+        if col not in ('participant', 'session', 'run', 'phase', 'idx')]
+    df['avg'] = df[ch_names].mean(axis=1)
     return df
