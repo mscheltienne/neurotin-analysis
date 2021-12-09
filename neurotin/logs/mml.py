@@ -30,7 +30,7 @@ def plot_mml_across_participants(csv, participants, figsize=(10, 5)):
     ax : axes.Axes
     """
     participants = _check_participants(participants)
-    figsize = _check_type(figsize, (tuple, ), item_name='figsize')
+    _check_type(figsize, (tuple, ), item_name='figsize')
 
     # Select data
     df = read_csv(csv)

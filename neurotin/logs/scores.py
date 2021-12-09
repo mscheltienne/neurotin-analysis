@@ -39,7 +39,7 @@ def plot_score_evolution_per_participant(
     _check_participant(participant)
     scores = _check_scores_idx(scores)
     _check_type(datapoints, (bool, ), item_name='datapoints')
-    figsize = _check_type(figsize, (tuple, ), item_name='figsize')
+    _check_type(figsize, (tuple, ), item_name='figsize')
 
     # Select data
     df = read_csv(csv)
@@ -92,7 +92,7 @@ def plot_score_across_participants(
     participants = _check_participants(participants)
     scores = _check_scores_idx(scores)
     _check_type(datapoints, (bool, ), item_name='datapoints')
-    figsize = _check_type(figsize, (tuple, ), item_name='figsize')
+    _check_type(figsize, (tuple, ), item_name='figsize')
 
     # Select data
     df = read_csv(csv)

@@ -62,8 +62,8 @@ def apply_filter_eeg(raw, *, bandpass=(None, None), notch=False, car=False):
         If True, a CAR reference based on the good channels is added.
     """
     bandpass = _check_bandpass(bandpass)
-    notch = _check_type(notch, (bool, ), item_name='notch')
-    car = _check_type(car, (bool, ), item_name='car')
+    _check_type(notch, (bool, ), item_name='notch')
+    _check_type(car, (bool, ), item_name='car')
 
     if not all(bp is None for bp in bandpass):
         _apply_bandpass_filter(raw, bandpass, 'eeg')
@@ -89,7 +89,7 @@ def apply_filter_aux(raw, *, bandpass=(None, None), notch=False):
     %(notch)s
     """
     bandpass = _check_bandpass(bandpass)
-    notch = _check_type(notch, (bool, ), item_name='notch')
+    _check_type(notch, (bool, ), item_name='notch')
 
     if not all(bp is None for bp in bandpass):
         _apply_bandpass_filter(raw, bandpass, ['eog', 'ecg'])
