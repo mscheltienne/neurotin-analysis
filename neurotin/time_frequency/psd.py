@@ -250,6 +250,7 @@ def apply_weights_mask(df, weights):
     return df
 
 
+@fill_doc
 def add_average_column(df):
     """
     Add a column averaging the power on all channels.

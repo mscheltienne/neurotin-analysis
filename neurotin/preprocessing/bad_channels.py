@@ -21,16 +21,6 @@ def _prepapre_raw(raw):
         - Calibration: Crop from the first rest phase to the last stimuli.
         - Online: Crop from the first non-regulation to the last regulation.
     Set the montage as 'standard_1020'. The reference 'CPz' is not added.
-
-    Parameters
-    ----------
-    raw : mne.io.Raw
-        Raw instance.
-
-    Returns
-    -------
-    raw : Raw
-        Copied and modified raw instance.
     """
     raw = raw.copy()
     apply_filter_eeg(raw, notch=True)
