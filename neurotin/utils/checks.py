@@ -39,6 +39,8 @@ def _ensure_int(item, *, item_name=None):
         raise TypeError("%s must be an int, got %s instead."
                         % (item_name, type(item)))
 
+    return item
+
 
 class _IntLike:
     @classmethod
@@ -104,6 +106,8 @@ def _check_type(item, types, *, item_name=None):
         raise TypeError(f"{item_name} must be an instance of {type_name}, "
                         f"got {type(item)} instead.")
 
+    return item
+
 
 def _check_value(item, allowed_values, *, item_name=None, extra=None):
     """
@@ -144,6 +148,8 @@ def _check_value(item, allowed_values, *, item_name=None, extra=None):
         raise ValueError(msg.format(item_name=item_name, extra=extra,
                                     options=options, item=item))
 
+    return item
+
 
 def _check_path(item, *, item_name=None, must_exist=False):
     """Check if path is a valid and return it as pathlib.Path.
@@ -175,6 +181,7 @@ def _check_path(item, *, item_name=None, must_exist=False):
     logger.debug("Checking path '%s'.", item)
     if must_exist:
         assert item.exists(), 'The path does not exists.'
+
     return item.expanduser().absolute()
 
 
@@ -204,6 +211,7 @@ def _check_n_jobs(n_jobs):
     if n_jobs == -1:
         n_jobs = n_cores
     _check_value(n_jobs, tuple(range(n_cores+1)), item_name='n_jobs')
+
     return n_jobs
 
 
@@ -224,6 +232,7 @@ def _check_participant(participant):
     """
     _check_type(participant, ('int', ), item_name='participant')
     assert 0 < participant
+
     return participant
 
 
@@ -277,4 +286,5 @@ def _check_session(session):
     """
     _check_type(session, ('int', ), item_name='session')
     assert 1 <= session <= 15
+
     return session
