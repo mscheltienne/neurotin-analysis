@@ -57,11 +57,11 @@ def exclude_ocular_and_heartbeat_with_ICA(raw, *, semiauto=False):
     ica = _ica(raw, method='picard', max_iter='auto')
 
     eog_idx, eog_scores = \
-        _exclude_ocular_components(raw, ica, threshold=0.5,
-                                   measure='correlation')
+        _exclude_ocular_components(raw, ica, threshold=4.8,
+                                   measure='zscore')
     ecg_idx, ecg_scores = \
         _exclude_heartbeat_components(raw, ica, method='correlation',
-                                      threshold=0.6, measure='correlation')
+                                      threshold=0.7, measure='correlation')
 
     ica.exclude = eog_idx + ecg_idx
 
