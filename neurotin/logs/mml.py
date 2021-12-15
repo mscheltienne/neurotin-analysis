@@ -44,8 +44,8 @@ def plot_mml_across_participants(csv, participants, figsize=(10, 5)):
     # Plot
     f, ax = plt.subplots(1, 1, figsize=figsize)
     sns.lineplot(
-        x='Session', y='Volume', hue='Participant', data=df,
-        palette='muted', style="Participant", markers=True, dashes=False)
+        x='Session', y='Volume', hue='Participant', data=df, palette='muted',
+        style="Participant", markers=True, dashes=False, ax=ax)
     ax.set_xticks(range(1, 16, 1))
     ax.set_yticks(np.arange(0, max(df.Volume)+2.5, 2.5))
 
