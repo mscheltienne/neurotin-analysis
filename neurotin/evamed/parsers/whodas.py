@@ -8,7 +8,9 @@ from ...utils.checks import _check_participant
 
 
 def parse_whodas(df, participant):
-    """Parse dataframe and extract WHODAS answers and information."""
+    """Parse dataframe and extract WHODAS answers and information.
+    Assumes only one WHODAS questionnaire is present in the dataframe,
+    e.g. baseline."""
     _check_participant(participant)
 
     # clean-up columns

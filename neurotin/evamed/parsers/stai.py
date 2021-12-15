@@ -8,7 +8,9 @@ from ...utils.checks import _check_participant
 
 
 def parse_stai(df, participant):
-    """Parse dataframe and extract STAI answers and information."""
+    """Parse dataframe and extract STAI answers and information.
+    Assumes only one STAI questionnaire is present in the dataframe,
+    e.g. baseline."""
     _check_participant(participant)
 
     # clean-up columns

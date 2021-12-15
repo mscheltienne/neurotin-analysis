@@ -4,11 +4,13 @@ import re
 
 import pandas as pd
 
-from ...utils.checks import _check_participant
+from ...utils.checks import _check_participant, _check_participants
 
 
 def parse_thi(df, participant):
-    """Parse dataframe and extract THI answers and information."""
+    """Parse dataframe and extract THI answers and information.
+    Assumes only one THI questionnaire is present in the dataframe,
+    e.g. baseline."""
     _check_participant(participant)
 
     # clean-up columns
@@ -46,3 +48,26 @@ def parse_thi(df, participant):
     df_thi.reset_index(drop=True, inplace=True)
 
     return df_thi
+
+
+def parse_multi_thi(df, participants):
+    """Parse the THI results from multiple THI questionnaires/participants."""
+    _check_participants(participants)
+
+    # clean-up columns
+    columns = [col for col in df.columns if 'THI' in col]
+    assert len(columns) != 0, 'THI not present in dataframe.'
+    prefix = set(col.split('_')[0] for col in columns)
+    assert len(prefix) != 0  # sanity-check
+
+    df_thi_dict = dict(participant=[], prefix=[], date=[], result=[])
+    for idx in participants:
+        for pre in prefix:
+            df_thi_dict['participant'].append(idx)
+            df_thi_dict['prefix'].append(pre)
+            date = df.loc[df['patient_code'] == idx, f'{pre}_date'].values[0]
+            df_thi_dict['date'].append(date)
+            reslt = df.loc[df['patient_code'] == idx, f'{pre}_THI_R'].values[0]
+            df_thi_dict['result'].append(reslt)
+
+    return pd.DataFrame.from_dict(df_thi_dict)

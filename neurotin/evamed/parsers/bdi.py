@@ -8,7 +8,9 @@ from ...utils.checks import _check_participant
 
 
 def parse_bdi(df, participant):
-    """Parse dataframe and extract BDI answers and information."""
+    """Parse dataframe and extract BDI answers and information.
+    Assumes only one BDI questionnaire is present in the dataframe,
+    e.g. baseline."""
     _check_participant(participant)
 
     # clean-up columns
