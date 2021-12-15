@@ -51,7 +51,7 @@ def boxplot(df, participant, figsize=(10, 5)):
 
     f, ax = plt.subplots(1, 1, figsize=figsize)
     sns.boxplot(x='session', y='avg', hue='phase', palette='muted',
-                  hue_order=['non-regulation', 'regulation'],
-                  data=df[df['participant'] == participant], ax=ax)
+                hue_order=['non-regulation', 'regulation'],
+                data=df[df['participant'] == participant], ax=ax)
 
     return f, ax
