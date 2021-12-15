@@ -70,4 +70,7 @@ def parse_multi_thi(df, participants):
             reslt = df.loc[df['patient_code'] == idx, f'{pre}_THI_R'].values[0]
             df_thi_dict['result'].append(reslt)
 
-    return pd.DataFrame.from_dict(df_thi_dict)
+    df_thi = pd.DataFrame.from_dict(df_thi_dict)
+    df_thi.date = pd.to_datetime(df_thi.date)
+
+    return df_thi
