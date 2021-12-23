@@ -222,7 +222,7 @@ def _check_result_file(result_file):
 
 
 # -----------------------------------------------------------------------------
-def plot_results(result_file, swarmplot=False, title_mapping=dict(),
+def plot_results(result_file, swarmplot=False, title_mapping=None,
                  key_to_plot='all'):
     """
     Box plot showing the repartition of the results.
@@ -238,6 +238,7 @@ def plot_results(result_file, swarmplot=False, title_mapping=dict(),
     key_to_plot : str | list of str | 'all'
         Subset of keys to plot. If 'all', plot all keys in result_file.
     """
+    title_mapping = dict() if title_mapping is None else title_mapping
     key_to_plot = _check_key_to_plot(key_to_plot)
     results = _result_file_parser(result_file)
     for df, counter, key in results:
