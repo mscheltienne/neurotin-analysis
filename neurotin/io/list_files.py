@@ -2,7 +2,7 @@ from ..utils.checks import (_check_type, _check_path, _check_participant,
                             _check_session)
 
 
-def list_raw_fif(directory, *, exclude=[]):
+def list_raw_fif(directory, *, exclude=None):
     """
     List all raw fif files in directory and its subdirectories.
 
@@ -18,6 +18,7 @@ def list_raw_fif(directory, *, exclude=[]):
     fifs : list
         Found raw fif files.
     """
+    exclude = [] if exclude is None else exclude
     directory = _check_path(directory, item_name='directory', must_exist=True)
     _check_type(exclude, (list, tuple), item_name='exclude')
     for file in exclude:
@@ -25,7 +26,7 @@ def list_raw_fif(directory, *, exclude=[]):
     return _list_fif(directory, exclude, endswith='-raw.fif')
 
 
-def list_ica_fif(directory, *, exclude=[]):
+def list_ica_fif(directory, *, exclude=None):
     """
     List all ica fif files in directory and its subdirectories.
 
@@ -41,6 +42,7 @@ def list_ica_fif(directory, *, exclude=[]):
     fifs : list
         Found ica fif files.
     """
+    exclude = [] if exclude is None else exclude
     directory = _check_path(directory, item_name='directory', must_exist=True)
     _check_type(exclude, (list, tuple), item_name='exclude')
     for file in exclude:
