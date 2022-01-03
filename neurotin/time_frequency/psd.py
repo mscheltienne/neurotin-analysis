@@ -5,6 +5,7 @@ import multiprocessing as mp
 import mne
 import numpy as np
 import pandas as pd
+from scipy.stats import zscore
 from scipy.integrate import simpson
 from mne.time_frequency import psd_welch
 
@@ -259,9 +260,60 @@ def add_average_column(df):
     ----------
     %(psd_df)s
         An 'avg' column is added averaging the power on all channels.
+
+    Returns
+    -------
+    %(psd_df)s
+        The average power across channels has been added in the column 'avg'.
     """
     ch_names = [
         col for col in df.columns
         if col not in ('participant', 'session', 'run', 'phase', 'idx')]
     df['avg'] = df[ch_names].mean(axis=1)
+    return df
+
+
+@fill_doc
+def remove_outliers(df, score=2.):
+    """
+    Remove outliers from the average columns in-place.
+
+    Parameters
+    ----------
+    %(psd_df)s
+        An 'avg' column is added averaging the power on all channels if it is
+        not present.
+    score : float
+        ZScore threshold applied on each participant/session/run to eliminate
+        outliers.
+
+    Returns
+    -------
+    %(psd_df)s
+        Outliers have been removed.
+    """
+    _check_type(score, ('numeric', ), item_name='score')
+
+    if 'avg' not in df.columns:
+        df = add_average_column(df)
+
+    outliers_idx = list()
+    participants = sorted(df['participant'].unique())
+    for participant in participants:
+        # retrieve df corresponding to this participant
+        df_participant = df[df['participant'] == participant]
+
+        sessions = sorted(df_participant['session'].unique())
+        for session in sessions:
+            df_session = df_participant[df_participant['session'] == session]
+
+            runs = sorted(df_session['run'].unique())
+            for run in runs:
+                df_run = df_session[df_session['run'] == run]
+
+                # search for outliers and retrieve index
+                outliers = df_run[~(np.abs(zscore(df_run['avg'])) <= score)]
+                outliers_idx.extend(list(outliers.index))
+
+    df.drop(index=outliers_idx, inplace=True)
     return df
