@@ -73,4 +73,10 @@ def parse_multi_thi(df, participants):
     df_thi = pd.DataFrame.from_dict(df_thi_dict)
     df_thi.date = pd.to_datetime(df_thi.date)
 
+    # rename
+    mapper = {'THIB': 'Baseline',
+              'THIPREA': 'Pre-assessment',
+              'THI': 'Post-assessment'}
+    df_thi['prefix'].replace(to_replace=mapper, inplace=True)
+
     return df_thi
