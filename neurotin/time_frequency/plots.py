@@ -66,6 +66,10 @@ def catplot(df, participants, kind='box', **kwargs):
     %(psd_df)s
     participants : list
         List of the participant IDs to compare.
+    kind : str
+        The kind of plot to draw, corresponds to the name of a categorical
+        axes-level plotting function. Options are: “strip”, “swarm”, “box”,
+        “violin”, “boxen”, “point”, “bar”, or “count”.
 
     Returns
     -------
