@@ -31,50 +31,6 @@ def violinplot(df, participant, figsize=(10, 5), **kwargs):
     return f, ax
 
 
-def violinplot_comparison(df, participants, figsize=None, **kwargs):
-    """
-    Plot a comparison between participants.
-
-    Parameters
-    ----------
-    %(psd_df)s
-    participants : list
-        List of the participant IDs to compare.
-
-    Returns
-    -------
-    f : Figure
-    ax : Axes
-    """
-    participants = _check_participants(participants)
-    _check_type(figsize, (tuple, None), item_name='figsize')
-    figsize = (20, 2*len(participants)) if figsize is None else figsize
-
-    f, ax = plt.subplots(len(participants), 1, figsize=figsize)
-    for k, participant in enumerate(participants):
-        sns.violinplot(x='session', y='avg', hue='phase', palette='muted',
-                       hue_order=['non-regulation', 'regulation'],
-                       data=df[df['participant'] == participant], split=True,
-                       scale="count", inner="quartile", ax=ax[k], **kwargs)
-
-    # design
-    for ax_ in ax:
-        ax_.legend().set_visible(False)
-        ax_.get_xaxis().set_visible(False)
-        ax_.get_yaxis().set_visible(False)
-
-    # adjust space
-    f.subplots_adjust(hspace=0)
-
-    # add session axis
-    ax[-1].get_xaxis().set_visible(True)
-    ax[-1].set_xticks(range(0, 15, 1))
-    ax[-1].set_xticklabels(sorted(df['session'].unique()))
-    ax[-1].set_xlabel('Session n°')
-
-    return f, ax
-
-
 def boxplot(df, participant, figsize=(10, 5), **kwargs):
     """
     Plot as box plots (left: non-regulation; right: regulation) the average
@@ -101,7 +57,7 @@ def boxplot(df, participant, figsize=(10, 5), **kwargs):
     return f, ax
 
 
-def boxplot_comparison(df, participants, figsize=None, **kwargs):
+def catplot(df, participants, kind='box', **kwargs):
     """
     Plot a comparison between participants.
 
@@ -113,33 +69,14 @@ def boxplot_comparison(df, participants, figsize=None, **kwargs):
 
     Returns
     -------
-    f : Figure
-    ax : Axes
+    g : FacetGrid
     """
     participants = _check_participants(participants)
-    _check_type(figsize, (tuple, None), item_name='figsize')
-    figsize = (20, 2*len(participants)) if figsize is None else figsize
-
-    f, ax = plt.subplots(len(participants), 1, figsize=figsize)
-    for k, participant in enumerate(participants):
-        sns.boxplot(x='session', y='avg', hue='phase', palette='muted',
+    g = sns.catplot(x='session', y='avg', row='participant',
+                    row_order=sorted(participants), hue='phase',
                     hue_order=['non-regulation', 'regulation'],
-                    data=df[df['participant'] == participant], ax=ax[k],
-                    **kwargs)
+                    palette='muted',
+                    data=df[df['participant'].isin(participants)],
+                    kind=kind, legend_out=True, sharey=False, **kwargs)
 
-    # design
-    for ax_ in ax:
-        ax_.legend().set_visible(False)
-        ax_.get_xaxis().set_visible(False)
-        ax_.get_yaxis().set_visible(False)
-
-    # adjust space
-    f.subplots_adjust(hspace=0)
-
-    # add session axis
-    ax[-1].get_xaxis().set_visible(True)
-    ax[-1].set_xticks(range(0, 15, 1))
-    ax[-1].set_xticklabels(sorted(df['session'].unique()))
-    ax[-1].set_xlabel('Session n°')
-
-    return f, ax
+    return g
