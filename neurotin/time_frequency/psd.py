@@ -284,7 +284,7 @@ def add_average_column(df, *, copy=False):
 @fill_doc
 def remove_outliers(df, score=2., *, copy=False):
     """
-    Remove outliers from the average columns.
+    Remove outliers from the average column.
 
     Parameters
     ----------
