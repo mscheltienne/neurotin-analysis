@@ -22,8 +22,8 @@ def plot_multi_thi_evolution(df, figsize=(10, 5)):
     location = df['prefix'].isin(valid_prefix)
     dashes = [(2, 2)] * len(df['participant'].unique())
     sns.lineplot(data=df.loc[location], x='date', y='result',
-                  hue='participant', palette='muted', markers=False,
-                  dashes=dashes, legend=False, ax=ax)
+                 hue='participant', palette='muted', markers=False,
+                 dashes=dashes, legend=False, ax=ax)
     # markers
     sns.scatterplot(data=df, x='date', y='result', style='prefix',
                     hue='participant', palette='muted', legend=True, s=50,
