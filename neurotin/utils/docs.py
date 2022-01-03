@@ -16,6 +16,10 @@ raw : mne.io.Raw
 docdict['raw_folder'] = """
 raw_folder : str | Path
     Path to the directory containing raw data with fif, logs, models, plots."""
+docdict['copy'] = """
+copy : bool
+    If True, operates and return a copy. Default to False to operate
+    in-place."""
 
 # --------------------------------- pipeline ---------------------------------
 docdict['pipeline_header'] = """Pipeline function called on each raw file."""

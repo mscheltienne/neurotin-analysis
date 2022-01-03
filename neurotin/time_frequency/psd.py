@@ -197,7 +197,7 @@ def _add_data_to_dict(data_dict, participant, session, run, phase, data,
 
 
 @fill_doc
-def apply_weights_session(df, raw_folder):
+def apply_weights_session(df, raw_folder, *, copy=False):
     """
     Apply the weights used during a given session to the PSD dataframe.
 
@@ -205,6 +205,7 @@ def apply_weights_session(df, raw_folder):
     ----------
     %(psd_df)s
     %(raw_folder)s
+    %(copy)s
 
     Returns
     -------
@@ -213,6 +214,8 @@ def apply_weights_session(df, raw_folder):
     _check_type(df, (pd.DataFrame, ), item_name='df')
     raw_folder = _check_path(raw_folder, item_name='raw_folder',
                              must_exist=True)
+    _check_type(copy, (bool, ), item_name='copy')
+    df = df.copy() if copy else df
 
     participant_session = None
     for index, row in df.iterrows():
@@ -224,12 +227,11 @@ def apply_weights_session(df, raw_folder):
             ch_names = weights['channel']
 
         df.loc[index, ch_names] = row[ch_names] * weights['weight'].values
-
     return df
 
 
 @fill_doc
-def apply_weights_mask(df, weights):
+def apply_weights_mask(df, weights, *, copy=False):
     """
     Apply the weights mask to the PSD dataframe.
 
@@ -237,6 +239,7 @@ def apply_weights_mask(df, weights):
     ----------
     %(psd_df)s
     %(df_weights)s
+    %(copy)s
 
     Returns
     -------
@@ -244,15 +247,16 @@ def apply_weights_mask(df, weights):
     """
     _check_type(df, (pd.DataFrame, ), item_name='df')
     _check_type(weights, (pd.DataFrame, ), item_name='weights')
+    _check_type(copy, (bool, ), item_name='copy')
+    df = df.copy() if copy else df
 
     ch_names = weights['channel']
     df.loc[:, ch_names] = df[ch_names] * weights['weight'].values
-
     return df
 
 
 @fill_doc
-def add_average_column(df):
+def add_average_column(df, *, copy=False):
     """
     Add a column averaging the power on all channels.
 
@@ -260,12 +264,16 @@ def add_average_column(df):
     ----------
     %(psd_df)s
         An 'avg' column is added averaging the power on all channels.
+    %(copy)s
 
     Returns
     -------
     %(psd_df)s
         The average power across channels has been added in the column 'avg'.
     """
+    _check_type(copy, (bool, ), item_name='copy')
+    df = df.copy() if copy else df
+
     ch_names = [
         col for col in df.columns
         if col not in ('participant', 'session', 'run', 'phase', 'idx')]
@@ -274,9 +282,9 @@ def add_average_column(df):
 
 
 @fill_doc
-def remove_outliers(df, score=2.):
+def remove_outliers(df, score=2., *, copy=False):
     """
-    Remove outliers from the average columns in-place.
+    Remove outliers from the average columns.
 
     Parameters
     ----------
@@ -286,6 +294,7 @@ def remove_outliers(df, score=2.):
     score : float
         ZScore threshold applied on each participant/session/run to eliminate
         outliers.
+    %(copy)s
 
     Returns
     -------
@@ -293,7 +302,8 @@ def remove_outliers(df, score=2.):
         Outliers have been removed.
     """
     _check_type(score, ('numeric', ), item_name='score')
-
+    _check_type(copy, (bool, ), item_name='copy')
+    df = df.copy() if copy else df
     if 'avg' not in df.columns:
         df = add_average_column(df)
 
