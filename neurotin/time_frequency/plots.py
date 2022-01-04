@@ -115,6 +115,6 @@ def diff_lineplot(df, participant, figsize=(10, 5), **kwargs):
 
     # create figure
     f, ax = plt.subplots(1, 1, figsize=figsize)
-    sns.lineplot(x=df.index, y='diff', data=df, ax=ax)
+    sns.lineplot(x=df.index, y='diff', data=df, ax=ax, **kwargs)
 
     return f, ax
