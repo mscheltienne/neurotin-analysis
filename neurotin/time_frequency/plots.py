@@ -99,6 +99,7 @@ def diff_lineplot(df, participant, figsize=(10, 5), **kwargs):
     Parameters
     ----------
     %(psd_diff_df)s
+    %(participant)s
 
     Returns
     -------
@@ -118,3 +119,45 @@ def diff_lineplot(df, participant, figsize=(10, 5), **kwargs):
     sns.lineplot(x=df.index, y='diff', data=df, ax=ax, **kwargs)
 
     return f, ax
+
+
+@fill_doc
+def diff_catplot_distribution(df_positives, df_negatives, participants,
+                              **kwargs):
+    """
+    Plot the distribution of positive vs negative diff.
+
+    Parameters
+    ----------
+    %(count_positives)s
+    %(count_negatives)s
+    participants : list
+        List of the participant IDs to compare.
+
+    Returns
+    -------
+    g : FacetGrid
+    """
+    participants = sorted(_check_participants(participants))
+
+    # filter df
+    df_positives = df_positives[df_positives['participant'].isin(participants)]
+    df_negatives = df_negatives[df_negatives['participant'].isin(participants)]
+
+    # create facetgrid with first catplot
+    g = sns.catplot(x='session', y='count', row='participant',
+                    row_order=participants, data=df_positives,
+                    kind='bar', legend_out=True, sharey=False,
+                    color='lightblue', **kwargs)
+
+    # add second plot on each axes
+    for k, ax in enumerate(g.axes):
+        df_ = df_negatives[df_negatives['participant'] == participants[k]]
+        sns.barplot(x='session', y='count', data=df_,
+                    color='lightgreen', ax=ax[0])
+
+    # style
+    for k, ax in enumerate(g.axes):
+        ax[0].yaxis.set_visible(False)
+
+    return g

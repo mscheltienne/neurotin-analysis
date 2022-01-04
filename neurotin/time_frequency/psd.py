@@ -456,6 +456,7 @@ def diff_between_phases(df, column='avg'):
 def count_diff(df):
     """
     Count the positive/negative diff values by session.
+    The count is normalized by the number of observations.
 
     Parameters
     ----------
@@ -469,8 +470,8 @@ def count_diff(df):
     assert 'diff' in df.columns
 
     # reset order
-    df.sort_values(by=['participant', 'session', 'run', 'idx'],
-                   ascending=True)
+    df = df.sort_values(by=['participant', 'session', 'run', 'idx'],
+                        ascending=True)
     df.reset_index()
 
     # check sign
@@ -485,24 +486,42 @@ def count_diff(df):
 
     participants = df['participant'].unique()
     sessions = df['session'].unique()
-    for participant, session, sign in itertools.product(
-            participants, sessions, (-1, 1)):
+    for participant, session in itertools.product(participants, sessions):
         try:
-            n = counts[participant, session, sign]
+            pos = counts[participant, session, 1]
+            neg = counts[participant, session, -1]
         except KeyError:
-            continue
+            pos = np.nan
+            neg = np.nan
 
-        if sign == 1:
-            positives['participant'].append(participant)
-            positives['session'].append(session)
-            positives['count'].append(n)
-        elif sign == -1:
-            negatives['participant'].append(participant)
-            negatives['session'].append(session)
-            negatives['count'].append(-n)
+        # add common data to dict
+        positives['participant'].append(participant)
+        positives['session'].append(session)
+        negatives['participant'].append(participant)
+        negatives['session'].append(session)
+
+        if any(np.isnan(x) or x == 0 for x in (pos, neg)):
+            positives['count'].append(np.nan)
+            negatives['count'].append(np.nan)
+        else:
+            # normalize
+            total = (pos + neg)
+            pos = pos / total
+            neg = neg / total
+            # add to dict
+            positives['count'].append(pos)
+            negatives['count'].append(-neg)
 
     # create df
     df_positives = pd.DataFrame.from_dict(positives, orient='columns')
     df_negatives = pd.DataFrame.from_dict(negatives, orient='columns')
+
+    # reset order
+    df_positives.sort_values(by=['participant', 'session'], ascending=True,
+                             inplace=True)
+    df_positives.reset_index()
+    df_negatives.sort_values(by=['participant', 'session'], ascending=True,
+                             inplace=True)
+    df_negatives.reset_index()
 
     return df_positives, df_negatives
