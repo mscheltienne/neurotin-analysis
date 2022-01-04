@@ -147,7 +147,7 @@ def diff_catplot_distribution(df_positives, df_negatives, participants,
     # create facetgrid with first catplot
     g = sns.catplot(x='session', y='count', row='participant',
                     row_order=participants, data=df_positives,
-                    kind='bar', legend_out=True, sharey=False,
+                    kind='bar', legend_out=True, sharey=True,
                     color='lightblue', **kwargs)
 
     # add second plot on each axes
