@@ -499,7 +499,7 @@ def count_diff(df):
         elif sign == -1:
             negatives['participant'].append(participant)
             negatives['session'].append(session)
-            negatives['count'].append(n)
+            negatives['count'].append(-n)
 
     # create df
     df_positives = pd.DataFrame.from_dict(positives, orient='columns')
