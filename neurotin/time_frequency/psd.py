@@ -332,6 +332,17 @@ def ratio(df_alpha, df_delta):
     """
     Compute the ratio of alpha/delta band power for all participant/session/run
     /phase/idx.
+
+    Parameters
+    ----------
+    %(psd_df)s
+        Contains alpha-band PSD.
+    %(psd_df)s
+        Contains delta-band PSD.
+
+    Returns
+    -------
+    %(psd_ratio_df)s
     """
     if 'avg' not in df_alpha.columns:
         df_alpha = add_average_column(df_alpha)
