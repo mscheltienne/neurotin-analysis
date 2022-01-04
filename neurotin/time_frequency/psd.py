@@ -328,24 +328,74 @@ def remove_outliers(df, score=2., *, copy=False):
     return df
 
 
-@fill_doc
-def diff_between_phases(df):
+def ratio(df_alpha, df_delta):
     """
-    Compute the difference between the PSD in a regulation phase and in the
+    Compute the ratio of alpha/delta band power for all participant/session/run
+    /phase/idx.
+    """
+    if 'avg' not in df_alpha.columns:
+        df_alpha = add_average_column(df_alpha)
+    if 'avg' not in df_delta.columns:
+        df_alpha = add_average_column(df_delta)
+
+    # check keys
+    keys = ['participant', 'session', 'run', 'phase', 'idx']
+    assert len(set(keys).intersection(df_alpha.columns)) == len(keys)
+    assert len(set(keys).intersection(df_delta.columns)) == len(keys)
+    assert sorted(df_alpha.columns) == sorted(df_delta.columns)
+
+    # container for new df with ratio of power
+    data = {key: [] for key in keys + ['ratio']}
+
+    ratio = df_alpha['avg'] / df_delta['avg']
+    ratio = ratio[ratio.notna()]
+
+    # fill new df dict
+    for i, r in ratio.iteritems():
+        alpha_ = df_alpha.loc[i]
+        delta_ = df_delta.loc[i]
+
+        # sanity-check
+        try:
+            assert alpha_['participant'] == delta_['participant']
+            assert alpha_['session'] == delta_['session']
+            assert alpha_['run'] == delta_['run']
+            assert alpha_['phase'] == delta_['phase']
+            assert alpha_['idx'] == delta_['idx']
+        except AssertionError:
+            continue
+
+        data['participant'].append(alpha_['participant'])
+        data['session'].append(alpha_['session'])
+        data['run'].append(alpha_['run'])
+        data['phase'].append(alpha_['phase'])
+        data['idx'].append(alpha_['idx'])
+        data['ratio'].append(r)
+
+    # create df
+    df = pd.DataFrame.from_dict(data, orient='columns')
+    return df
+
+
+@fill_doc
+def diff_between_phases(df, column='avg'):
+    """
+    Compute the difference between a column in a regulation phase and in the
     preceding non-regulation phase.
 
     Parameters
     ----------
     %(psd_df)s
-        An 'avg' column is added averaging the power on all channels if it is
-        not present.
+    column : str
+        Label of the column on which the difference is computed between both
+        phases.
 
     Returns
     -------
     %(psd_diff_df)s
     """
-    if 'avg' not in df.columns:
-        df = add_average_column(df)
+    _check_type(column, (str, ), item_name='column')
+    assert column in df.columns
 
     # check keys
     keys = ['participant', 'session', 'run', 'idx']
@@ -371,8 +421,8 @@ def diff_between_phases(df):
                     df_idx = df_run[df_run['idx'] == idx]
 
                     # compute the difference between regulation and rest
-                    reg = df_idx[df_idx.phase == 'regulation']['avg']
-                    non_reg = df_idx[df_idx.phase == 'non-regulation']['avg']
+                    reg = df_idx[df_idx.phase == 'regulation'][column]
+                    non_reg = df_idx[df_idx.phase == 'non-regulation'][column]
                     try:
                         diff = reg.values[0] - non_reg.values[0]
                     except IndexError:
