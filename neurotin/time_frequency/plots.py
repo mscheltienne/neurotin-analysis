@@ -99,5 +99,22 @@ def diff_lineplot(df, participant, figsize=(10, 5), **kwargs):
     Parameters
     ----------
     %(psd_diff_df)s
+
+    Returns
+    -------
+    f : Figure
+    ax : Axes
     """
-    pass
+    _check_participant(participant)
+    _check_type(figsize, (tuple, ), item_name='figsize')
+
+    # extract information
+    df = df[df['participant'] == participant]
+    df.sort_values(by=['session', 'run', 'idx'], ascending=True)
+    df.reset_index()
+
+    # create figure
+    f, ax = plt.subplots(1, 1, figsize=figsize)
+    sns.lineplot(x=df.index, y='diff', data=df, ax=ax)
+
+    return f, ax
