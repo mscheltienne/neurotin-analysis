@@ -310,7 +310,6 @@ def remove_outliers(df, score=2., *, copy=False):
     outliers_idx = list()
     participants = sorted(df['participant'].unique())
     for participant in participants:
-        # retrieve df corresponding to this participant
         df_participant = df[df['participant'] == participant]
 
         sessions = sorted(df_participant['session'].unique())
@@ -326,4 +325,66 @@ def remove_outliers(df, score=2., *, copy=False):
                 outliers_idx.extend(list(outliers.index))
 
     df.drop(index=outliers_idx, inplace=True)
+    return df
+
+
+@fill_doc
+def diff_between_phases(df):
+    """
+    Compute the difference between the PSD in a regulation phase and in the
+    preceding non-regulation phase.
+
+    Parameters
+    ----------
+    %(psd_df)s
+        An 'avg' column is added averaging the power on all channels if it is
+        not present.
+
+    Returns
+    -------
+    %(psd_diff_df)s
+    """
+    if 'avg' not in df.columns:
+        df = add_average_column(df)
+
+    # check keys
+    keys = ['participant', 'session', 'run', 'idx']
+    assert len(set(keys).intersection(df.columns)) == len(keys)
+
+    # container for new df with diff between phases
+    data = {key: [] for key in keys + ['diff']}
+
+    participants = sorted(df['participant'].unique())
+    for participant in participants:
+        df_participant = df[df['participant'] == participant]
+
+        sessions = sorted(df_participant['session'].unique())
+        for session in sessions:
+            df_session = df_participant[df_participant['session'] == session]
+
+            runs = sorted(df_session['run'].unique())
+            for run in runs:
+                df_run = df_session[df_session['run'] == run]
+
+                index = sorted(df_session['idx'].unique())
+                for idx in index:
+                    df_idx = df_run[df_run['idx'] == idx]
+
+                    # compute the difference between regulation and rest
+                    reg = df_idx[df_idx.phase == 'regulation']['avg']
+                    non_reg = df_idx[df_idx.phase == 'non-regulation']['avg']
+                    try:
+                        diff = reg.values[0] - non_reg.values[0]
+                    except IndexError:
+                        continue
+
+                    # fill dict
+                    data['participant'].append(participant)
+                    data['session'].append(session)
+                    data['run'].append(run)
+                    data['idx'].append(idx)
+                    data['diff'].append(diff)
+
+    # create df
+    df = pd.DataFrame.from_dict(data, orient='columns')
     return df

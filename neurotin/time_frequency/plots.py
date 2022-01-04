@@ -1,9 +1,11 @@
 import seaborn as sns
 from matplotlib import pyplot as plt
 
+from ..utils.docs import fill_doc
 from ..utils.checks import _check_type, _check_participant, _check_participants
 
 
+@fill_doc
 def violinplot(df, participant, figsize=(10, 5), **kwargs):
     """
     Plot as violin plots (left: non-regulation; right: regulation) the average
@@ -31,6 +33,7 @@ def violinplot(df, participant, figsize=(10, 5), **kwargs):
     return f, ax
 
 
+@fill_doc
 def boxplot(df, participant, figsize=(10, 5), **kwargs):
     """
     Plot as box plots (left: non-regulation; right: regulation) the average
@@ -57,6 +60,7 @@ def boxplot(df, participant, figsize=(10, 5), **kwargs):
     return f, ax
 
 
+@fill_doc
 def catplot(df, participants, kind='box', **kwargs):
     """
     Plot a comparison between participants.
@@ -84,3 +88,16 @@ def catplot(df, participants, kind='box', **kwargs):
                     kind=kind, legend_out=True, sharey=False, **kwargs)
 
     return g
+
+
+@fill_doc
+def diff_lineplot(df, participant, figsize=(10, 5), **kwargs):
+    """
+    Plot the difference between PSD power in consecutive non-regulation and
+    regulation phase.
+
+    Parameters
+    ----------
+    %(psd_diff_df)s
+    """
+    pass

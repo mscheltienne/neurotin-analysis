@@ -112,8 +112,8 @@ df : DataFrame
         session : int - Session ID (1 to 15)
         run : int - Run ID
         phase : str - 'regulation' or 'non-regulation'
-        idx : ID of the phase within the run (1 to 10)
-        ch : float - Averaged PSD (1 per channel)."""
+        idx : ID of the phase within the run (0 to 9)
+        ch : float - Averaged PSD (1 per channel)"""
 docdict['psd_duration'] = """
 duration : int | float
     Duration of an epoch in seconds."""
@@ -124,6 +124,15 @@ docdict['psd_reject'] = """
 reject : dict | 'auto' | None
     MNE-compatible rejection dictionary or 'auto' to compute it with
     autoreject. If set to None, rejection is skipped."""
+docdict['psd_diff_df'] = """
+df : DataFrame
+    Difference between the average band power in the regulation phase and
+    the preceding non-regulation phase.
+        participant : int - Participant ID
+        session : int - Session ID (1 to 15)
+        run : int - Run ID
+        idx : ID of the phase within the run (0 to 9)
+        diff : float - PSD difference"""
 
 # ------------------------- Documentation functions --------------------------
 docdict_indented = dict()
