@@ -142,6 +142,12 @@ docdict['psd_reject'] = """
 reject : dict | 'auto' | None
     MNE-compatible rejection dictionary or 'auto' to compute it with
     autoreject. If set to None, rejection is skipped."""
+docdict['count_positives'] = """
+df_positives : DataFrame
+    Counts of positives 'diff' per session."""
+docdict['count_negatives'] = """
+df_negatives : DataFrame
+    Counts of negatives 'diff' per session."""
 
 # ------------------------- Documentation functions --------------------------
 docdict_indented = dict()

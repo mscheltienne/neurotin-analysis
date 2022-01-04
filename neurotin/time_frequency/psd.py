@@ -1,4 +1,5 @@
 import re
+import itertools
 import traceback
 import multiprocessing as mp
 
@@ -449,3 +450,59 @@ def diff_between_phases(df, column='avg'):
     # create df
     df = pd.DataFrame.from_dict(data, orient='columns')
     return df
+
+
+@fill_doc
+def count_diff(df):
+    """
+    Count the positive/negative diff values by session.
+
+    Parameters
+    ----------
+    %(psd_diff_df)s
+
+    Returns
+    -------
+    %(count_positives)s
+    %(count_negatives)s
+    """
+    assert 'diff' in df.columns
+
+    # reset order
+    df.sort_values(by=['participant', 'session', 'run', 'idx'],
+                   ascending=True)
+    df.reset_index()
+
+    # check sign
+    df['sign'] = np.sign(df['diff'])
+    # groupby
+    counts = df.groupby(by=['participant', 'session'],
+                        dropna=True)['sign'].value_counts()
+
+    # create new counts dataframe
+    positives = {'participant': [], 'session': [], 'count': []}
+    negatives = {'participant': [], 'session': [], 'count': []}
+
+    participants = df['participant'].unique()
+    sessions = df['session'].unique()
+    for participant, session, sign in itertools.product(
+            participants, sessions, (-1, 1)):
+        try:
+            n = counts[participant, session, sign]
+        except KeyError:
+            continue
+
+        if sign == 1:
+            positives['participant'].append(participant)
+            positives['session'].append(session)
+            positives['count'].append(n)
+        elif sign == -1:
+            negatives['participant'].append(participant)
+            negatives['session'].append(session)
+            negatives['count'].append(n)
+
+    # create df
+    df_positives = pd.DataFrame.from_dict(positives, orient='columns')
+    df_negatives = pd.DataFrame.from_dict(negatives, orient='columns')
+
+    return df_positives, df_negatives
