@@ -152,12 +152,21 @@ def diff_catplot_distribution(df_positives, df_negatives, participants,
 
     # add second plot on each axes
     for k, ax in enumerate(g.axes):
-        df_ = df_negatives[df_negatives['participant'] == participants[k]]
-        sns.barplot(x='session', y='count', data=df_,
+        df = df_negatives[df_negatives['participant'] == participants[k]]
+        sns.barplot(x='session', y='count', data=df,
                     color='lightgreen', ax=ax[0])
+
+    # add line plot 0.5 below positive value
+    df = df_positives.copy()
+    df.loc[:, 'count'] -= 0.5
+    df.loc[:, 'session'] -= 1
+    for k, ax in enumerate(g.axes):
+        df_ = df[df['participant'] == participants[k]]
+        sns.lineplot(x='session', y='count', data=df_, ax=ax[0], legend=False)
 
     # style
     for k, ax in enumerate(g.axes):
         ax[0].yaxis.set_visible(False)
+        ax[0].axhline(y=0, linestyle='--', color='black', linewidth=0.5)
 
     return g
