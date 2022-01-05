@@ -78,5 +78,6 @@ def parse_multi_thi(df, participants):
               'THIPREA': 'Pre-assessment',
               'THI': 'Post-assessment'}
     df_thi['prefix'].replace(to_replace=mapper, inplace=True)
+    df_thi.rename(columns=dict(prefix='When'), inplace=True)
 
     return df_thi

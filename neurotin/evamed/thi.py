@@ -12,20 +12,22 @@ def plot_multi_thi_evolution(df, figsize=(10, 5)):
     ax.set(xlabel="Date", ylabel="THI Score")
 
     # baseline to post-assessment
-    valid_prefix = ['Baseline', 'Pre-assessment', 'Post-assessment']
-    location = df['prefix'].isin(valid_prefix)
+    valids = ['Baseline', 'Pre-assessment', 'Post-assessment']
+    location = df['When'].isin(valids)
     sns.lineplot(data=df.loc[location], x='date', y='result',
                  hue='participant', palette='muted', markers=False,
                  dashes=False, legend=False, ax=ax)
     # late assessment
-    valid_prefix = []  # TODO: add late assessment to parser
-    location = df['prefix'].isin(valid_prefix)
+    valids = []  # TODO: add late assessment to parser
+    location = df['When'].isin(valids)
     dashes = [(2, 2)] * len(df['participant'].unique())
     sns.lineplot(data=df.loc[location], x='date', y='result',
                  hue='participant', palette='muted', markers=False,
                  dashes=dashes, legend=False, ax=ax)
     # markers
-    sns.scatterplot(data=df, x='date', y='result', style='prefix',
+    sns.scatterplot(data=df, x='date', y='result', style='When',
+                    style_order=('Baseline', 'Pre-assessment',
+                                 'Post-assessment'),
                     hue='participant', palette='muted', legend=True, s=50,
                     ax=ax)
 
