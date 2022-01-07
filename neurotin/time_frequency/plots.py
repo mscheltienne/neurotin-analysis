@@ -148,13 +148,13 @@ def diff_catplot_distribution(df_positives, df_negatives, participants,
     g = sns.catplot(x='session', y='count', row='participant',
                     row_order=participants, data=df_positives,
                     kind='bar', legend_out=True, sharey=True,
-                    color='lightblue', **kwargs)
+                    color='limegreen', **kwargs)
 
     # add second plot on each axes
     for k, ax in enumerate(g.axes):
         df = df_negatives[df_negatives['participant'] == participants[k]]
         sns.barplot(x='session', y='count', data=df,
-                    color='lightgreen', ax=ax[0])
+                    color='deepskyblue', ax=ax[0])
 
     # add line plot 0.5 below positive value
     df = df_positives.copy()
