@@ -1,6 +1,7 @@
 import pickle
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 
 from ..utils.docs import fill_doc
@@ -82,7 +83,7 @@ def _read_logs(session_dir):
 
 
 @fill_doc
-def load_session_weights(folder, participant, session):
+def load_session_weights(folder, participant, session, replace_bad_with=0):
     """Load the weights used during that session and return them as Dataframe.
 
     Parameters
@@ -90,11 +91,15 @@ def load_session_weights(folder, participant, session):
     %(folder)s
     %(participant)s
     %(session)s
+    replace_bad_with : float | np.nan
+        What is used to fill bad channel values.
 
     Returns
     -------
     %(df_weights)s
     """
+    replace_bad_with = _check_type(replace_bad_with, ('numeric', np.nan),
+                                   item_name='replace_bad_with')
     weights, info, _, _, _ = load_model(folder, participant, session)
 
     # weights is missing the channels set as bads in info
@@ -102,7 +107,7 @@ def load_session_weights(folder, participant, session):
     idx = 0
     for ch in info.ch_names:
         if ch in info['bads']:
-            weights_with_bads.append(0)
+            weights_with_bads.append(replace_bad_with)
         else:
             weights_with_bads.append(weights[idx])
             idx += 1
