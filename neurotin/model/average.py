@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import os
 import re
 
 from ..io.model import load_session_weights
@@ -31,7 +30,7 @@ def compute_average_model(raw_folder, participants):
     df = None
     for participant in participants:
         # look for sessions
-        pattern = re.compile('Session (\d{1,2})')
+        pattern = re.compile(r'Session (\d{1,2})')
         folder = raw_folder / str(participant).zfill(3)
         sessions = [int(session)
                     for path in folder.iterdir()
