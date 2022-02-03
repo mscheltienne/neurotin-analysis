@@ -23,5 +23,5 @@ df = compute_average(folder, participants)
 path = r''
 df = pd.read_pickle(path)
 
-#%% Plots
+#%% Plot
 plot_topomap(df, outlines='head', contours=6, border=0, extrapolate='local')

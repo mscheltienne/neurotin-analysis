@@ -40,7 +40,7 @@ def run():
     else:
         pattern = re.compile(r'(\d{3})')
         participants = [int(p.name) for p in Path(args.input_dir).iterdir()
-                        if pattern.search(str(p))]
+                        if pattern.match(p.name)]
 
     if len(participants) == 0:
         raise ValueError('Could not find any participants to merge.')
