@@ -38,7 +38,7 @@ def run():
     if args.participants is not None:
         participants = [int(participant) for participant in args.participants]
     else:
-        pattern = re.compile('(\d{3})')
+        pattern = re.compile(r'(\d{3})')
         participants = [int(p.name) for p in Path(args.input_dir).iterdir()
                         if pattern.search(str(p))]
 
