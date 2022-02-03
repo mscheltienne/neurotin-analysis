@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 import re
 
+from .. import logger
 from ..io.model import load_session_weights
 from ..utils.docs import fill_doc
 from ..utils.checks import _check_path, _check_participants
 
 
 @fill_doc
-def compute_average_model(raw_folder, participants):
+def compute_average(raw_folder, participants):
     """
     Compute the average model across all session and across all participants.
 
@@ -37,8 +38,14 @@ def compute_average_model(raw_folder, participants):
                     for session in re.findall(pattern, str(path))]
 
         for session in sessions:
-            weights = load_session_weights(
-                raw_folder, participant, session, replace_bad_with=np.nan)
+            try:
+                weights = load_session_weights(
+                    raw_folder, participant, session, replace_bad_with=np.nan)
+            except FileNotFoundError:
+                logger.warning(
+                    'Model for participant %s and session %s not found.',
+                    participant, session)
+                continue
             weights.rename(columns={'weight': f'{participant}-S{session}'},
                            inplace=True)
             weights.set_index('channel', inplace=True)

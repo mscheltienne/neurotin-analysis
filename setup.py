@@ -109,7 +109,9 @@ setup(
             'neurotin_pp_validation_ica_sources = '+\
                 'neurotin.commands.neurotin_pp_validation_ica_sources:run',
             'neurotin_tfr_compute_psd_average_bins = '+\
-                'neurotin.commands.neurotin_tfr_compute_psd_average_bins:run'
+                'neurotin.commands.neurotin_tfr_compute_psd_average_bins:run',
+            'neurotin_model_compute_average = '+\
+                'neurotin.commands.neurotin_model_compute_average:run'
           ]
         }
     )
