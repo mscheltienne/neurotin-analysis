@@ -6,6 +6,24 @@ from neurotin.time_frequency.psd import (
 from neurotin.time_frequency.plots import diff_catplot_distribution
 
 
+#%% CLI commands
+"""
+# Compute PSDs
+# -a accepts 'mean' or 'integrate'
+neurotin_tfr_compute_psd_average_bins preprocessed/ica/ psds/alpha.pcl -p 57 60 61 63 65 66 68 72 73 -d 4 -o 2 --reject --fmin 8 --fmax 13 -a mean --n_jobs 35
+neurotin_tfr_compute_psd_average_bins preprocessed/ica/ psds/delta.pcl -p 57 60 61 63 65 66 68 72 73 -d 4 -o 2 --reject --fmin 1 --fmax 4 -a mean --n_jobs 35
+
+# Apply weights and remove outliers (python or IPython console)
+import pandas as pd
+from neurotin.time_frequency.psd import apply_weights_session
+
+df = pd.read_pickle('psds/alpha.pcl')
+df = apply_weights_session(df, 'data/Participants')
+df = add_average_column(df)
+df = remove_outliers(df, score=2.)
+df.to_pickle('psds/alpha_.pcl', compression=None)
+"""
+
 #%% PSDs - Alpha
 fname = r''
 
