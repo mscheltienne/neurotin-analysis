@@ -4,11 +4,11 @@ import traceback
 import multiprocessing as mp
 
 import mne
+from mne.time_frequency import psd_welch
 import numpy as np
 import pandas as pd
 from scipy.stats import zscore
 from scipy.integrate import simpson
-from mne.time_frequency import psd_welch
 
 from .epochs import make_fixed_length_epochs, reject_epochs
 from .. import logger

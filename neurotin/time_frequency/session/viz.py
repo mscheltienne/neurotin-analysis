@@ -1,8 +1,8 @@
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from ..utils.docs import fill_doc
-from ..utils.checks import _check_type, _check_participant, _check_participants
+from ...utils.docs import fill_doc
+from ...utils.checks import _check_type, _check_participant, _check_participants
 
 
 @fill_doc
@@ -88,37 +88,6 @@ def catplot(df, participants, kind='box', **kwargs):
                     kind=kind, legend_out=True, sharey=False, **kwargs)
 
     return g
-
-
-@fill_doc
-def diff_lineplot(df, participant, figsize=(10, 5), **kwargs):
-    """
-    Plot the difference between PSD power in consecutive non-regulation and
-    regulation phase.
-
-    Parameters
-    ----------
-    %(psd_diff_df)s
-    %(participant)s
-
-    Returns
-    -------
-    f : Figure
-    ax : Axes
-    """
-    _check_participant(participant)
-    _check_type(figsize, (tuple, ), item_name='figsize')
-
-    # extract information
-    df = df[df['participant'] == participant]
-    df.sort_values(by=['session', 'run', 'idx'], ascending=True)
-    df.reset_index()
-
-    # create figure
-    f, ax = plt.subplots(1, 1, figsize=figsize)
-    sns.lineplot(x=df.index, y='diff', data=df, ax=ax, **kwargs)
-
-    return f, ax
 
 
 @fill_doc

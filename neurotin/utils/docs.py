@@ -144,10 +144,10 @@ reject : dict | 'auto' | None
     autoreject. If set to None, rejection is skipped."""
 docdict['count_positives'] = """
 df_positives : DataFrame
-    Counts of positives 'diff' per session."""
+    Counts of positives 'diff'."""
 docdict['count_negatives'] = """
 df_negatives : DataFrame
-    Counts of negatives 'diff' per session."""
+    Counts of negatives 'diff'."""
 
 # ------------------------- Documentation functions --------------------------
 docdict_indented = dict()

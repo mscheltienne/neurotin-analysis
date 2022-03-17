@@ -3,7 +3,7 @@ import pandas as pd
 from neurotin.time_frequency.psd import (
     add_average_column, remove_outliers, diff_between_phases, ratio,
     count_diff)
-from neurotin.time_frequency.subject.viz import diff_catplot_distribution
+from neurotin.time_frequency.session.viz import diff_catplot_distribution
 
 
 #%% CLI commands
