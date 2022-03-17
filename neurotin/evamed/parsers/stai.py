@@ -1,37 +1,49 @@
-"""Parser of State and Trait Anxiety Inventory (STAI) Evamed questionnaires."""
+"""Parser of State and Trait Anxiety Inventory (STAI) Evamed questionnaires.
 
-import re
+Export:
+    -> Analysis
+    -> Select group
+    -> Export
+        -> CSV
+        -> Synthesis
+        -> [x] Export labels of choce
+    -> Select all 2 questionnaires
+        -> [x] State and Trait Anxiety Inventory (STAI)
+"""
 
 import pandas as pd
 
-from ...utils.checks import _check_participant
+from ...utils.checks import _check_participants
 
 
-def parse_stai(df, participant):
+def parse_stai(df, participants):
     """Parse dataframe and extract STAI answers and information.
     Assumes only one STAI questionnaire is present in the dataframe,
     e.g. baseline."""
-    _check_participant(participant)
+
+    """Parse the STAI from multiple STAI questionnaires/participants
+    that have different prefix, e.g. 'STAI', 'STAIB'."""
+    _check_participants(participants)
 
     # clean-up columns
     columns = [col for col in df.columns if 'STAI' in col]
     assert len(columns) != 0, 'STAI not present in dataframe.'
     prefix = set(col.split('_')[0] for col in columns)
-    assert len(prefix) == 1
-    prefix = list(prefix)[0]
+    assert len(prefix) != 0  # sanity-check
 
-    # locate participant lines
-    df = df.loc[df['patient_code'] == participant]
+    df_stai_dict = dict(participant=[], prefix=[], date=[], result=[])
+    for idx in participants:
+        for pre in prefix:
+            df_stai_dict['participant'].append(idx)
+            df_stai_dict['prefix'].append(pre)
+            date = df.loc[df['patient_code'] == idx, f'{pre}_date'].values[0]
+            df_stai_dict['date'].append(date)
+            reslt = df.loc[df['patient_code'] == idx,
+                           f'{pre}_STAI_R'].values[0]
+            df_stai_dict['result'].append(reslt)
 
-    # extract questions
-    pattern = re.compile(f'{prefix}_STAI' + r'\d{1,2}')
-    columns_questions = [col for col in columns if pattern.match(col)]
-    df_stai = df[columns_questions].applymap(lambda x: int(x[0]),
-                                             na_action='ignore')
-    # extract date/results
-    df_stai.insert(0, 'date', pd.to_datetime(df[f'{prefix}_date']))
-    df_stai.insert(1, 'results', df[f'{prefix}_STAI_R'])
-
+    # code to compute the result score
+    """
     # sanity-check
     questions_weights_4_to_1 = [
         f'{prefix}_STAI'+str(k)
@@ -46,13 +58,16 @@ def parse_stai(df, participant):
     tmp = df_stai[questions_weights_4_to_1].replace({1: 4, 2: 3, 3: 2, 4: 1})
     tmp[questions_weights_1_to_4] = df_stai[questions_weights_1_to_4]
     assert (tmp[columns_questions].sum(axis=1) == df_stai['results']).all()
+    """
+
+    df_stai = pd.DataFrame.from_dict(df_stai_dict)
+    df_stai.date = pd.to_datetime(df_stai.date)
 
     # rename
-    mapper = {col: 'Q'+re.search(r'\d{1,2}', col).group()
-              for col in columns_questions}
-    df_stai.rename(mapper=mapper, axis='columns', copy=False, inplace=True)
-
-    # re-index
-    df_stai.reset_index(drop=True, inplace=True)
+    mapper = {'THIB': 'Baseline',
+              'THIPREA': 'Pre-assessment',
+              'THI': 'Post-assessment'}
+    df_stai['prefix'].replace(to_replace=mapper, inplace=True)
+    df_stai.rename(columns=dict(prefix='When'), inplace=True)
 
     return df_stai
