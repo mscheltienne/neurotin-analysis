@@ -3,13 +3,14 @@ import pandas as pd
 from neurotin.time_frequency.psd import (
     add_average_column, remove_outliers, diff_between_phases, ratio,
     count_diff)
-from neurotin.time_frequency.plots import diff_catplot_distribution
+from neurotin.time_frequency.subject.viz import diff_catplot_distribution
 
 
 #%% CLI commands
 """
 # Compute PSDs
 # -a accepts 'mean' or 'integrate'
+# only difference is the scale, variations are identical -> integrate used.
 neurotin_tfr_compute_psd_average_bins preprocessed/ica/ psds/alpha.pcl -p 57 60 61 63 65 66 68 72 73 -d 4 -o 2 --reject --fmin 8 --fmax 13 -a mean --n_jobs 35
 neurotin_tfr_compute_psd_average_bins preprocessed/ica/ psds/delta.pcl -p 57 60 61 63 65 66 68 72 73 -d 4 -o 2 --reject --fmin 1 --fmax 4 -a mean --n_jobs 35
 
