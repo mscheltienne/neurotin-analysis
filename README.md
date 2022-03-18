@@ -1,110 +1,67 @@
-# NeuroTin
+# NeuroTin (EEG analysis)
 
-Scripts and programs to analyze the NeuroTin EEG dataset.
-The RAW dataset folder structure is set to:
+NeuroTin is a clinical trial under the supervision of principal investigator
+Prof. Dr. Pascal Senn (HUG, Geneva) and supported by the Wyss Center.
+NeuroTin aims to compare tinnitus reduction after 3 different therapeutic
+approaches:
 
-```
-Data
-└─ 001
-    └─ Session 1
-    └─ Session 2
-        └─ Calibration
-        └─ Model
-        └─ Online
-        └─ Plots
-        └─ RestingState
-        └─ bads.txt
-        └─ logs.txt
-    └─ ...
-    └─ Session 15
-└─ 002
-└─ ...
-```
+- Cognitive Behavioral Therapy (CBT), the current gold-standard treatment
+- Neurofeedback with electroencephalography (EEG)
+- Neurofeedback with functional magnetic resonance imaging (fMRI)
+
+This repository contains the python implementation of the Neurofeedback
+paradigm using electroencephalography. Each session is articulated around 3
+main steps: calibration, model, and neurofeedback.
+
+- The calibration uses an auditory stimuli to elicit an N1-P2 evoked response.
+- A model applies weights between 0 and 1 to each electrode based on the
+  N1-P2 evoked response.
+- Neurofeedback runs alternate between phases of non-regulation (also called
+  rest) lasting 8 seconds, and phases of regulation lasting 16 seconds. During
+  phases of regulation, participants attempt to up-regulate the ratio of
+  alpha-band power over delta-band power displayed in real-time.
+
+The implementation of the neurofeedback paradigm using EEG can be found on this
+[repository](https://github.com/mscheltienne/neurotin-eeg).
+
+---
+
+## Dataset structure
+
+The raw dataset folder structure is defined as:
+
+
+> Data
+> └─ 001
+>     └─ Session 1
+>     └─ Session 2
+>         └─ Calibration
+>         └─ Model
+>         └─ Online
+>         └─ Plots
+>         └─ RestingState
+>         └─ bads.txt
+>         └─ logs.txt
+>     └─ ...
+>     └─ Session 15
+> └─ 002
+> └─ ...
 
 4 `.csv` files are used to log different variables for every participant and
 session:
 
-- `mml_logs.csv`: result of the Minimum Masking Level test.
+- `mml_logs.csv`: results of the Minimum Masking Level test repeated at every
+  session.
+- `sound_stimulus_logs.csv`: auditory stimulus settings used for calibration.
 - `model_var_logs.csv`: helmet size (54, 56, 58), model normalization variables
   and bad channels.
 - `scores_logs.csv`: neurofeedback scores displayed.
-- `sound_stimulus_logs.csv`: auditory stimulus settings used.
 
-For functions part of the CLI interface, help for the arguments can be obtained
-with the `--help` flag.
+---
 
-## logs
+## Command-line interface
 
-`neurotin.logs` contains scripts to process and analyze the 4 logging `.csv`
-files.
-
-#### CLI
-
-- `neurotin_logs_mml`: Plot MML for a list of participants.
-
-## model
-
-`neurotin.model` contains scripts to analyze the models used in the
-neurofeedback training.
-
-## preprocessing
-
-`neurotin.preprocessing` contains scripts to clean the raw data and to fill
-missing information. The pipeline is splits in different steps creating
-intermediate files with the same folder structure as the input folder.
-
-### Step 1: `neurotin.preprocessing.prepare_raw`
-
-- Rename channels and fix channel types.
-- Checks sampling frequency and resample to 512 Hz if needed.
-- Checks events and add events as annotations.
-- Filter AUX with FIR bandpass (1., 45.) Hz and notch filter for powerline.
-- Mark bad channels with the PREP pipeline.
-- Add reference channel `CPz` and set standard 10/20 montage.
-- Filter EEG with FIR bandpass (1., 45.) Hz.
-- Add common average reference (CAR) projector.
-- Interpolate bad channels.
-- Apply common average reference (CAR) projector.
-
-### Step 2: `neurotin.preprocessing.ica`
-
-- Apply ICA and remove occular and heartbeat related components.
-
-Thresholds and methods to select ocular and heartbeat related components have
-been adapted for this dataset.
-
-TODO:
-- [ ] Replace with a python implementation of ICLabel
-
-### Step 3: `neurotin.preprocessing.meas_info`
-
-- Fill `.info['description']`, `.info['device_info']`, `.info['experimenter']`,
-  `.info['meas_date']`, `.info['subject_info']`.
-
-Description includes `subject id`, `session`, `recording type` and
-`recording run`.
-Device information includes `type`, `model`, `serial` and `website`.
-Exprimenter includes the experimenter name.
-Measurement date includes the recording datetime (UTC).
-Subject information includes `subject id`, `birthday` (optional) and
-`sex` (optional).
-
-### CLI
-
-- `neurotin_pp_prepare_raw`
-- `neurotin_pp_ica`
-- `neurotin_pp_meas_info`
-
-## time-frequency
-
-`time-frequency` contains scripts for sensor-level time-frequency analysis,
-e.g. PSD computation using welch method or multitapers.
-
-## evamed
-
-`evamed` contains scsripts to parse and analyze the evamed questionnaires.
-The questionnaires are provided as an exported compact .csv file.
-
-## I/O
-
-`neurotin.io` contains functions for I/O operations.
+Many analysis function produces either (pre)processed data files or pandas
+DataFrame. A list of functions accessible via the CLI can be displayed with the
+command `neurotin`. Help for those functions can be obtained with the `--help`
+flag.
