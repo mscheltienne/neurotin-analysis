@@ -10,10 +10,9 @@ import neurotin
 
 def run():
     """Entrypoint for neurotin <command> usage."""
-    root = Path(__file__).parent.parent
-    valid_commands = sorted(
-        glob.glob(str(root/'commands'/'neurotin_*.py')))
-    valid_commands = [file.split(os.path.sep)[-1][4:-3]
+    root = Path(__file__).parent
+    valid_commands = sorted(glob.glob(str(root / 'neurotin_*.py')))
+    valid_commands = [file.split(os.path.sep)[-1][:-3]
                       for file in valid_commands]
 
     def print_help():
