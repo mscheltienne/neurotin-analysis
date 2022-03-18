@@ -30,7 +30,7 @@ The implementation of the neurofeedback paradigm using EEG can be found on this
 
 The raw dataset folder structure is defined as:
 
-
+```
 > Data
 > └─ 001
 >     └─ Session 1
@@ -46,6 +46,7 @@ The raw dataset folder structure is defined as:
 >     └─ Session 15
 > └─ 002
 > └─ ...
+```
 
 4 `.csv` files are used to log different variables for every participant and
 session:
