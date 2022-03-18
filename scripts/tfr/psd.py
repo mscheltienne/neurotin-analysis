@@ -1,8 +1,7 @@
 import pandas as pd
 
 from neurotin.time_frequency.psd import (
-    add_average_column, remove_outliers, diff_between_phases, ratio,
-    count_diff)
+    diff_between_phases, ratio, count_diff)
 from neurotin.time_frequency.session.viz import diff_catplot_distribution
 
 
@@ -29,8 +28,6 @@ df.to_pickle('psds/alpha_.pcl', compression=None)
 fname = r''
 
 df_alpha = pd.read_pickle(fname)
-df_alpha = add_average_column(df_alpha)
-df_alpha = remove_outliers(df_alpha)
 diff_alpha = diff_between_phases(df_alpha, column='avg')
 
 
@@ -38,8 +35,6 @@ diff_alpha = diff_between_phases(df_alpha, column='avg')
 fname = r''
 
 df_delta = pd.read_pickle(fname)
-df_delta = add_average_column(df_delta)
-df_delta = remove_outliers(df_delta)
 diff_delta = diff_between_phases(df_delta, column='avg')
 
 
