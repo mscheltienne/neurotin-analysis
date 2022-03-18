@@ -2,7 +2,8 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 from ...utils.docs import fill_doc
-from ...utils.checks import _check_type, _check_participant, _check_participants
+from ...utils.checks import (_check_type, _check_participant,
+                             _check_participants)
 
 
 @fill_doc
