@@ -31,7 +31,6 @@ def prepare_raw(raw):
     Returns
     -------
     %(raw)s
-    %(bads)s
     """
     # Check sampling frequency
     if raw.info['sfreq'] != 512:
@@ -57,7 +56,7 @@ def prepare_raw(raw):
     # CAR
     apply_filter_eeg(raw, car=True)
 
-    return raw, bads
+    return raw
 
 
 # -----------------------------------------------------------------------------
@@ -273,11 +272,11 @@ def pipeline(
         raw = fill_info(raw)
 
         # prepare
-        raw, bads = prepare_raw(raw)
+        raw = prepare_raw(raw)
         assert len(raw.info['projs']) == 0  # sanity-check
 
         # ica
-        raw, ica, eog_scores, ecg_scores = remove_artifact_ic(raw)
+        raw, ica, _, _ = remove_artifact_ic(raw)
 
         # interpolate bads
         raw.interpolate_bads(reset_bads=True, mode='accurate')
