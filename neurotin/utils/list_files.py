@@ -1,5 +1,5 @@
 from ._checks import (_check_type, _check_path, _check_participant,
-                       _check_session)
+                      _check_session)
 
 
 def list_raw_fif(directory, *, exclude=None):
