@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import os
 from pathlib import Path
 import traceback
@@ -9,10 +10,11 @@ from .events import check_events, add_annotations_from_events
 from .filters import apply_filter_eeg, apply_filter_aux
 from .. import logger
 from ..io import read_raw_fif
-from ..utils._checks import _check_path
+from ..utils._checks import _check_path, _check_type, _check_value
 from ..utils._docs import fill_doc
 
 
+# -----------------------------------------------------------------------------
 @fill_doc
 def prepare_raw(raw):
     """
@@ -58,6 +60,7 @@ def prepare_raw(raw):
     return raw, bads
 
 
+# -----------------------------------------------------------------------------
 @fill_doc
 def remove_artifact_ic(raw, *, semiauto=False):
     """
@@ -115,6 +118,117 @@ def remove_artifact_ic(raw, *, semiauto=False):
 
 
 # -----------------------------------------------------------------------------
+@fill_doc
+def fill_info(raw):
+    """
+    Fill the measurement info with:
+        - a description including the subject ID, session ID, recording type
+        and recording run.
+        - device information with the type, model and serial.
+        - experimenter name.
+        - measurement date (UTC)
+
+    The raw instance is modified in-place.
+
+    Parameters
+    ----------
+    %(raw)s
+
+    Returns
+    -------
+    %(raw)s
+    """
+    functions = (
+        _add_device_info,
+        _add_experimenter_info,
+        _add_subject_info,
+        _add_measurement_date,
+        )
+    for function in functions:
+        try:
+            function(raw)
+        except Exception:
+            pass
+    raw.info._check_consistency()
+    return raw
+
+
+def _add_description(raw):
+    """Add a description including the subject ID, session ID, recording type
+    and recording run."""
+    fname = Path(raw.filenames[0])
+    subject = int(fname.parent.parent.parent.name)
+    session = int(fname.parent.parent.name.split()[-1])
+    recording_type = fname.parent.name
+    recording_run = fname.name.split('-')[0]
+    raw.info['description'] = f'Subject {subject} - Session {session} ' + \
+                              f'- {recording_type} {recording_run}'
+
+
+def _add_device_info(raw):
+    """Add device information to raw instance."""
+    fname = Path(raw.filenames[0])
+    raw.info['device_info'] = dict()
+    raw.info['device_info']['type'] = 'EEG'
+    raw.info['device_info']['model'] = 'eego mylab'
+    serial = fname.stem.split('-raw')[0].split('-')[-1].split()[1]
+    raw.info['device_info']['serial'] = serial
+    raw.info['device_info']['site'] = \
+        'https://www.ant-neuro.com/products/eego_mylab'
+
+
+def _add_experimenter_info(raw, experimenter='Mathieu Scheltienne'):
+    """Add experimenter information to raw instance."""
+    _check_type(experimenter, (str, ), item_name='experimenter')
+    raw.info['experimenter'] = experimenter
+
+
+def _add_measurement_date(raw):
+    """Add measurement date information to raw instance."""
+    recording_type_mapping = {
+        'Calibration': 'Calib',
+        'RestingState': 'RestS',
+        'Online': 'OnRun'
+        }
+
+    fname = Path(raw.filenames[0])
+    recording_type = fname.parent.name
+    _check_value(recording_type, recording_type_mapping, 'recording_type')
+    recording_type = recording_type_mapping[recording_type]
+    recording_run = int(fname.name.split('-')[0])
+    logs_file = fname.parent.parent / 'logs.txt'
+    logs_file = _check_path(logs_file, item_name='logs_file', must_exist=True)
+
+    with open(logs_file, 'r') as f:
+        lines = f.readlines()
+    lines = [line.split(' - ') for line in lines
+             if len(line.split(' - ')) > 1]
+    logs = [(datetime.strptime(line[0].strip(), "%d/%m/%Y %H:%M"),
+             line[1].strip(), line[2].strip())
+            for line in lines]
+
+    datetime_ = None
+    for log in logs:
+        if log[1] == recording_type and int(log[2][-1]) == recording_run:
+            datetime_ = log[0]
+            break
+    assert datetime_ is not None
+
+    raw.set_meas_date(datetime_.astimezone(timezone.utc))
+
+
+def _add_subject_info(raw):
+    """Add subject information to raw instance."""
+    subject_info = dict()
+    # subject ID
+    fname = Path(raw.filenames[0])
+    subject = int(fname.parent.parent.parent.name)
+    subject_info['id'] = subject
+    subject_info['his_id'] = str(subject).zfill(3)
+    raw.info['subject_info'] = subject_info
+
+
+# -----------------------------------------------------------------------------
 def pipeline(
         fname,
         dir_in,
@@ -154,6 +268,9 @@ def pipeline(
 
         # load
         raw = read_raw_fif(fname)
+
+        # fill info
+        raw = fill_info(raw)
 
         # prepare
         raw, bads = prepare_raw(raw)

@@ -63,7 +63,6 @@ entry_points={
     'console_scripts': [
         'neurotin = neurotin.commands.main:run',
         'neurotin_preprocess = neurotin.commands.neurotin_preprocess:run',
-        'neurotin_meas_info = neurotin.commands.neurotin_meas_info:run',
         'neurotin_psd_avg_band = neurotin.commands.neurotin_psd_avg_band:run',
         'neurotin_model_avg = neurotin.commands.neurotin_model_avg:run'
       ]
