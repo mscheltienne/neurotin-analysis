@@ -4,7 +4,7 @@ import traceback
 
 import mne
 
-from .bad_channels import PREP_bads_suggestion
+from .bads import PREP_bads_suggestion
 from .events import check_events, add_annotations_from_events
 from .filters import apply_filter_eeg, apply_filter_aux
 from .. import logger
@@ -86,11 +86,11 @@ def remove_artifact_ic(raw, *, semiauto=False):
     ica.fit(raw, picks=picks)
 
     # select components
-    raw_ = raw.copy().pick_types(eeg=True, exclude='bads')
+    raw_ = raw.copy().pick_types(eeg=True, eog=True, ecg=True, exclude='bads')
     eog_idx, eog_scores = ica.find_bads_eog(
-        raw_, ica, threshold=4.8, measure='zscore')
+        raw_, threshold=4.8, measure='zscore')
     ecg_idx, ecg_scores = ica.find_bads_ecg(
-        raw_, ica, method='correlation', threshold=0.7, measure='correlation')
+        raw_, method='correlation', threshold=0.7, measure='correlation')
 
     # apply ICA
     ica.exclude = eog_idx + ecg_idx
@@ -173,7 +173,7 @@ def pipeline(
 
     except Exception:
         logger.warning('FAILED: %s -> Skip.' % fname)
-        logger.debug(traceback.format_exc())
+        logger.warning(traceback.format_exc())
         return (False, str(fname))
 
 

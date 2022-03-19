@@ -1,6 +1,5 @@
 from ._checks import (_check_type, _check_path, _check_participant,
                        _check_session)
-from ._docs import fill_doc
 
 
 def list_raw_fif(directory, *, exclude=None):
@@ -63,7 +62,6 @@ def _list_fif(directory, exclude, endswith):
     return fifs
 
 
-@fill_doc
 def raw_fif_selection(
         dir_in,
         dir_out,
@@ -78,12 +76,19 @@ def raw_fif_selection(
 
     Parameters
     ----------
-    %(dir_in)s
-    %(dir_out)s
-    %(select_participant)s
-    %(select_session)s
-    %(select_fname)s
-    %(ignore_existing)s
+    dir_in : path-like
+        Path to the folder containing the FIF files to process
+    dir_out : path-like
+        Path to the folder containing the FIF files processed. The FIF files
+        are saved under the same relative folder structure as in 'dir_in'.
+    participant : int | None
+        If not None, restricts processing to this participant.
+    session : int | None
+        If not None, restricts processing to this session.
+    fname : path-like | None
+        If not None, restricts processing to this file.
+    ignore_existing : bool
+        If True, files already processed and saved in 'dir_out' are ignored.
 
     Returns
     -------

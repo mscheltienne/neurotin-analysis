@@ -58,6 +58,16 @@ def get_requirements(path):
 
 install_requires = get_requirements('requirements.txt')
 
+# Entry points for CLI
+entry_points={
+    'console_scripts': [
+        'neurotin = neurotin.commands.main:run',
+        'neurotin_preprocess = neurotin.commands.neurotin_preprocess:run',
+        'neurotin_meas_info = neurotin.commands.neurotin_meas_info:run',
+        'neurotin_psd_avg_band = neurotin.commands.neurotin_psd_avg_band:run',
+        'neurotin_model_avg = neurotin.commands.neurotin_model_avg:run'
+      ]
+    }
 
 setup(
     name=NAME,
@@ -91,13 +101,5 @@ setup(
     install_requires=install_requires,
     packages=find_packages(),
     include_package_data=True,
-    entry_points={
-        'console_scripts': [
-            'neurotin = neurotin.commands.main:run',
-            'neurotin_preprocess = neurotin.commands.neurotin_preprocess:run',
-            'neurotin_meas_info = neurotin.commands.neurotin_meas_info:run',
-            'neurotin_psd_band = neurotin.commands.neurotin_psd_band:run',
-            'neurotin_model_avg = neurotin.commands.neurotin_model_avg:run'
-          ]
-        }
+    entry_points=entry_points,
     )

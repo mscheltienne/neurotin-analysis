@@ -6,6 +6,7 @@ from pathlib import Path
 from neurotin import set_log_level
 from neurotin.commands import helpdict
 from neurotin.model import compute_average
+from neurotin.utils._checks import _check_path
 
 
 def run():
@@ -19,7 +20,7 @@ def run():
         help='folder where raw data and models are stored.')
 
     parser.add_argument(
-        'result_file', type=str, help='path where the dataframe is pickled.')
+        'df_fname', type=str, help='path where the dataframe is pickled.')
 
     parser.add_argument(
         '-p', '--participants', help='participant ID(s) to include.',
@@ -33,12 +34,14 @@ def run():
     args = parser.parse_args()
     set_log_level(args.loglevel.upper().strip())
 
+    dir_in = _check_path(args.dir_in, 'dir_in', must_exist=True)
+
     # assert result file is writable
     try:
-        with open(args.result_file, 'wb') as f:
+        with open(args.df_fname, 'wb') as f:
             pickle.dump('data will be written here..', f, -1)
     except Exception:
-        raise IOError("Could not write to file: '%s'." % args.result_file)
+        raise IOError("Could not write to file: '%s'." % args.df_fname)
 
     if args.participants is not None:
         participants = [int(participant) for participant in args.participants]
@@ -50,5 +53,5 @@ def run():
     if len(participants) == 0:
         raise ValueError('Could not find any participants to merge.')
 
-    df = compute_average(args.input_dir, participants)
-    df.to_pickle(args.result_file, compression=None)
+    df = compute_average(dir_in, participants)
+    df.to_pickle(args.df_fname, compression=None)
