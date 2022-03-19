@@ -25,6 +25,10 @@ session : int
     ID of the session to include."""
 docdict['raw'] = """
 raw : Raw"""
+docdict['copy'] = """
+copy : bool
+    If True, operates and return a copy. Default to False to operate
+    in-place."""
 
 # --------------------------------- evamed -----------------------------------
 docdict['df_raw_evamed'] = """
@@ -43,6 +47,27 @@ bandpass : tuple
 docdict['notch'] = """
 notch : bool
     If True, a notch filter at (50, 100, 150) Hz  is applied."""
+
+# ------------------------------------ psd -----------------------------------
+docdict['df_psd'] = """
+df : DataFrame
+    PSD in frequency band (fmin, fmax) averaged across bins. The columns are:
+        participant : int - Participant ID
+        session : int - Session ID (1 to 15)
+        run : int - Run ID
+        phase : str - 'regulation' or 'non-regulation'
+        idx : ID of the phase within the run (0 to 9)
+        ch : float - Averaged PSD (1 per channel)"""
+docdict['psd_duration'] = """
+duration : float
+    Duration of an epoch in seconds."""
+docdict['psd_overlap'] = """
+overlap :float
+    Duration of epoch overlap in seconds."""
+docdict['psd_reject'] = """
+reject : dict | 'auto' | None
+    MNE-compatible rejection dictionary or 'auto' to compute it with
+    autoreject. If set to None, rejection is skipped."""
 
 # -------------------------------- externals ---------------------------------
 docdict['plt.figsize'] = """

@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Union
 
 from autoreject import AutoReject, get_rejection_threshold
 import mne
@@ -13,7 +14,11 @@ from ..utils._docs import fill_doc
 
 
 @fill_doc
-def make_fixed_length_epochs(raw, duration=4., overlap=3.):
+def make_fixed_length_epochs(
+        raw,
+        duration: Union[int, float] = 4.,
+        overlap: Union[int, float] = 3.
+        ):
     """
     Create fixed length epochs for neurofeedback runs and aggregate epochs
     together from the same phase together.
@@ -118,6 +123,7 @@ def _load_events(raw):
     return events, event_id
 
 
+@fill_doc
 def reject_epochs(epochs, reject=None):
     """
     Reject bad epochs with a global rejection threshold.
@@ -126,9 +132,7 @@ def reject_epochs(epochs, reject=None):
     ----------
     epochs : Epochs
         Raw epochs, before peak-to-peak rejection.
-    reject : dict | 'auto' | None
-        MNE-compatible rejection dictionary or 'auto' to compute it with
-        autoreject. If set to None, rejection is skipped.
+    %(psd_reject)s
 
     Returns
     -------
@@ -152,7 +156,10 @@ def reject_epochs(epochs, reject=None):
     return epochs, reject
 
 
-def repair_epochs(epochs, thresh_method='random_search'):
+def repair_epochs(
+        epochs,
+        thresh_method: str = 'random_search'
+        ):
     """
     Repair bad epochs using autoreject.
 

@@ -3,7 +3,7 @@ import argparse
 
 from neurotin import set_log_level
 from neurotin.commands import helpdict
-from neurotin.time_frequency.psd import compute_psd_average_bins
+from neurotin.psd import psd_avg_band
 
 
 def run():
@@ -58,8 +58,15 @@ def run():
     participants = [int(participant) for participant in args.participants]
     reject = 'auto' if args.reject else None
 
-    df = compute_psd_average_bins(args.input_dir_fif, participants,
-                                  args.duration, args.overlap, reject,
-                                  args.fmin, args.fmax, args.average,
-                                  args.n_jobs)
+    df = psd_avg_band(
+        args.input_dir_fif,
+        participants,
+        args.duration,
+        args.overlap,
+        reject,
+        args.fmin,
+        args.fmax,
+        args.average,
+        args.n_jobs
+        )
     df.to_pickle(args.result_file, compression=None)
