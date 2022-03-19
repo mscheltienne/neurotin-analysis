@@ -3,7 +3,6 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from ..io.csv import read_csv
 from ..utils._checks import _check_type, _check_participants
 from ..utils._docs import fill_doc
 
@@ -31,7 +30,7 @@ def lineplot_mml_evolution(csv, participants, figsize=(10, 5)):
     _check_type(figsize, (tuple, ), item_name='figsize')
 
     # Select data
-    df = read_csv(csv)
+    df = pd.read_csv(csv)
     df = pd.melt(
         df, id_vars=('Participant', 'Session'), value_vars='MML Volume',
         var_name='MML', value_name='Volume')

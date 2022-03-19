@@ -4,7 +4,6 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from ..io.csv import read_csv
 from ..utils._checks import (
     _check_type, _check_participant, _check_participants)
 from ..utils._docs import fill_doc
@@ -50,7 +49,7 @@ def boxplot_scores_evolution(
     _check_type(figsize, (tuple, ), item_name='figsize')
 
     # Select data
-    df = read_csv(csv)
+    df = pd.read_csv(csv)
     df = df.loc[df['Participant'] == int(participant)]
     df = pd.melt(
         df, id_vars='Session', value_vars=[f'Score {k}' for k in scores],
@@ -108,7 +107,7 @@ def boxplot_scores_between_participants(
     _check_type(figsize, (tuple, ), item_name='figsize')
 
     # Select data
-    df = read_csv(csv)
+    df = pd.read_csv(csv)
     df = pd.melt(
         df, id_vars='Participant', value_vars=[f'Score {k}' for k in scores],
         var_name='Score ID', value_name='Score')

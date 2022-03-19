@@ -11,7 +11,7 @@ folder = r''
 folder = Path(folder)
 
 #%% Specific participants
-participants = [63]
+participants = []
 df = compute_average(folder, participants)
 
 #%% All participants
