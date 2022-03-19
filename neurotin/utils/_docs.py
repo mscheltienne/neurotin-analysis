@@ -56,35 +56,6 @@ n_jobs : int
     Number of parallel jobs used. Must not exceed the core count. Can be -1
     to use all cores."""
 
-# ----------------------------------- cli ------------------------------------
-docdict['cli_header'] = """CLI processing pipeline."""
-docdict['pipeline_header'] = """Pipeline function called on each raw file."""
-docdict['dir_in'] = """
-dir_in : path-like
-    Path to the folder containing the FIF files to process."""
-docdict['dir_out'] = """
-dir_out : path-like
-    Path to the folder containing the FIF files processed. The FIF files are
-    saved under the same relative folder structure as in 'dir_in'."""
-docdict['select_participant'] = """
-participant : int | None
-    Restricts file selection to this participant."""
-docdict['select_session'] = """
-session : int | None
-    Restricts file selection to this session."""
-docdict['select_fname'] = """
-fname : path-like | None
-    Restrict file selection to this file (must be inside 'dir_in')."""
-docdict['ignore_existing'] = """
-ignore_existing : bool
-    If True, files already processed are not included."""
-docdict['success'] = """
-success : bool
-    False if a processing step raised an Exception."""
-docdict['fname'] = """
-fname : str
-    Path to the input file to the processing pipeline."""
-
 # ------------------------- Documentation functions --------------------------
 docdict_indented = dict()
 

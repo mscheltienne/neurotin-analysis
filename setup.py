@@ -94,15 +94,10 @@ setup(
     entry_points={
         'console_scripts': [
             'neurotin = neurotin.commands.main:run',
-            'neurotin_pp_ica = neurotin.commands.neurotin_pp_ica:run',
-            'neurotin_pp_meas_info = '+\
-                'neurotin.commands.neurotin_pp_meas_info:run',
-            'neurotin_pp_prepare_raw = '+\
-                'neurotin.commands.neurotin_pp_prepare_raw:run',
-            'neurotin_tfr_compute_psd_average_bins = '+\
-                'neurotin.commands.neurotin_tfr_compute_psd_average_bins:run',
-            'neurotin_model_compute_average = '+\
-                'neurotin.commands.neurotin_model_compute_average:run'
+            'neurotin_preprocess = neurotin.commands.neurotin_preprocess:run',
+            'neurotin_meas_info = neurotin.commands.neurotin_meas_info:run',
+            'neurotin_psd_band = neurotin.commands.neurotin_psd_band:run',
+            'neurotin_model_avg = neurotin.commands.neurotin_model_avg:run'
           ]
         }
     )

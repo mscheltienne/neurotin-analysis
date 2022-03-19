@@ -1,34 +1,65 @@
-import multiprocessing as mp
 import os
+from pathlib import Path
 import traceback
 
 import mne
 
+from .bad_channels import PREP_bads_suggestion
+from .events import check_events, add_annotations_from_events
+from .filters import apply_filter_eeg, apply_filter_aux
 from .. import logger
-from ..io.cli import write_results
-from ..utils.list_files import raw_fif_selection
-from ..utils._checks import _check_path, _check_n_jobs
+from ..io import read_raw_fif
+from ..utils._checks import _check_path
 from ..utils._docs import fill_doc
-
-mne.set_log_level('ERROR')
-
-
-def _exclude_ocular_components(raw, ica, **kwargs):
-    """Find and exclude ocular-related components.
-    kwargs are passed to ica.find_bads_eog()."""
-    eog_idx, eog_scores = ica.find_bads_eog(raw, **kwargs)
-    return eog_idx, eog_scores[eog_idx]
-
-
-def _exclude_heartbeat_components(raw, ica, **kwargs):
-    """Find and exclude heartbeat-related components.
-    kwargs are passed to ica.find_bads_ecg()."""
-    ecg_idx, ecg_scores = ica.find_bads_ecg(raw, **kwargs)
-    return ecg_idx, ecg_scores[ecg_idx]
 
 
 @fill_doc
-def exclude_ocular_and_heartbeat_with_ICA(raw, *, semiauto=False):
+def prepare_raw(raw):
+    """
+    Prepare raw instance by checking events, adding events as annotations,
+    marking bad channels, add montage, applying FIR filters, and applying a
+    common average reference (CAR).
+
+    The raw instance is modified in-place.
+
+    Parameters
+    ----------
+    %(raw)s
+
+    Returns
+    -------
+    %(raw)s
+    %(bads)s
+    """
+    # Check sampling frequency
+    if raw.info['sfreq'] != 512:
+        raw.resample(sfreq=512)
+
+    # Check events
+    recording_type = Path(raw.filenames[0]).stem.split('-')[1]
+    check_events(raw, recording_type)
+    raw, _ = add_annotations_from_events(raw)
+
+    # Filter
+    apply_filter_aux(raw, bandpass=(1., 40.), notch=True)
+    apply_filter_eeg(raw, bandpass=(1., 40.))
+
+    # Mark bad channels
+    bads = PREP_bads_suggestion(raw)  # operates on a copy and applies notch
+    raw.info['bads'] = bads
+
+    # Add montage
+    raw.add_reference_channels(ref_channels='CPz')
+    raw.set_montage('standard_1020')  # only after adding ref channel
+
+    # CAR
+    apply_filter_eeg(raw, car=True)
+
+    return raw, bads
+
+
+@fill_doc
+def remove_artifact_ic(raw, *, semiauto=False):
     """
     Apply ICA to remove ocular and heartbeat artifacts from raw instance.
 
@@ -49,17 +80,19 @@ def exclude_ocular_and_heartbeat_with_ICA(raw, *, semiauto=False):
     ecg_scores : Scores used for selection of the heartbeat component(s).
     """
     ica = mne.preprocessing.ICA(method='picard', max_iter='auto')
+
+    # fit ICA
     picks = mne.pick_types(raw.info, eeg=True, exclude='bads')
     ica.fit(raw, picks=picks)
 
+    # select components
     raw_ = raw.copy().pick_types(eeg=True, exclude='bads')
-    eog_idx, eog_scores = \
-        _exclude_ocular_components(raw_, ica, threshold=4.8,
-                                   measure='zscore')
-    ecg_idx, ecg_scores = \
-        _exclude_heartbeat_components(raw_, ica, method='correlation',
-                                      threshold=0.7, measure='correlation')
+    eog_idx, eog_scores = ica.find_bads_eog(
+        raw_, ica, threshold=4.8, measure='zscore')
+    ecg_idx, ecg_scores = ica.find_bads_ecg(
+        raw_, ica, method='correlation', threshold=0.7, measure='correlation')
 
+    # apply ICA
     ica.exclude = eog_idx + ecg_idx
 
     try:
@@ -75,7 +108,6 @@ def exclude_ocular_and_heartbeat_with_ICA(raw, *, semiauto=False):
         else:
             raise
 
-    # Apply ICA
     ica.apply(raw)
 
     # Scores should not be returned when #9846 is fixed.
@@ -83,22 +115,31 @@ def exclude_ocular_and_heartbeat_with_ICA(raw, *, semiauto=False):
 
 
 # -----------------------------------------------------------------------------
-@fill_doc
-def _pipeline(fname, dir_in, dir_out):
-    """%(pipeline_header)s
+def pipeline(
+        fname,
+        dir_in,
+        dir_out,
+        ):
+    """Preprocessing pipeline function called on every raw files.
 
-    Exclude ocular and heartbeat related components with ICA.
+    Add measurement information.
 
     Parameters
     ----------
-    %(fname)s
-    %(dir_in)s
-    %(dir_out)s
+    fname : str
+        Path to the input file to the processing pipeline.
+    dir_in : path-like
+        Path to the folder containing the FIF files to process
+    dir_out : path-like
+        Path to the folder containing the FIF files processed. The FIF files
+        are saved under the same relative folder structure as in 'dir_in'.
 
     Returns
     -------
-    %(success)s
-    %(fname)s
+    success : bool
+        False if a processing step raised an Exception.
+    fname : str
+        Path to the input file to the processing pipeline.
     """
     logger.info('Processing: %s' % fname)
     try:
@@ -111,21 +152,29 @@ def _pipeline(fname, dir_in, dir_out):
         output_fname_raw, output_fname_ica = \
             _create_output_fname(fname, dir_in, dir_out)
 
+        # load
+        raw = read_raw_fif(fname)
+
+        # prepare
+        raw, bads = prepare_raw(raw)
+        assert len(raw.info['projs']) == 0  # sanity-check
+
         # ica
-        raw = mne.io.read_raw_fif(fname, preload=True)
-        raw, ica, eog_scores, ecg_scores = \
-            exclude_ocular_and_heartbeat_with_ICA(raw)
+        raw, ica, eog_scores, ecg_scores = remove_artifact_ic(raw)
+
+        # interpolate bads
+        raw.interpolate_bads(reset_bads=True, mode='accurate')
 
         # export
         raw.save(output_fname_raw, fmt="double", overwrite=True)
         ica.save(output_fname_ica)
 
-        return (True, str(fname), eog_scores, ecg_scores)
+        return (True, str(fname))
 
     except Exception:
         logger.warning('FAILED: %s -> Skip.' % fname)
         logger.debug(traceback.format_exc())
-        return (False, str(fname), None, None)
+        return (False, str(fname))
 
 
 def _create_output_fname(
@@ -143,52 +192,3 @@ def _create_output_fname(
         dir_out / str(relative_fname).replace('-raw.fif', '-ica.fif')
     os.makedirs(output_fname_raw.parent, exist_ok=True)
     return output_fname_raw, output_fname_ica
-
-
-@fill_doc
-def _cli(
-        dir_in,
-        dir_out,
-        n_jobs=1,
-        participant=None,
-        session=None,
-        fname=None,
-        ignore_existing: bool = True
-        ):
-    """%(cli_header)s
-
-    Parameters
-    ----------
-    %(input_dir_fif)s
-    %(output_dir_fif)s
-    %(n_jobs)s
-    %(select_participant)s
-    %(select_session)s
-    %(select_fname)s
-    %(ignore_existing)s
-    """
-    # check arguments
-    dir_in = _check_path(dir_in, 'dir_in', must_exist=True)
-    dir_out = _check_path(dir_out, 'dir_out', must_exist=False)
-    n_jobs = _check_n_jobs(n_jobs)
-
-    # create output folder if needed
-    os.makedirs(dir_out, exist_ok=True)
-
-    # list files to process
-    fifs = raw_fif_selection(
-        dir_in,
-        dir_out,
-        participant=participant,
-        session=session,
-        fname=fname,
-        ignore_existing=ignore_existing)
-
-    # create input pool for pipeline
-    input_pool = [(fname, dir_in, dir_out) for fname in fifs]
-    assert 0 < len(input_pool)  # sanity-check
-
-    with mp.Pool(processes=n_jobs) as p:
-        results = p.starmap(_pipeline, input_pool)
-
-    write_results(results, dir_out / 'ica.pcl')

@@ -13,18 +13,23 @@ def run():
     parser = argparse.ArgumentParser(
         prog='NeuroTin',
         description='Compute average model from online recordings.')
+
     parser.add_argument(
-        'input_dir', type=str,
-        help='folder where raw data and models is stored')
+        'dir_in', type=str,
+        help='folder where raw data and models are stored.')
+
     parser.add_argument(
         'result_file', type=str, help='path where the dataframe is pickled.')
+
     parser.add_argument(
-        '-p', '--participants',
-        help=helpdict['participants'], nargs='+', required=False)
+        '-p', '--participants', help='participant ID(s) to include.',
+        nargs='+', required=False)
+
     parser.add_argument(
         '--loglevel', type=str, metavar='str', help=helpdict['loglevel'],
         default='info')
 
+    # parse and set log levels
     args = parser.parse_args()
     set_log_level(args.loglevel.upper().strip())
 
