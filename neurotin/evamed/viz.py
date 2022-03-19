@@ -12,8 +12,7 @@ def lineplot_evolution(df, name, figsize=(10, 5)):
 
     Parameters
     ----------
-    df : DataFrame
-        Dataframe returned by parsers.
+    %(df_clinical)s
     name : str
         Name of the questionnaire used.
     %(plt.figsize)s

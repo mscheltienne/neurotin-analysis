@@ -70,7 +70,8 @@ def RANSAC_bads_suggestion(raw):
 
     Returns
     -------
-    %(bads)s
+    bads : list
+        List of bad channels.
     """
     raw = _prepapre_raw(raw)
     epochs = mne.make_fixed_length_epochs(
@@ -98,7 +99,8 @@ def PREP_bads_suggestion(raw):
 
     Returns
     -------
-    %(bads)s
+    bads : list
+        List of bad channels.
     """
     raw = _prepapre_raw(raw)
     raw.pick_types(eeg=True)

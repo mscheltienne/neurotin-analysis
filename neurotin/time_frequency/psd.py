@@ -45,7 +45,9 @@ def compute_psd_average_bins(folder, participants, duration, overlap, reject,
         How to average the frequency bin/spectrum. Either 'mean' to calculate
         the arithmetic mean of all bins or 'integrate' to use Simpson's rule to
         compute integral from samples.
-    %(n_jobs)s
+    n_jobs : int
+        Number of parallel jobs used. Must not exceed the core count. Can be -1
+        to use all cores.
     **kwargs : dict
         kwargs are passed to MNE PSD function.
 

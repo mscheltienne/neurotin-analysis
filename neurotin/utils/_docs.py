@@ -36,9 +36,6 @@ df: DataFrame
     'result'."""
 
 # ------------------------------ preprocessing -------------------------------
-docdict['bads'] = """
-bads : list
-    List of bad channels."""
 docdict['bandpass'] = """
 bandpass : tuple
     A 2-length tuple (highpass, lowpass), e.g. (1., 40.).
@@ -51,10 +48,6 @@ notch : bool
 docdict['plt.figsize'] = """
 figsize : tuple
     2-sequence tuple defining the matplotlib figure size."""
-docdict['n_jobs'] = """
-n_jobs : int
-    Number of parallel jobs used. Must not exceed the core count. Can be -1
-    to use all cores."""
 
 # ------------------------- Documentation functions --------------------------
 docdict_indented = dict()
