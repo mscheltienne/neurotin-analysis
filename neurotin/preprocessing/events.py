@@ -1,12 +1,12 @@
 from collections import Counter
 
+from bsl.utils import find_event_channel
 import mne
 import numpy as np
-from bsl.utils import find_event_channel
 
-from ..utils.docs import fill_doc
-from ..utils.checks import _check_value
 from ..config.events import EVENTS, EVENTS_MAPPING, EVENTS_DURATION_MAPPING
+from ..utils._checks import _check_value
+from ..utils._docs import fill_doc
 
 
 @fill_doc
@@ -16,11 +16,11 @@ def add_annotations_from_events(raw):
 
     Parameters
     ----------
-    %(raw_in_place)s
+    %(raw)s
 
     Returns
     -------
-    %(raw_in_place)s
+    %(raw)s
     annotations : Annotations
     """
     previous_annotations = raw.annotations
@@ -56,13 +56,13 @@ def check_events(raw, recording_type):
 
     Parameters
     ----------
-    %(raw_in_place)s
+    %(raw)s
     recording_type : str
         One of 'calibration', 'rs', 'online'.
 
     Returns
     -------
-    %(raw_in_place)s
+    %(raw)s
     """
     check_functions = {
         "calibration": _check_events_calibration,
@@ -164,7 +164,7 @@ def replace_event_value(raw, old_value, new_value):
 
     Parameters
     ----------
-    %(raw_in_place)s
+    %(raw)s
     old_value : int
         Event value to replace.
     new_value : int
@@ -172,7 +172,7 @@ def replace_event_value(raw, old_value, new_value):
 
     Returns
     -------
-    %(raw_in_place)s
+    %(raw)s
     """
     tch = find_event_channel(inst=raw)
     raw.apply_function(

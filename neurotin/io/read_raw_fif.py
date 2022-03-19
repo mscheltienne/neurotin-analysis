@@ -9,13 +9,13 @@ def read_raw_fif(fname):
 
     Parameters
     ----------
-    fname : str | Path
-        Path to the MNE raw file to read. Must be in .fif format.
+    fname : path-like
+        Path to the MNE raw file to read in .fif format.
 
     Returns
     -------
     raw : Raw
-        Raw instance.
+        MNE Raw data instance.
     """
     # Load/check file name
     raw = mne.io.read_raw_fif(fname, preload=True)

@@ -94,20 +94,11 @@ setup(
     entry_points={
         'console_scripts': [
             'neurotin = neurotin.commands.main:run',
-            'neurotin_io_convert2eeglab = '+\
-                'neurotin.commands.neurotin_io_convert2eeglab:run',
-            'neurotin_io_apply_proj = '+\
-                'neurotin.commands.neurotin_io_apply_proj:run',
-            'neurotin_logs_mml = neurotin.commands.neurotin_logs_mml:run',
             'neurotin_pp_ica = neurotin.commands.neurotin_pp_ica:run',
             'neurotin_pp_meas_info = '+\
                 'neurotin.commands.neurotin_pp_meas_info:run',
             'neurotin_pp_prepare_raw = '+\
                 'neurotin.commands.neurotin_pp_prepare_raw:run',
-            'neurotin_pp_validation_ica = '+\
-                'neurotin.commands.neurotin_pp_validation_ica:run',
-            'neurotin_pp_validation_ica_sources = '+\
-                'neurotin.commands.neurotin_pp_validation_ica_sources:run',
             'neurotin_tfr_compute_psd_average_bins = '+\
                 'neurotin.commands.neurotin_tfr_compute_psd_average_bins:run',
             'neurotin_model_compute_average = '+\

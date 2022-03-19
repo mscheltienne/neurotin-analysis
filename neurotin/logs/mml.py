@@ -1,33 +1,31 @@
-"""
-The MML are logged with pandas in a .csv file with the syntax:
-    [participant, session, MML volume]
-"""
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
 from ..io.csv import read_csv
-from ..utils.checks import _check_type, _check_participants
+from ..utils._checks import _check_type, _check_participants
+from ..utils._docs import fill_doc
 
 
-def plot_mml_across_participants(csv, participants, figsize=(10, 5)):
-    """
-    Plot the MML evolution for the given participants.
+@fill_doc
+def lineplot_mml_evolution(csv, participants, figsize=(10, 5)):
+    """Minimum Masking Level test are logged in a .csv file with the syntax:
+        [participant, session, MML volume]
+    The evolution of the minimum masking level during the 15 sessions is
+    plotted for each participant as a lineplot.
 
     Parameters
     ----------
-    csv : str | pathlib.Path
-        Path to the csv file to read. Must be in .csv format.
-    participants : list of int
-        List of participants ID (int) to include.
-    figsize : tuple, optional
-        Matplotlib figure's size. The default is (10, 5).
+    csv : path-like
+        Path to the 'mml_logs.csv' file to read.
+    %(participants)s
+    %(plt.figsize)s
 
     Returns
     -------
     f : Figure
-    ax : axes.Axes
+    ax : Axes
     """
     participants = _check_participants(participants)
     _check_type(figsize, (tuple, ), item_name='figsize')
@@ -47,6 +45,6 @@ def plot_mml_across_participants(csv, participants, figsize=(10, 5)):
         x='Session', y='Volume', hue='Participant', data=df, palette='muted',
         style="Participant", markers=True, dashes=False, ax=ax)
     ax.set_xticks(range(1, 16, 1))
-    ax.set_yticks(np.arange(0, max(df.Volume)+2.5, 2.5))
+    ax.set_yticks(np.arange(0, max(df.Volume) + 2.5, 2.5))
 
     return f, ax

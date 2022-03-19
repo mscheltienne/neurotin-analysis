@@ -1,7 +1,7 @@
 import numpy as np
 
-from ..utils.docs import fill_doc
-from ..utils.checks import _check_type
+from ..utils._checks import _check_type
+from ..utils._docs import fill_doc
 
 
 def _check_bandpass(bandpass):
@@ -55,7 +55,7 @@ def apply_filter_eeg(raw, *, bandpass=(None, None), notch=False, car=False):
 
     Parameters
     ----------
-    %(raw_in_place)s
+    %(raw)s
     %(bandpass)s
     %(notch)s
     car : bool
@@ -84,7 +84,7 @@ def apply_filter_aux(raw, *, bandpass=(None, None), notch=False):
 
     Parameters
     ----------
-    %(raw_in_place)s
+    %(raw)s
     %(bandpass)s
     %(notch)s
     """

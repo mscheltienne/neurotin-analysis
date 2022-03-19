@@ -1,15 +1,15 @@
 from itertools import chain
 
+from autoreject import AutoReject, get_rejection_threshold
 import mne
-import numpy as np
 from mne import BaseEpochs
 from mne.io import BaseRaw
-from autoreject import AutoReject, get_rejection_threshold
+import numpy as np
 
-from ..utils.docs import fill_doc
-from ..utils.checks import _check_value, _check_type
 from ..config.events import (EVENTS, EVENTS_MAPPING, EVENTS_DURATION_MAPPING,
                              FIRST_REST_PHASE_EXT)
+from ..utils._checks import _check_value, _check_type
+from ..utils._docs import fill_doc
 
 
 @fill_doc
@@ -27,8 +27,7 @@ def make_fixed_length_epochs(raw, duration=4., overlap=3.):
 
     Parameters
     ----------
-    raw : Raw
-        Preprocessed raw instance.
+    %(raw)s
     %(psd_duration)s
     %(psd_overlap)s
 
@@ -74,15 +73,13 @@ def make_fixed_length_epochs(raw, duration=4., overlap=3.):
 
 def make_epochs(raw):
     """
-    Create epochs for regulation and non-regulation events.
-    Regulation epochs last 16 seconds.
-    Non-regulation epochs last 8 seconds. The first non-regulation epoch is
-    cropped on its last 8 seconds.
+    Create epochs for regulation and non-regulation events. Regulation epochs
+    last 16 seconds. Non-regulation epochs last 8 seconds. The first
+    non-regulation epoch is cropped around its last 8 seconds.
 
     Parameters
     ----------
-    raw : Raw
-        Preprocessed raw instance.
+    %(raw)s
 
     Returns
     -------
@@ -118,11 +115,9 @@ def _load_events(raw):
     assert unique_events == set((EVENTS['regulation'],
                                  EVENTS['non-regulation']))
     event_id = {EVENTS_MAPPING[value]: value for value in unique_events}
-
     return events, event_id
 
 
-@fill_doc
 def reject_epochs(epochs, reject=None):
     """
     Reject bad epochs with a global rejection threshold.
@@ -131,7 +126,9 @@ def reject_epochs(epochs, reject=None):
     ----------
     epochs : Epochs
         Raw epochs, before peak-to-peak rejection.
-    %(psd_reject)s
+    reject : dict | 'auto' | None
+        MNE-compatible rejection dictionary or 'auto' to compute it with
+        autoreject. If set to None, rejection is skipped.
 
     Returns
     -------
@@ -169,7 +166,7 @@ def repair_epochs(epochs, thresh_method='random_search'):
     Returns
     -------
     epochs : Epochs
-        Epochs repaired by the model.
+        Epochs repaired by autoreject.
     """
     _check_type(epochs, (BaseEpochs, ), item_name='epochs')
     _check_value(thresh_method, ('random_search', 'bayesian_optimization'),

@@ -1,13 +1,9 @@
 import multiprocessing as mp
 import os
-from pathlib import Path
 import traceback
 
 import mne
 
-from .bad_channels import PREP_bads_suggestion
-from .events import check_events, add_annotations_from_events
-from .filters import apply_filter_eeg, apply_filter_aux
 from .. import logger
 from ..io import read_raw_fif
 from ..io.cli import write_results
@@ -20,11 +16,9 @@ mne.set_log_level('ERROR')
 
 
 @fill_doc
-def prepare_raw(raw):
+def interpolate_bads(raw):
     """
-    Prepare raw instance by checking events, adding events as annotations,
-    marking bad channels, add montage, applying FIR filters, and applying a
-    common average reference (CAR).
+    Interpolate bad channels.
 
     The raw instance is modified in-place.
 
@@ -35,33 +29,9 @@ def prepare_raw(raw):
     Returns
     -------
     %(raw)s
-    %(bads)s
     """
-    # Check sampling frequency
-    if raw.info['sfreq'] != 512:
-        raw.resample(sfreq=512)
-
-    # Check events
-    recording_type = Path(raw.filenames[0]).stem.split('-')[1]
-    check_events(raw, recording_type)
-    raw, _ = add_annotations_from_events(raw)
-
-    # Filter
-    apply_filter_aux(raw, bandpass=(1., 40.), notch=True)
-    apply_filter_eeg(raw, bandpass=(1., 40.))
-
-    # Mark bad channels
-    bads = PREP_bads_suggestion(raw)  # operates on a copy and applies notch
-    raw.info['bads'] = bads
-
-    # Add montage
-    raw.add_reference_channels(ref_channels='CPz')
-    raw.set_montage('standard_1020')  # only after adding ref channel
-
-    # CAR
-    apply_filter_eeg(raw, car=True)
-
-    return raw, bads
+    raw.interpolate_bads(reset_bads=True, mode='accurate')
+    return raw
 
 
 # -----------------------------------------------------------------------------
@@ -69,7 +39,7 @@ def prepare_raw(raw):
 def _pipeline(fname, dir_in, dir_out):
     """%(pipeline_header)s
 
-    Prepare and preprocess raw .fif files.
+    Interpolate bad channels in raw .fif files.
 
     Parameters
     ----------
@@ -81,7 +51,6 @@ def _pipeline(fname, dir_in, dir_out):
     -------
     %(success)s
     %(fname)s
-    %(bads)s
     """
     logger.info('Processing: %s' % fname)
     try:
@@ -95,18 +64,17 @@ def _pipeline(fname, dir_in, dir_out):
 
         # preprocess
         raw = read_raw_fif(fname)
-        raw, bads = prepare_raw(raw)
-        assert len(raw.info['projs']) == 0  # sanity-check
+        raw = interpolate_bads(raw)
 
         # export
         raw.save(output_fname, fmt="double", overwrite=True)
 
-        return (True, str(fname), bads)
+        return (True, str(fname))
 
     except Exception:
         logger.warning('FAILED: %s -> Skip.' % fname)
         logger.debug(traceback.format_exc())
-        return (False, str(fname), None)
+        return (False, str(fname))
 
 
 def _create_output_fname(
@@ -171,4 +139,4 @@ def _cli(
     with mp.Pool(processes=n_jobs) as p:
         results = p.starmap(_pipeline, input_pool)
 
-    write_results(results, dir_out / 'prepare_raw.pcl')
+    write_results(results, dir_out / 'bads.pcl')

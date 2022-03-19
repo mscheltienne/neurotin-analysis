@@ -1,9 +1,9 @@
-import os
-import re
-import pickle
 from datetime import datetime
+import os
+import pickle
+import re
 
-from ..utils.checks import _check_path, _check_type
+from ..utils._checks import _check_path, _check_type
 
 
 def write_results(results, results_file):
@@ -17,7 +17,7 @@ def write_results(results, results_file):
     ----------
     results : list of tuples
         (bool, str, ...) containing the results from the _pipeline functions.
-    results_file : str | Path
+    results_file : path-like
         Path to the .pcl file where the results are pickled. The datetime is
         appended to the file name stem.
     """
@@ -43,13 +43,13 @@ def write_results(results, results_file):
 
 def read_results(results_file, *, success_only=False, failure_only=False):
     """
-    Read results of CLI call. Each result in the list of results starts with
+    Read results from CLI call. Each result in the list of results starts with
     (bool, str, ...). The bool in position 0 is set to False when an error was
     raised during processing. The str in position 1 is the fname processed.
 
     Parameters
     ----------
-    results_file : str | Path
+    results_file : path-like
         Path to the .pcl file where the results are pickled. The datetime is
         appended to the file name stem.
     success_only : bool

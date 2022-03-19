@@ -1,28 +1,28 @@
+from datetime import datetime, timezone
+import multiprocessing as mp
 import os
+from pathlib import Path
 import re
 import traceback
-from pathlib import Path
-import multiprocessing as mp
-from datetime import datetime, timezone
 
 import mne
 
 from .. import logger
-from ..io.cli_results import write_results
-from ..io.list_files import raw_fif_selection
-from ..utils.docs import fill_doc
-from ..utils.checks import (_check_type, _check_path, _check_value,
-                            _check_n_jobs)
+from ..io.cli import write_results
+from ..utils.list_files import raw_fif_selection
+from ..utils._docs import fill_doc
+from ..utils._checks import (_check_type, _check_path, _check_value,
+                             _check_n_jobs)
 
 
-@fill_doc
-def parse_subject_info(subject_info_fname):
+def parse_subject_info(fname_subject_info):
     """
     Parse the subject info file and return the subject ID, sex and birthday.
 
     Parameters
     ----------
-    %(subject_info_fname)s
+    fname_subject_info : path-like
+        Path to the subject info file.
 
     Returns
     -------
@@ -35,7 +35,7 @@ def parse_subject_info(subject_info_fname):
             birthday : tuple
                 3-length tuple (year, month, day)
     """
-    fname = _check_path(subject_info_fname, item_name='subject_info_fname',
+    fname = _check_path(fname_subject_info, item_name='fname_subject_info',
                         must_exist=True)
     with open(fname, 'r') as file:
         lines = file.readlines()
@@ -46,7 +46,13 @@ def parse_subject_info(subject_info_fname):
 
 
 @fill_doc
-def fill_info(raw, input_dir_fif, raw_folder, subject, sex, birthday):
+def fill_info(
+        raw,
+        dir_in,  # contains preprocessed .fif files on which info are filled
+        folder,  # contains all raw data (with original date)
+        subject,
+        sex,
+        birthday):
     """
     Fill the measurement info with:
         - a description including the subject ID, session ID, recording type
@@ -55,23 +61,25 @@ def fill_info(raw, input_dir_fif, raw_folder, subject, sex, birthday):
         - experimenter name.
         - measurement date (UTC)
 
+    The raw instance is modified in-place.
+
     Parameters
     ----------
-    %(raw_in_place)s
-    %(input_dir_fif)s
-    %(raw_folder)s
+    %(raw)s
+    %(dir_in)s
+    %(folder_data)s
     %(subject)s
     %(sex)s
     %(birthday)s
 
     Returns
     -------
-    %(raw_in_place)s
+    %(raw)s
     """
     _add_description(raw, subject)
     _add_device_info(raw)
     _add_experimenter_info(raw, experimenter='Mathieu Scheltienne')
-    _add_measurement_date(raw, input_dir_fif, raw_folder)
+    _add_measurement_date(raw, dir_in, folder)
     _add_subject_info(raw, subject, sex, birthday)
     raw.info._check_consistency()
     return raw
@@ -107,12 +115,13 @@ def _add_experimenter_info(raw, experimenter='Mathieu Scheltienne'):
     raw.info['experimenter'] = experimenter
 
 
-def _add_measurement_date(raw, input_dir_fif, raw_folder):
+def _add_measurement_date(raw, dir_in, folder):
     """Add measurement date information to raw instance."""
     recording_type_mapping = {
         'Calibration': 'Calib',
         'RestingState': 'RestS',
-        'Online': 'OnRun'}
+        'Online': 'OnRun'
+        }
 
     fname = Path(raw.filenames[0])
     recording_type = fname.parent.name
@@ -120,9 +129,9 @@ def _add_measurement_date(raw, input_dir_fif, raw_folder):
                  item_name='recording_type')
     recording_type = recording_type_mapping[recording_type]
     recording_run = int(fname.name.split('-')[0])
-    relative_path = fname.relative_to(input_dir_fif)
+    relative_path = fname.relative_to(dir_in)
 
-    logs_file = raw_folder / relative_path.parent.parent / 'logs.txt'
+    logs_file = folder / relative_path.parent.parent / 'logs.txt'
     logs_file = _check_path(logs_file, item_name='logs_file')
     if not logs_file.exists():
         return  # don't set meas date
@@ -185,7 +194,7 @@ def _check_birthday(birthday):
     """Checks that birthday is given as a tuple of int (year, month, day)."""
     try:
         birthday = tuple([int(n) for n in birthday])
-        assert 1900 <= birthday[0] <= 2020
+        assert 1920 <= birthday[0] <= 2020
         assert 1 <= birthday[1] <= 12
         assert 1 <= birthday[2] <= 31
     except Exception:
@@ -195,8 +204,15 @@ def _check_birthday(birthday):
 
 # -----------------------------------------------------------------------------
 @fill_doc
-def _pipeline(fname, input_dir_fif, output_dir_fif, raw_folder, subject, sex,
-              birthday):
+def _pipeline(
+        fname,
+        dir_in,
+        dir_out,
+        folder,
+        subject,
+        sex,
+        birthday
+        ):
     """%(pipeline_header)s
 
     Add measurement information.
@@ -204,9 +220,9 @@ def _pipeline(fname, input_dir_fif, output_dir_fif, raw_folder, subject, sex,
     Parameters
     ----------
     %(fname)s
-    %(input_dir_fif)s
-    %(output_dir_fif_with_None)s
-    %(raw_folder)s
+    %(dir_in)s
+    %(dir_out)s If None, 'dir_in' is used as 'dir_out'.
+    %(folder_data)s
     %(subject)s
     %(sex)s
     %(birthday)s
@@ -220,26 +236,19 @@ def _pipeline(fname, input_dir_fif, output_dir_fif, raw_folder, subject, sex,
     try:
         # checks paths
         fname = _check_path(fname, item_name='fname', must_exist=True)
-        input_dir_fif = _check_path(input_dir_fif,
-                                    item_name='input_dir_fif',
-                                    must_exist=True)
-        if output_dir_fif is not None:
-            output_dir_fif = _check_path(output_dir_fif,
-                                         item_name='output_dir_fif',
-                                         must_exist=True)
-        raw_folder = _check_path(raw_folder, item_name='raw_folder',
-                                 must_exist=True)
+        dir_in = _check_path(dir_in, 'dir_in', must_exist=True)
+        if dir_out is not None:
+            dir_out = _check_path(dir_out, 'dir_out', must_exist=True)
+        folder = _check_path(folder, 'folder', must_exist=True)
 
         # create output file name
-        if output_dir_fif is not None:
-            output_fname = _create_output_fname(fname, input_dir_fif,
-                                                output_dir_fif)
+        if dir_out is not None:
+            output_fname = _create_output_fname(fname, dir_in, dir_out)
         else:
             output_fname = fname
 
         raw = mne.io.read_raw_fif(fname, preload=True)
-        raw = fill_info(raw, input_dir_fif, raw_folder, subject, sex,
-                        birthday)
+        raw = fill_info(raw, dir_in, folder, subject, sex, birthday)
         raw.save(output_fname, fmt="double", overwrite=True)
 
         return (True, str(fname))
@@ -250,28 +259,42 @@ def _pipeline(fname, input_dir_fif, output_dir_fif, raw_folder, subject, sex,
         return (False, str(fname))
 
 
-def _create_output_fname(fname, input_dir_fif, output_dir_fif):
+def _create_output_fname(
+        fname,
+        dir_in,
+        dir_out
+        ):
     """Creates the output file name based on the relative path between fname
     and input_dir_fif."""
     # this will fail if fname is not in input_dir_fif
-    relative_fname = fname.relative_to(input_dir_fif)
+    relative_fname = fname.relative_to(dir_in)
     # create output fname
-    output_fname = output_dir_fif / relative_fname
+    output_fname = dir_out / relative_fname
     os.makedirs(output_fname.parent, exist_ok=True)
     return output_fname
 
 
 @fill_doc
-def _cli(input_dir_fif, output_dir_fif, raw_folder, subject_info, n_jobs=1,
-         participant=None, session=None, fname=None, ignore_existing=True):
+def _cli(
+        dir_in,
+        dir_out,
+        folder,
+        fname_subject_info,
+        n_jobs=1,
+        participant=None,
+        session=None,
+        fname=None,
+        ignore_existing=True
+        ):
     """%(cli_header)s
 
     Parameters
     ----------
-    %(input_dir_fif)s
-    %(output_dir_fif_with_None)s
-    %(raw_folder)s
-    %(subject_info_fname)s
+    %(dir_in)s
+    %(dir_out)s If None, 'dir_in' is used as 'dir_out'.
+    %(folder_data)s
+    fname_subject_info : path-like
+        Path to the subject info file.
     %(n_jobs)s
     %(select_participant)s
     %(select_session)s
@@ -279,48 +302,60 @@ def _cli(input_dir_fif, output_dir_fif, raw_folder, subject_info, n_jobs=1,
     %(ignore_existing)s
     """
     # check arguments
-    input_dir_fif = _check_path(input_dir_fif, item_name='input_dir_fif',
-                                must_exist=True)
-    if output_dir_fif is not None:
-        output_dir_fif = _check_path(output_dir_fif,
-                                     item_name='output_dir_fif')
-        os.makedirs(output_dir_fif, exist_ok=True)
+    dir_in = _check_path(dir_in, 'dir_in', must_exist=True)
+    if dir_out is not None:
+        dir_out = _check_path(dir_out, 'dir_out')
+        os.makedirs(dir_out, exist_ok=True)
     else:
-        output_dir_fif = input_dir_fif
+        dir_out = dir_in
         ignore_existing = False  # overwrite existing files
-    raw_folder = _check_path(raw_folder, item_name='raw_folder',
-                             must_exist=True)
-    subject_info = _check_path(subject_info, item_name='subject_info',
-                               must_exist=True)
+    folder = _check_path(folder, 'folder', must_exist=True)
+    fname_subject_info = _check_path(fname_subject_info, 'fname_subject_info',
+                                     must_exist=True)
     n_jobs = _check_n_jobs(n_jobs)
 
     # read subject_info
-    subject_info_dict = parse_subject_info(subject_info)
+    subject_info_dict = parse_subject_info(fname_subject_info)
 
     # list files to process
-    fifs_in = raw_fif_selection(input_dir_fif, output_dir_fif,
-                                participant=participant, session=session,
-                                fname=fname, ignore_existing=ignore_existing)
+    fifs = raw_fif_selection(
+        dir_in,
+        dir_out,
+        participant=participant,
+        session=session,
+        fname=fname,
+        ignore_existing=ignore_existing
+        )
 
     # create input pool for pipeline based on provided subject info
-    input_pool = _create_input_pool(fifs_in, input_dir_fif, output_dir_fif,
-                                    raw_folder, subject_info_dict)
+    input_pool = _create_input_pool(
+        fifs,
+        dir_in,
+        dir_out,
+        folder,
+        subject_info_dict
+        )
     assert 0 < len(input_pool)  # sanity-check
 
     with mp.Pool(processes=n_jobs) as p:
         results = p.starmap(_pipeline, input_pool)
 
-    write_results(results, output_dir_fif/'meas_info.pcl')
+    write_results(results, dir_out / 'meas_info.pcl')
 
 
-def _create_input_pool(fifs_in, input_dir_fif, output_dir_fif, raw_folder,
-                       subject_info_dict):
+def _create_input_pool(
+        fifs,
+        dir_in,
+        dir_out,
+        folder,
+        subject_info_dict
+        ):
     """Create input pool for pipeline function.
-    Shape: (fname, input_dir_fif, output_dir_fif, subject, sex, birthday)."""
+    Shape: (fname, dir_in, dir_out, folder, subject, sex, birthday)."""
     input_pool = list()
     # pattern to match subject
     pattern = re.compile(r'\%s(\d{3})\%s' % (os.sep, os.sep))
-    for fname in fifs_in:
+    for fname in fifs:
         match = re.findall(pattern, str(fname))
         assert len(match) == 1
         subject = int(match[0])
@@ -329,6 +364,5 @@ def _create_input_pool(fifs_in, input_dir_fif, output_dir_fif, raw_folder,
         except KeyError:
             sex, birthday = 0, None
         input_pool.append(
-            (fname, input_dir_fif, output_dir_fif, raw_folder,
-             subject, sex, birthday))
+            (fname, dir_in, dir_out, folder, subject, sex, birthday))
     return input_pool

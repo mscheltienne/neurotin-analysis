@@ -1,30 +1,30 @@
+import re
+
 import numpy as np
 import pandas as pd
-import re
 
 from .. import logger
 from ..io.model import load_session_weights
-from ..utils.docs import fill_doc
-from ..utils.checks import _check_path, _check_participants
+from ..utils._checks import _check_path, _check_participants
+from ..utils._docs import fill_doc
 
 
 @fill_doc
-def compute_average(raw_folder, participants):
+def compute_average(folder, participants):
     """
     Compute the average model across all session and across all participants.
 
     Parameters
     ----------
-    %(raw_folder)s
-    participants : int | list | tuple
-        Participant ID or list of participant IDs to merge.
+    %(folder_data)s
+    %(participants)s
 
     Returns
     -------
     df : DataFrame
         Average weight per channel.
     """
-    raw_folder = _check_path(raw_folder, item_name='folder', must_exist=True)
+    folder = _check_path(folder, item_name='folder', must_exist=True)
     participants = _check_participants(participants)
 
     # Load all models into a DataFrame
@@ -32,15 +32,15 @@ def compute_average(raw_folder, participants):
     for participant in participants:
         # look for sessions
         pattern = re.compile(r'Session (\d{1,2})')
-        folder = raw_folder / str(participant).zfill(3)
+        folder_ = folder / str(participant).zfill(3)
         sessions = [int(session)
-                    for path in folder.iterdir()
+                    for path in folder_.iterdir()
                     for session in re.findall(pattern, str(path))]
 
         for session in sessions:
             try:
                 weights = load_session_weights(
-                    raw_folder, participant, session, replace_bad_with=np.nan)
+                    folder, participant, session, replace_bad_with=np.nan)
             except FileNotFoundError:
                 logger.warning(
                     'Model for participant %s and session %s not found.',

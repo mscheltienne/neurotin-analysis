@@ -1,5 +1,6 @@
 """Preprocessing module."""
 
+from .bads import interpolate_bads  # noqa: F401
 from .bad_channels import (RANSAC_bads_suggestion,  # noqa: F401
                            PREP_bads_suggestion)
 from .events import (add_annotations_from_events, check_events,  # noqa: F401

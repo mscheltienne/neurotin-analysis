@@ -1,44 +1,52 @@
-"""
-The scores are logged with pandas in a .csv file with the syntax:
-    [[participant, session, model_idx, online_idx, int(transfer_run)] + scores]
-"""
+from typing import Union
+
+from matplotlib import pyplot as plt
 import pandas as pd
 import seaborn as sns
-from matplotlib import pyplot as plt
 
 from ..io.csv import read_csv
-from ..utils.checks import _check_type, _check_participant, _check_participants
+from ..utils._checks import (
+    _check_type, _check_participant, _check_participants)
+from ..utils._docs import fill_doc
 
 
-def plot_score_evolution_per_participant(
-        csv, participant, scores=10, datapoints=False, figsize=(10, 5)):
-    """
-    Plot as boxplots the score evolution across session for a given
-    participant. Multiple score IDs can be plotted simultaneously.
+@fill_doc
+def boxplot_scores_evolution(
+        csv,
+        participant: Union[int, list, tuple],
+        scores: int = 10,
+        swarmplot: bool = False,
+        figsize: tuple = (10, 5)
+        ):
+    """The NFB scores displayed are logged in a .csv file with the syntax:
+        [participant, session, model_idx, online_idx, transfer, scores [...]]
+
+    The evolution of the NFB score during the 15 sessions is plotted for the
+    given participant with boxplots. Scores from different part of the NFB runs
+    can be displayed by providing the argument scores. By default, the last
+    score corresponding to the total score obtained on a given run is used.
 
     Parameters
     ----------
-    csv : str | pathlib.Path
-        Path to the csv file to read. Must be in .csv format.
-    participant : int
-        Participant ID.
-    scores : int | list of int, optional
-        Score ID or list of scores IDs to plot.
-        IDs are defined between 0 and 10. The default is 10.
-    datapoints : bool, optional
-        If True, plots the datapoints on top of the boxes.
-        The default is False.
-    figsize : tuple, optional
-        Matplotlib figure's size. The default is (10, 5).
+    csv : path-like
+        Path to the 'scores_logs.csv' file to read.
+    %(participant)s
+    scores : int | list of int
+        ID of the non-regulation/regulation cycle score to include, or list
+        of the IDs to include. Each cycle is displayed as a separate boxplot.
+        Must be between 1 and 10 included.
+    swarmplot : bool, optional
+        If True, plots the datapoints on top of the boxes with a swarmplot.
+    %(plt.figsize)s
 
     Returns
     -------
     f : Figure
-    ax : axes.Axes
+    ax : Axes
     """
     _check_participant(participant)
     scores = _check_scores_idx(scores)
-    _check_type(datapoints, (bool, ), item_name='datapoints')
+    _check_type(swarmplot, (bool, ), item_name='swarmplot')
     _check_type(figsize, (tuple, ), item_name='figsize')
 
     # Select data
@@ -53,7 +61,7 @@ def plot_score_evolution_per_participant(
     sns.boxplot(
         x='Session', y='Score', hue='Score ID', data=df,
         palette='muted', ax=ax)
-    if datapoints:
+    if swarmplot:
         sns.swarmplot(
             x='Session', y='Score', hue='Score ID', data=df,
             size=3, color='black', ax=ax)
@@ -63,35 +71,40 @@ def plot_score_evolution_per_participant(
     return f, ax
 
 
-def plot_score_across_participants(
-        csv, participants, scores=10, datapoints=False, figsize=(10, 5)):
-    """
-    Plot as boxplots the score in all session across participants. Multiple
-    score IDs can be plotted simultaneously.
+@fill_doc
+def boxplot_scores_between_participants(
+        csv,
+        participants: Union[int, list, tuple],
+        scores: int = 10,
+        swarmplot: bool = False,
+        figsize: tuple = (10, 5)):
+    """The NFB scores displayed are logged in a .csv file with the syntax:
+        [participant, session, model_idx, online_idx, transfer, scores [...]]
+
+    The scores obtained during the 15 sessions are plotted in a single
+    boxplot for each participant.
 
     Parameters
     ----------
-    csv : str | pathlib.Path
-        Path to the csv file to read. Must be in .csv format.
-    participants : list of int
-        List of participants ID (int) to include.
-    scores : int | list of int, optional
-        Score ID or list of scores IDs to plot.
-        IDs are defined between 0 and 10. The default is 10.
-    datapoints : bool, optional
-        If True, plots the datapoints on top of the boxes.
-        The default is False.
-    figsize : tuple, optional
-        Matplotlib figure's size. The default is (10, 5).
+    csv : path-like
+        Path to the 'scores_logs.csv' file to read.
+    %(participant)s
+    scores : int | list of int
+        ID of the non-regulation/regulation cycle score to include, or list
+        of the IDs to include. Each cycle is displayed as a separate boxplot.
+        Must be between 1 and 10 included.
+    swarmplot : bool, optional
+        If True, plots the datapoints on top of the boxes with a swarmplot.
+    %(plt.figsize)s
 
     Returns
     -------
     f : Figure
-    ax : axes.Axes
+    ax : Axes
     """
     participants = _check_participants(participants)
     scores = _check_scores_idx(scores)
-    _check_type(datapoints, (bool, ), item_name='datapoints')
+    _check_type(swarmplot, (bool, ), item_name='swarmplot')
     _check_type(figsize, (tuple, ), item_name='figsize')
 
     # Select data
@@ -106,7 +119,7 @@ def plot_score_across_participants(
     sns.boxplot(
         x='Participant', y='Score', hue='Score ID', data=df,
         palette='muted', ax=ax)
-    if datapoints:
+    if swarmplot:
         sns.swarmplot(
             x='Participant', y='Score', hue='Score ID', data=df,
             size=3, color='black', ax=ax)
@@ -119,14 +132,11 @@ def plot_score_across_participants(
 def _check_scores_idx(scores):
     """Checks that the scores passed are valid."""
     _check_type(scores, ('int', list, tuple), item_name='scores')
-
-    if isinstance(scores, (int, )):
+    if isinstance(scores, int):
         scores = [scores]
-    elif isinstance(scores, (tuple, )):
+    elif isinstance(scores, tuple):
         scores = list(scores)
-
     for score in scores:
-        _check_type(score, ('int'), item_name='score')
+        _check_type(score, ('int', ), item_name='score')
     assert all(1 <= score <= 10 for score in scores)
-
     return scores

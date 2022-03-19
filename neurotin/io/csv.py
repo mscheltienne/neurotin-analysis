@@ -1,21 +1,21 @@
 import pandas as pd
 
-from ..utils.checks import _check_path
+from ..utils._checks import _check_path
 
 
 def read_csv(csv, **kwargs):
     """
-    Read the CSV file and returns the stored pandas dataframe.
+    Read the CSV file and returns the stored pandas DataFrame.
 
     Parameters
     ----------
-    csv : str | pathlib.Path
-        Path to the csv file to read. Must be in .csv format.
+    csv : path-like
+        Path to the .csv file to read.
     kwargs are passed to pd.read_csv().
 
     Returns
     -------
-    df : pandas.DataFrame
+    df : DataFrame
     """
     csv = _check_path(csv, item_name='csv', must_exist=True)
     assert csv.suffix == '.csv', 'Provided file is not a .csv file.'
@@ -29,12 +29,12 @@ def read_csv_evamed(csv):
 
     Parameters
     ----------
-    csv : str | pathlib.Path
-        Path to the csv file to read. Must be in .csv format.
+    csv : path-like
+        Path to the .csv file to read.
 
     Returns
     -------
-    df : pandas.DataFrame
+    df : DataFrame
     """
     df = read_csv(csv, encoding='latin1', skiprows=0, header=1)
     df = df.drop(df.columns[-1], axis=1)

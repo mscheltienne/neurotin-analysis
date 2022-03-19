@@ -2,7 +2,7 @@ import mne
 import numpy as np
 import pandas as pd
 
-from ..utils.checks import _check_type
+from ..utils._checks import _check_type
 
 
 def plot_topomap(weights, info=None, **kwargs):
@@ -15,6 +15,9 @@ def plot_topomap(weights, info=None, **kwargs):
         If a numpy array is provided, the channel names must be provided in
         info. If a Series is provided, the channel names are retrieved from
         the index.
+    info : Info
+       MNE measurement information instance containing the channel names.
+       A standard 1020 montage is added.
     """
     weights = _check_type(weights, (pd.Series, np.ndarray),
                           item_name='weights')
@@ -35,6 +38,6 @@ def _check_info(info, n):
     """Check that info is valid if weights is a numpy array."""
     if info is None:
         raise ValueError(
-            'Info must be provided in weights is a numpy array.')
+            'Info must be provided if weights is a numpy array.')
     assert len(info.ch_names) == n, \
         'Info does not contain the same number of channels as weights.'

@@ -5,6 +5,7 @@ from autoreject import Ransac
 
 from .filters import apply_filter_eeg
 from ..config.events import EVENTS
+from ..utils._docs import fill_doc
 
 
 # Until 0.4 release, make sure to use the development version.
@@ -57,6 +58,7 @@ def _prepapre_raw(raw):
     return raw
 
 
+@fill_doc
 def RANSAC_bads_suggestion(raw):
     """
     Create fix length-epochs and apply a RANSAC algorithm to detect bad
@@ -64,13 +66,11 @@ def RANSAC_bads_suggestion(raw):
 
     Parameters
     ----------
-    raw : mne.io.Raw
-        Raw instance.
+    %(raw)s
 
     Returns
     -------
-    bads : list
-        List of bad channels.
+    %(bads)s
     """
     raw = _prepapre_raw(raw)
     epochs = mne.make_fixed_length_epochs(
@@ -78,10 +78,10 @@ def RANSAC_bads_suggestion(raw):
     picks = mne.pick_types(raw.info, eeg=True)
     ransac = Ransac(verbose=False, picks=picks, n_jobs=1)
     ransac.fit(epochs)
-
     return ransac.bad_chs_
 
 
+@fill_doc
 def PREP_bads_suggestion(raw):
     """
     Apply the PREP pipeline to detect bad channels:
@@ -94,13 +94,11 @@ def PREP_bads_suggestion(raw):
 
     Parameters
     ----------
-    raw : mne.io.Raw
-        Raw instance.
+    %(raw)s
 
     Returns
     -------
-    bads : list
-        List of bad channels.
+    %(bads)s
     """
     raw = _prepapre_raw(raw)
     raw.pick_types(eeg=True)

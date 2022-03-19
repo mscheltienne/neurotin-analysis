@@ -1,5 +1,5 @@
 """Logs module to analyze log files."""
 
-from .mml import plot_mml_across_participants  # noqa: F401
-from .scores import (plot_score_evolution_per_participant,  # noqa: F401
-                     plot_score_across_participants)
+from .mml import lineplot_mml_evolution  # noqa: F401
+from .scores import (boxplot_scores_evolution,  # noqa: F401
+                     boxplot_scores_between_participants)

@@ -1,34 +1,40 @@
-import pickle
 from datetime import datetime
+import pickle
 
 import numpy as np
 import pandas as pd
 
-from ..utils.docs import fill_doc
-from ..utils.checks import (_check_type, _check_path, _check_participant,
-                            _check_session)
+from ..utils._docs import fill_doc
+from ..utils._checks import (_check_type, _check_path, _check_participant,
+                             _check_session)
 
 
 @fill_doc
 def load_model(folder, participant, session, model_idx='auto'):
     """
-    Load a saved model for a given participant/session.
+    Load a saved model for a given participant and session.
 
     Parameters
     ----------
-    %(folder)s
+    %(folder_data)s
     %(participant)s
     %(session)s
+    model_idx : int | 'auto'
+        ID of the model to load. If 'auto', the latest model is loaded.
 
     Returns
     -------
-    weights : array of shape (channels, ) -> (64, )
-    info : mne.Info
+    weights : array
+        Array of weights between 0 and 1 of shape (64 channels, )
+    info : Info
+        MNE measurement info instance.
     reject : dict
         Global peak-to-peak rejection threshold. Only key should be 'eeg'.
-    reject_local : array of shape (channels, ) -> (64, )
-        Local peak-to-peak rejection threshold.
+    reject_local : array
+        Array of local peak-to-peak rejection threshold of shape shape
+        (64 channels, ).
     calib_idx : int
+        ID of the calibration used to generate the model.
     """
     folder = _check_path(folder, item_name='folder', must_exist=True)
     participant = _check_participant(participant)
@@ -36,7 +42,7 @@ def load_model(folder, participant, session, model_idx='auto'):
     session = _check_session(session)
     model_idx = _check_model_idx(model_idx)
 
-    session_dir = folder/participant_folder/f'Session {session}'
+    session_dir = folder / participant_folder / f'Session {session}'
 
     if model_idx == 'auto':
         # read_logs
@@ -46,8 +52,7 @@ def load_model(folder, participant, session, model_idx='auto'):
         assert 0 < len(valid_model_idx)
         model_idx = max(valid_model_idx)
 
-    model_fname = session_dir/'Model'/f'{model_idx}-model.pcl'
-
+    model_fname = session_dir / 'Model' / f'{model_idx}-model.pcl'
     with open(model_fname, 'rb') as f:
         weights, info, reject, reject_local, calib_idx = pickle.load(f)
 
@@ -59,9 +64,9 @@ def _check_model_idx(model_idx):
     _check_type(model_idx, ('int', str), item_name='model_idx')
     if isinstance(model_idx, str):
         model_idx = model_idx.lower().strip()
-        assert model_idx == 'auto', 'Invalid model IDx.'
+        assert model_idx == 'auto', 'Invalid model ID.'
     else:
-        assert 1 <= model_idx, 'Invalid model IDx.'
+        assert 1 <= model_idx, 'Invalid model ID.'
     return model_idx
 
 
@@ -69,34 +74,34 @@ def _read_logs(session_dir):
     """Read logs for a given participant/session."""
     session_dir = _check_path(session_dir, item_name='session_dir',
                               must_exist=True)
-    logs_file = _check_path(session_dir/'logs.txt', item_name='logs_file',
+    logs_file = _check_path(session_dir / 'logs.txt', item_name='logs_file',
                             must_exist=True)
-
     with open(logs_file, 'r') as f:
         lines = f.readlines()
-
     lines = [line.split(' - ') for line in lines if len(line.split(' - ')) > 1]
     logs = [[datetime.strptime(line[0].strip(), "%d/%m/%Y %H:%M")] +
             [line[k].strip() for k in range(1, len(line))] for line in lines]
-
     return sorted(logs, key=lambda x: x[0], reverse=False)
 
 
 @fill_doc
 def load_session_weights(folder, participant, session, replace_bad_with=0):
-    """Load the weights used during that session and return them as Dataframe.
+    """Load the weights used during that session and return them as a
+    Dataframe.
 
     Parameters
     ----------
-    %(folder)s
+    %(folder_data)s
     %(participant)s
     %(session)s
     replace_bad_with : float | np.nan
-        What is used to fill bad channel values.
+        What is used to fill bad channel values in the DataFrame.
 
     Returns
     -------
-    %(df_weights)s
+    weights : DataFrame
+        Weights used during the online neurofeedback (1 per channel, bads
+        included).
     """
     replace_bad_with = _check_type(replace_bad_with, ('numeric', np.nan),
                                    item_name='replace_bad_with')
