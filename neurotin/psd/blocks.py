@@ -75,7 +75,7 @@ def blocks_difference_between_consecutive_phases(df, column='avg'):
     return pd.DataFrame.from_dict(data, orient='columns')
 
 
-def blocks_count_success(df):
+def blocks_count_success(df, group_session: bool = False):
     """
     Count the positive/negative diff values by session.
     The count is normalized by the number of observations.
@@ -90,6 +90,8 @@ def blocks_count_success(df):
             run : int - Run ID
             idx : ID of the phase within the run (0 to 9)
             diff : float - PSD difference (regulation - rest)
+    group_sessions : bool
+        If True, all session are grouped together.
 
     Returns
     -------
@@ -108,51 +110,78 @@ def blocks_count_success(df):
     # check sign
     df['sign'] = np.sign(df['diff'])
     # groupby
-    counts = df.groupby(by=['participant', 'session'],
-                        dropna=True)['sign'].value_counts()
+    by = ['participant'] if group_session else ['participant', 'session']
+    counts = df.groupby(by=by, dropna=True)['sign'].value_counts()
 
     # create new counts dataframe
-    positives = {'participant': [], 'session': [], 'count': []}
-    negatives = {'participant': [], 'session': [], 'count': []}
+    keys = ['participant'] if group_session else ['participant', 'session']
+    positives = {key: [] for key in keys + ['count']}
+    negatives = {key: [] for key in keys + ['count']}
 
     participants = df['participant'].unique()
     sessions = df['session'].unique()
-    for participant, session in product(participants, sessions):
-        try:
-            pos = counts[participant, session, 1]
-            neg = counts[participant, session, -1]
-        except KeyError:
-            pos = np.nan
-            neg = np.nan
 
-        # add common data to dict
-        positives['participant'].append(participant)
-        positives['session'].append(session)
-        negatives['participant'].append(participant)
-        negatives['session'].append(session)
+    if group_session:
+        for participant in participants:
+            try:
+                pos = counts[participant, 1]
+                neg = counts[participant, -1]
+            except KeyError:
+                pos = np.nan
+                neg = np.nan
 
-        if any(np.isnan(x) or x == 0 for x in (pos, neg)):
-            positives['count'].append(np.nan)
-            negatives['count'].append(np.nan)
-        else:
-            # normalize
-            total = (pos + neg)
-            pos = pos / total
-            neg = neg / total
-            # add to dict
-            positives['count'].append(pos)
-            negatives['count'].append(-neg)
+            # add common data to dict
+            positives['participant'].append(participant)
+            negatives['participant'].append(participant)
+
+            if any(np.isnan(x) or x == 0 for x in (pos, neg)):
+                positives['count'].append(np.nan)
+                negatives['count'].append(np.nan)
+            else:
+                # normalize
+                total = (pos + neg)
+                pos = pos / total
+                neg = neg / total
+                # add to dict
+                positives['count'].append(pos)
+                negatives['count'].append(-neg)
+
+    else:
+        for participant, session in product(participants, sessions):
+            try:
+                pos = counts[participant, session, 1]
+                neg = counts[participant, session, -1]
+            except KeyError:
+                pos = np.nan
+                neg = np.nan
+
+            # add common data to dict
+            positives['participant'].append(participant)
+            positives['session'].append(session)
+            negatives['participant'].append(participant)
+            negatives['session'].append(session)
+
+            if any(np.isnan(x) or x == 0 for x in (pos, neg)):
+                positives['count'].append(np.nan)
+                negatives['count'].append(np.nan)
+            else:
+                # normalize
+                total = (pos + neg)
+                pos = pos / total
+                neg = neg / total
+                # add to dict
+                positives['count'].append(pos)
+                negatives['count'].append(-neg)
 
     # create df
     df_positives = pd.DataFrame.from_dict(positives, orient='columns')
     df_negatives = pd.DataFrame.from_dict(negatives, orient='columns')
 
     # reset order
-    df_positives.sort_values(by=['participant', 'session'], ascending=True,
-                             inplace=True)
+    by = ['participant'] if group_session else ['participant', 'session']
+    df_positives.sort_values(by=by, ascending=True, inplace=True)
     df_positives.reset_index()
-    df_negatives.sort_values(by=['participant', 'session'], ascending=True,
-                             inplace=True)
+    df_negatives.sort_values(by=by, ascending=True, inplace=True)
     df_negatives.reset_index()
 
     return df_positives, df_negatives
