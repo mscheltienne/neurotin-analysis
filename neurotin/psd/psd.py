@@ -12,7 +12,7 @@ from scipy.integrate import simpson
 
 from .epochs import make_fixed_length_epochs, reject_epochs
 from .. import logger
-from ..io.list_files import list_raw_fif
+from ..utils.list_files import list_raw_fif
 from ..utils._checks import (_check_path, _check_participants, _check_type,
                              _check_value, _check_n_jobs)
 from ..utils._docs import fill_doc

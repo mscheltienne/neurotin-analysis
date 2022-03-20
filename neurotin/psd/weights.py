@@ -6,14 +6,16 @@ from ..utils._docs import fill_doc
 
 
 @fill_doc
-def apply_weights_mask(df, weights, *, copy=False):
+def weights_apply_mask(df, weights, *, copy=False):
     """
     Apply the weights mask to the PSD dataframe.
 
     Parameters
     ----------
     %(df_psd)s
-    %(df_weights)s
+    weights : DataFrame
+        Weights used during the online neurofeedback (1 per channel, bads
+        included).
     %(copy)s
 
     Returns
@@ -31,7 +33,7 @@ def apply_weights_mask(df, weights, *, copy=False):
 
 
 @fill_doc
-def apply_weights_session(df, folder, *, copy=False):
+def weights_apply_session_mask(df, folder, *, copy=False):
     """
     Apply the weights used during a given session to the PSD dataframe.
 

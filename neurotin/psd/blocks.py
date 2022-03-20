@@ -8,7 +8,7 @@ from ..utils._docs import fill_doc
 
 
 @fill_doc
-def diff_between_phases(df, column='avg'):
+def blocks_difference_between_consecutive_phases(df, column='avg'):
     """
     Compute the difference between a column in a regulation phase and in the
     preceding non-regulation phase.
@@ -29,14 +29,14 @@ def diff_between_phases(df, column='avg'):
             session : int - Session ID (1 to 15)
             run : int - Run ID
             idx : ID of the phase within the run (0 to 9)
-            diff : float - PSD difference
+            diff : float - PSD difference (regulation - rest)
     """
     _check_type(column, (str, ), item_name='column')
     assert column in df.columns
 
     # check keys
     keys = ['participant', 'session', 'run', 'idx']
-    assert len(set(keys).intersection(df.columns)) == len(keys)
+    assert all(key in df.columns for key in keys)
 
     # container for new df with diff between phases
     data = {key: [] for key in keys + ['diff']}
@@ -72,12 +72,10 @@ def diff_between_phases(df, column='avg'):
                     data['idx'].append(idx)
                     data['diff'].append(diff)
 
-    # create df
-    df = pd.DataFrame.from_dict(data, orient='columns')
-    return df
+    return pd.DataFrame.from_dict(data, orient='columns')
 
 
-def count_diff(df):
+def blocks_count_success(df):
     """
     Count the positive/negative diff values by session.
     The count is normalized by the number of observations.
@@ -91,7 +89,7 @@ def count_diff(df):
             session : int - Session ID (1 to 15)
             run : int - Run ID
             idx : ID of the phase within the run (0 to 9)
-            diff : float - PSD difference
+            diff : float - PSD difference (regulation - rest)
 
     Returns
     -------
