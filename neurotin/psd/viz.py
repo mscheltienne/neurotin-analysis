@@ -187,6 +187,7 @@ def plot_joint_clinical_nfb_performance(
     # add horizontal line at 50%
     ax1.axhline(0.5, linestyle='--', linewidth=1, color='black')
 
+
 # -----------------------------------------------------------------------------
 # Plots at the group-level, all sessions and all participants have been merged
 # together.
