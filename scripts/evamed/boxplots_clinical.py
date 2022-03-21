@@ -7,7 +7,7 @@ from neurotin.io import read_csv_evamed
 
 
 # Set participants
-participants = [57, 60, 61, 63, 65, 66, 68, 69, 72, 73]
+participants = []
 # Load clinical dataframes
 fname = r''
 df = read_csv_evamed(fname)
