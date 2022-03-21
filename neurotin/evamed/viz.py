@@ -16,6 +16,11 @@ def lineplot_evolution(df, name, figsize=(10, 5)):
     name : str
         Name of the questionnaire used.
     %(plt.figsize)s
+
+    Returns
+    -------
+    f : Figure
+    ax : Axes
     """
     _check_type(figsize, (tuple, ), item_name='figsize')
 
@@ -41,5 +46,33 @@ def lineplot_evolution(df, name, figsize=(10, 5)):
                                  'Post-assessment'),
                     hue='participant', palette='muted', legend=True, s=50,
                     ax=ax)
+
+    return f, ax
+
+
+@fill_doc
+def boxplot_visits(df, name, figsize=(5, 5)):
+    """Plot the comparison between different visits for a clinical outcome as
+    boxplots.
+
+    Parameters
+    ----------
+    %(df_clinical)s
+    name : str
+        Name of the questionnaire used.
+    %(plt.figsize)s
+
+    Returns
+    -------
+    f : Figure
+    ax : Axes
+    """
+    _check_type(figsize, (tuple, ), item_name='figsize')
+
+    f, ax = plt.subplots(1, 1, figsize=figsize)
+    ax.set(xlabel="Visit", ylabel=f"{name} Score (lower is better)")
+
+    order = sorted(df.visit.unique())
+    sns.boxplot(x='visit', y='result', data=df, order=order)
 
     return f, ax
