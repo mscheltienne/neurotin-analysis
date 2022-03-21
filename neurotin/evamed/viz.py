@@ -70,9 +70,9 @@ def boxplot_visits(df, name, figsize=(5, 5)):
     _check_type(figsize, (tuple, ), item_name='figsize')
 
     f, ax = plt.subplots(1, 1, figsize=figsize)
-    ax.set(xlabel="Visit", ylabel=f"{name} Score (lower is better)")
 
     order = sorted(df.visit.unique())
-    sns.boxplot(x='visit', y='result', data=df, order=order)
+    sns.boxplot(x='visit', y='result', data=df, order=order, ax=ax)
+    ax.set(xlabel="Visit", ylabel=f"{name} Score (lower is better)")
 
     return f, ax
