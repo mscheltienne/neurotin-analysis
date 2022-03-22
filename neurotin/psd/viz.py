@@ -140,7 +140,7 @@ def plot_joint_clinical_nfb_performance(
     df_clinical['result'] = -df_clinical['result']
 
     # create figure
-    f, ax1 = plt.subplots(1, 1, figsize=(10, 3))
+    f, ax1 = plt.subplots(1, 1, figsize=(15, 5))
 
     # define order by performance
     order = [(idx, score) for idx, score in df.values]
@@ -156,7 +156,7 @@ def plot_joint_clinical_nfb_performance(
     for participant in df_clinical['participant'].unique():
         df_ = df_clinical[df_clinical['participant'] == participant].dropna()
         ordered = sorted(
-            [(when, date) for when, date in df_[['When', 'date']].values],
+            [(visit, date) for visit, date in df_[['visit', 'date']].values],
             key=lambda x: x[1])
         orders.append([elt[0] for elt in ordered])
     # Take the longest
@@ -164,7 +164,7 @@ def plot_joint_clinical_nfb_performance(
 
     # create bar plot for clinical results
     ax2 = ax1.twinx()
-    sns.barplot(data=df_clinical, x='participant', y='result', hue='When',
+    sns.barplot(data=df_clinical, x='participant', y='result', hue='visit',
                 order=order, hue_order=hue_order, ax=ax2, palette='deep')
 
     # set y-ticks
