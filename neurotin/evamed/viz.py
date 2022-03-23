@@ -118,7 +118,7 @@ def barplot_difference_between_visits(
     order = ('Baseline', 'Post-assessment')
     df = df[df['visit'].isin(order)]
 
-    df_dict = {'participant': [], 'result':[]}
+    df_dict = {'participant': [], 'result': []}
     for participant in df['participant'].unique():
         df_ = df[df['participant'] == participant]
         post = df_[df_['visit'] == order[1]]['result'].values[0]
@@ -149,7 +149,7 @@ def barplot_difference_between_visits(
 
 
 def barplots_difference_between_visits(
-        dfs : Union[list, tuple],
+        dfs: Union[list, tuple],
         names: Union[list,  tuple],
         figsize: tuple = (10, 5)
         ):
@@ -187,7 +187,7 @@ def barplots_difference_between_visits(
         df = df[df['visit'].isin(order)]
         dfs[k] = df
 
-    df_dict = {'participant': [], 'questionnaire': [], 'result':[]}
+    df_dict = {'participant': [], 'questionnaire': [], 'result': []}
     for k, df in enumerate(dfs):
         name = names[k]
         for participant in df['participant'].unique():
