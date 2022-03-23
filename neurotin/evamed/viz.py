@@ -219,7 +219,8 @@ def barplots_difference_between_visits(
     ax.set_ylabel('Post - Baseline')
 
     # legend
-    ax.legend(title='Visit', loc='center left', bbox_to_anchor=(1.05, 0.5))
+    ax.legend(title='Questionnaire', loc='center left',
+              bbox_to_anchor=(1.05, 0.5))
     f.subplots_adjust(left=0.08, right=0.75)
     f.tight_layout()
 
