@@ -191,7 +191,7 @@ def plot_joint_clinical_nfb_performance(
 
 
 def plot_topomap_regulation(df, participant, group_session: bool = False,
-                            figsize: tuple = (20, 5)):
+                            figsize: tuple = (20, 4)):
     """
     Plot 2 topographic maps from the differance observed between rest and
     regulation phases: one for areas up-regulated and one for areas
