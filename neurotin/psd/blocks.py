@@ -18,7 +18,7 @@ def blocks_difference_between_consecutive_phases(df, column='avg'):
     %(df_psd)s
     column : str
         Label of the column on which the difference is computed between both
-        phases.
+        phases. Can also be 'all' to include all columns.
 
     Returns
     -------
@@ -29,16 +29,31 @@ def blocks_difference_between_consecutive_phases(df, column='avg'):
             session : int - Session ID (1 to 15)
             run : int - Run ID
             idx : ID of the phase within the run (0 to 9)
-            diff : float - PSD difference (regulation - rest)
+            diff or col : float - PSD difference (regulation - rest)
     """
     _check_type(column, (str, ), item_name='column')
-    assert column in df.columns
+    if column != 'all':
+        assert column in df.columns
 
     # check keys
     keys = ['participant', 'session', 'run', 'idx']
     assert all(key in df.columns for key in keys)
 
+    if column == 'all':
+        data = _blocks_difference_between_consecutive_phases_all_columns(df)
+    else:
+        data = _blocks_difference_between_consecutive_phases_single_column(
+            df, column)
+
+    return pd.DataFrame.from_dict(data, orient='columns')
+
+
+def _blocks_difference_between_consecutive_phases_single_column(df, column):
+    """
+    Compute the difference between consecutive phases from a single column.
+    """
     # container for new df with diff between phases
+    keys = ['participant', 'session', 'run', 'idx']
     data = {key: [] for key in keys + ['diff']}
 
     participants = sorted(df['participant'].unique())
@@ -72,7 +87,50 @@ def blocks_difference_between_consecutive_phases(df, column='avg'):
                     data['idx'].append(idx)
                     data['diff'].append(diff)
 
-    return pd.DataFrame.from_dict(data, orient='columns')
+    return data
+
+
+def _blocks_difference_between_consecutive_phases_all_columns(df):
+    """
+    Compute the difference between consecutive phases for all columns.
+    """
+    # container for new df with diff between phases
+    keys = ['participant', 'session', 'run', 'idx']
+    columns = [col for col in df.columns if col not in keys + ['phase']]
+    data = {key: [] for key in keys + columns}
+    participants = sorted(df['participant'].unique())
+    for participant in participants:
+        df_participant = df[df['participant'] == participant]
+
+        sessions = sorted(df_participant['session'].unique())
+        for session in sessions:
+            df_session = df_participant[df_participant['session'] == session]
+
+            runs = sorted(df_session['run'].unique())
+            for run in runs:
+                df_run = df_session[df_session['run'] == run]
+
+                index = sorted(df_session['idx'].unique())
+                for idx in index:
+                    df_idx = df_run[df_run['idx'] == idx]
+
+                    # compute the difference between regulation and rest
+                    reg = df_idx[df_idx.phase == 'regulation'][columns]
+                    non_reg = df_idx[df_idx.phase == 'non-regulation'][columns]
+                    try:
+                        diff = reg.values[0, :] - non_reg.values[0, :]
+                    except IndexError:
+                        continue
+
+                    # fill dict
+                    data['participant'].append(participant)
+                    data['session'].append(session)
+                    data['run'].append(run)
+                    data['idx'].append(idx)
+                    for k, col in enumerate(columns):
+                        data[col] = diff[k]
+
+    return data
 
 
 def blocks_count_success(df, group_session: bool = False):
