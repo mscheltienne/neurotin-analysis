@@ -7,6 +7,9 @@ from ..utils._checks import _check_type
 from ..utils._docs import fill_doc
 
 
+# TODO: column should be str | list | tuple -> is str it gets converted into a
+# list. If 'all', the list becomes all columns. A single pipeline should exist
+# no matter the number of columns.
 @fill_doc
 def blocks_difference_between_consecutive_phases(df, column='avg'):
     """
