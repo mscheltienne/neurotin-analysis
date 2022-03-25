@@ -29,7 +29,7 @@ def blocks_difference_between_consecutive_phases(df, column='avg'):
             session : int - Session ID (1 to 15)
             run : int - Run ID
             idx : ID of the phase within the run (0 to 9)
-            diff or col : float - PSD difference (regulation - rest)
+            diff or col-diff : float - PSD difference (regulation - rest)
     """
     _check_type(column, (str, ), item_name='column')
     if column != 'all':
@@ -97,7 +97,7 @@ def _blocks_difference_between_consecutive_phases_all_columns(df):
     # container for new df with diff between phases
     keys = ['participant', 'session', 'run', 'idx']
     columns = [col for col in df.columns if col not in keys + ['phase']]
-    data = {key: [] for key in keys + columns}
+    data = {key: [] for key in keys + [col + '-diff' for col in columns]}
     participants = sorted(df['participant'].unique())
     for participant in participants:
         df_participant = df[df['participant'] == participant]
@@ -128,7 +128,7 @@ def _blocks_difference_between_consecutive_phases_all_columns(df):
                     data['run'].append(run)
                     data['idx'].append(idx)
                     for k, col in enumerate(columns):
-                        data[col] = diff[k]
+                        data[col + '-diff'] = diff[k]
 
     return data
 
