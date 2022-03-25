@@ -16,7 +16,7 @@ df = pd.read_pickle(fname)
 diff = blocks_difference_between_consecutive_phases(df, column='all')
 
 #%% Create plots
-f, ax = plt.subplots(2, len(participants))
+f, ax = plt.subplots(2, len(participants), figsize=(20, 4))
 
 #%% Compute and plot topographic maps
 electrodes = [
