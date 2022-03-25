@@ -131,7 +131,7 @@ def _blocks_difference_between_consecutive_phases_all_columns(df):
                     data['run'].append(run)
                     data['idx'].append(idx)
                     for k, col in enumerate(columns):
-                        data[col + '-diff'] = diff[k]
+                        data[col + '-diff'].append(diff[k])
 
     return data
 
