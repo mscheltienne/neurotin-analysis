@@ -113,65 +113,15 @@ def blocks_count_success(df, group_session: bool = False):
     by = ['participant'] if group_session else ['participant', 'session']
     counts = df.groupby(by=by, dropna=True)['sign'].value_counts()
 
-    # create new counts dataframe
-    keys = ['participant'] if group_session else ['participant', 'session']
-    positives = {key: [] for key in keys + ['count']}
-    negatives = {key: [] for key in keys + ['count']}
-
     participants = df['participant'].unique()
     sessions = df['session'].unique()
 
     if group_session:
-        for participant in participants:
-            try:
-                pos = counts[participant, 1]
-                neg = counts[participant, -1]
-            except KeyError:
-                pos = np.nan
-                neg = np.nan
-
-            # add common data to dict
-            positives['participant'].append(participant)
-            negatives['participant'].append(participant)
-
-            if any(np.isnan(x) or x == 0 for x in (pos, neg)):
-                positives['count'].append(np.nan)
-                negatives['count'].append(np.nan)
-            else:
-                # normalize
-                total = (pos + neg)
-                pos = pos / total
-                neg = neg / total
-                # add to dict
-                positives['count'].append(pos)
-                negatives['count'].append(-neg)
-
+        positives, negatives = _blocks_count_success_group_session(
+            counts, participants)
     else:
-        for participant, session in product(participants, sessions):
-            try:
-                pos = counts[participant, session, 1]
-                neg = counts[participant, session, -1]
-            except KeyError:
-                pos = np.nan
-                neg = np.nan
-
-            # add common data to dict
-            positives['participant'].append(participant)
-            positives['session'].append(session)
-            negatives['participant'].append(participant)
-            negatives['session'].append(session)
-
-            if any(np.isnan(x) or x == 0 for x in (pos, neg)):
-                positives['count'].append(np.nan)
-                negatives['count'].append(np.nan)
-            else:
-                # normalize
-                total = (pos + neg)
-                pos = pos / total
-                neg = neg / total
-                # add to dict
-                positives['count'].append(pos)
-                negatives['count'].append(-neg)
+        positives, negatives = _blocks_count_success(
+            counts, participants, sessions)
 
     # create df
     df_positives = pd.DataFrame.from_dict(positives, orient='columns')
@@ -185,3 +135,69 @@ def blocks_count_success(df, group_session: bool = False):
     df_negatives.reset_index()
 
     return df_positives, df_negatives
+
+
+def _blocks_count_success(counts, participants, sessions):
+    """Counts success for each participant/session individually."""
+    positives = {key: [] for key in ('participant', 'session', 'count')}
+    negatives = {key: [] for key in ('participant', 'session', 'count')}
+
+    for participant, session in product(participants, sessions):
+        try:
+            pos = counts[participant, session, 1]
+            neg = counts[participant, session, -1]
+        except KeyError:
+            pos = np.nan
+            neg = np.nan
+
+        # add common data to dict
+        positives['participant'].append(participant)
+        positives['session'].append(session)
+        negatives['participant'].append(participant)
+        negatives['session'].append(session)
+
+        if any(np.isnan(x) or x == 0 for x in (pos, neg)):
+            positives['count'].append(np.nan)
+            negatives['count'].append(np.nan)
+        else:
+            # normalize
+            total = (pos + neg)
+            pos = pos / total
+            neg = neg / total
+            # add to dict
+            positives['count'].append(pos)
+            negatives['count'].append(-neg)
+
+    return positives, negatives
+
+
+def _blocks_count_success_group_session(counts, participants):
+    """Counts success for each participant by grouping sessions."""
+    positives = {key: [] for key in ('participant', 'count')}
+    negatives = {key: [] for key in ('participant', 'count')}
+
+    for participant in participants:
+        try:
+            pos = counts[participant, 1]
+            neg = counts[participant, -1]
+        except KeyError:
+            pos = np.nan
+            neg = np.nan
+
+        # add common data to dict
+        positives['participant'].append(participant)
+        negatives['participant'].append(participant)
+
+        if any(np.isnan(x) or x == 0 for x in (pos, neg)):
+            positives['count'].append(np.nan)
+            negatives['count'].append(np.nan)
+        else:
+            # normalize
+            total = (pos + neg)
+            pos = pos / total
+            neg = neg / total
+            # add to dict
+            positives['count'].append(pos)
+            negatives['count'].append(-neg)
+
+    return positives, negatives
