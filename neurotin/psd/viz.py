@@ -2,6 +2,8 @@ from typing import Union
 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import PercentFormatter
+from mne import create_info
+from mne.viz import plot_topomap
 import numpy as np
 import seaborn as sns
 
@@ -186,6 +188,65 @@ def plot_joint_clinical_nfb_performance(
 
     # add horizontal line at 50%
     ax1.axhline(0.5, linestyle='--', linewidth=1, color='black')
+
+
+def plot_topomap_regulation(df, participant, group_session: bool = False,
+                            figsize: tuple = (20, 5)):
+    """
+    Plot 2 topographic maps from the differance observed between rest and
+    regulation phases: one for areas up-regulated and one for areas
+    down-regulated.
+    """
+    # retrieve electrodes
+    electrodes = [
+        col for col in df.columns
+        if col not in ('participant', 'session', 'run', 'idx', 'avg-diff')
+        ]
+
+    # compute metric to plot
+    upreg = {k: np.zeros(len(electrodes)) for k in df.session.unique()}
+    downreg = {k: np.zeros(len(electrodes)) for k in df.session.unique()}
+
+    df_participant = df[df['participant'] == participant]
+    sessions = sorted(df_participant['session'].unique())
+    for session in sessions:
+        df_session = df_participant[df_participant['session'] == session]
+        data = df_session[electrodes].values
+        pos = np.argwhere(data > 0)
+        neg = np.argwhere(data < 0)
+        for idx in pos:
+            upreg[session][idx[1]] += data[idx[0], idx[1]]
+        for idx in neg:
+            downreg[session][idx[1]] += data[idx[0], idx[1]]
+
+    # crate mne info
+    info = create_info([elt.split('-')[0] for elt in electrodes], 1, 'eeg')
+    info.set_montage('standard_1020')
+
+    # Plot
+    f, ax = plt.subplots(2, 1 if group_session else len(sessions),
+                         figsize=figsize)
+    if group_session:
+        upreg_ = np.average(np.stack(list(upreg.values())), axis=0)
+        downreg_ = np.average(np.stack(list(downreg.values())), axis=0)
+        plot_topomap(upreg_, info, axes=ax[0],
+                     extrapolate='local', show=False)
+        plot_topomap(downreg_, info, axes=ax[1],
+                     extrapolate='local', show=False)
+        ax[0].set_ylabel('Up-regulation')
+        ax[1].set_ylabel('Down-regulation')
+    else:
+        for k, session in enumerate(sessions):
+            plot_topomap(upreg[session], info, axes=ax[0, k],
+                         extrapolate='local', show=False)
+            plot_topomap(downreg[session], info, axes=ax[1, k],
+                         extrapolate='local', show=False)
+            ax[0, k].set_title(f'Session {k}')
+            ax[0, 0].set_ylabel('Up-regulation')
+            ax[1, 0].set_ylabel('Down-regulation')
+    f.tight_layout()
+
+    return f, ax
 
 
 # -----------------------------------------------------------------------------
