@@ -86,7 +86,7 @@ def set_log_level(verbosity):
 
 class LoggerFormatter(logging.Formatter):
     """
-    Format string Syntax for BSL.
+    Format string Syntax for logger.
     """
     # Format string syntax for the different Log levels
     _formatters = dict()
