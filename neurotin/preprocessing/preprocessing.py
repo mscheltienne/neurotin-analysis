@@ -32,6 +32,9 @@ def prepare_raw(raw):
     -------
     %(raw)s
     """
+    # Drop channels
+    raw.drop_channels(['M1', 'M2'])
+
     # Check sampling frequency
     if raw.info['sfreq'] != 512:
         raw.resample(sfreq=512)
