@@ -37,4 +37,11 @@ jobs:
         uses: py-actions/flake8@v1
         with:
           path: "neurotin"
-          exclude: "neurotin/config/paths.ini"
+      - name: Run black
+        uses: psf/black@stable
+        with:
+          options: "--check --verbose"
+      - name: Run isort
+        uses: jamescurtin/isort-action@master
+        with:
+            requirementsFiles: "requirements.txt requirements_testing.txt"
