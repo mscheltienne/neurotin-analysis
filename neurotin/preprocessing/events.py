@@ -1,12 +1,12 @@
 from collections import Counter
 
 import mne
-from mne.io import BaseRaw
-from mne.epochs import BaseEpochs
 import numpy as np
+from mne.epochs import BaseEpochs
+from mne.io import BaseRaw
 
-from ..config.events import EVENTS, EVENTS_MAPPING, EVENTS_DURATION_MAPPING
-from ..utils._checks import _check_value, _check_type
+from ..config.events import EVENTS, EVENTS_DURATION_MAPPING, EVENTS_MAPPING
+from ..utils._checks import _check_type, _check_value
 from ..utils._docs import fill_doc
 
 
@@ -36,9 +36,10 @@ def find_event_channel(inst=None, ch_names=None):
         Event channel index, list of event channel indexes or ``None`` if not
         found.
     """
-    _check_type(inst, (None, np.ndarray, BaseRaw, BaseEpochs),
-                item_name='inst')
-    _check_type(ch_names, (None, list, tuple), item_name='ch_names')
+    _check_type(
+        inst, (None, np.ndarray, BaseRaw, BaseEpochs), item_name="inst"
+    )
+    _check_type(ch_names, (None, list, tuple), item_name="ch_names")
 
     # numpy array + ch_names
     if isinstance(inst, np.ndarray) and ch_names is not None:
@@ -47,28 +48,38 @@ def find_event_channel(inst=None, ch_names=None):
     # numpy array without ch_names
     elif isinstance(inst, np.ndarray) and ch_names is None:
         # data range between 0 and 255 and all integers?
-        tchs = [idx for idx in range(inst.shape[0])
-                if (inst[idx].astype(int, copy=False) == inst[idx]).all()
-                and max(inst[idx]) <= 255 and min(inst[idx]) == 0]
+        tchs = [
+            idx
+            for idx in range(inst.shape[0])
+            if (inst[idx].astype(int, copy=False) == inst[idx]).all()
+            and max(inst[idx]) <= 255
+            and min(inst[idx]) == 0
+        ]
 
     # For MNE raw/epochs + ch_names
     elif isinstance(inst, (BaseRaw, BaseEpochs)) and ch_names is not None:
-        tchs = [idx for idx, type_ in enumerate(inst.get_channel_types())
-                if type_ == 'stim']
+        tchs = [
+            idx
+            for idx, type_ in enumerate(inst.get_channel_types())
+            if type_ == "stim"
+        ]
         if len(tchs) == 0:
             tchs = _search_in_ch_names(ch_names)
 
     # For MNE raw/epochs without ch_names
     elif isinstance(inst, (BaseRaw, BaseEpochs)) and ch_names is None:
-        tchs = [idx for idx, type_ in enumerate(inst.get_channel_types())
-                if type_ == 'stim']
+        tchs = [
+            idx
+            for idx, type_ in enumerate(inst.get_channel_types())
+            if type_ == "stim"
+        ]
         if len(tchs) == 0:
             tchs = _search_in_ch_names(inst.ch_names)
 
     # For unknown data type
     elif inst is None:
         if ch_names is None:
-            raise ValueError('ch_names cannot be None when inst is None.')
+            raise ValueError("ch_names cannot be None when inst is None.")
         tchs = _search_in_ch_names(ch_names)
 
     # output
@@ -82,12 +93,14 @@ def find_event_channel(inst=None, ch_names=None):
 
 def _search_in_ch_names(ch_names):
     """Search trigger channel by name in a list of valid names."""
-    valid_trigger_ch_names = ['TRIGGER', 'STI', 'TRG', 'CH_Event']
+    valid_trigger_ch_names = ["TRIGGER", "STI", "TRG", "CH_Event"]
 
     tchs = list()
     for idx, ch_name in enumerate(ch_names):
-        if any(trigger_ch_name in ch_name
-               for trigger_ch_name in valid_trigger_ch_names):
+        if any(
+            trigger_ch_name in ch_name
+            for trigger_ch_name in valid_trigger_ch_names
+        ):
             tchs.append(idx)
 
     return tchs
@@ -112,8 +125,11 @@ def add_annotations_from_events(raw):
     tch = find_event_channel(inst=raw)
     events = mne.find_events(raw, stim_channel=raw.ch_names[tch])
     annotations = mne.annotations_from_events(
-        events=events, event_desc=EVENTS_MAPPING, sfreq=raw.info["sfreq"],
-        orig_time=previous_annotations.orig_time)
+        events=events,
+        event_desc=EVENTS_MAPPING,
+        sfreq=raw.info["sfreq"],
+        orig_time=previous_annotations.orig_time,
+    )
     for k in range(events.shape[0]):
         idx = events[k, 2]
         annotations.duration[k] = EVENTS_DURATION_MAPPING[idx]
@@ -152,7 +168,8 @@ def check_events(raw, recording_type):
     check_functions = {
         "calibration": _check_events_calibration,
         "rs": _check_events_resting_state,
-        "online": _check_events_neurofeedback}
+        "online": _check_events_neurofeedback,
+    }
     _check_value(recording_type, check_functions, item_name="recording_type")
     tch = find_event_channel(inst=raw)
     events = mne.find_events(raw, stim_channel=raw.ch_names[tch])
@@ -167,19 +184,23 @@ def _check_events_calibration(raw, events):
     count = Counter(events[:, 2])
     assert len(count.keys()) == 3, (
         "Calibration should include 3 different event keys. "
-        f"Found {tuple(count.keys())}")
+        f"Found {tuple(count.keys())}"
+    )
 
     # check that the numbers of events are (1, 75, 75).
     count = sorted(count.items(), key=lambda x: (x[1], x[0]))
     assert count[0][1] == 1, (
         "Calibration should have a single event for blink paradigm."
-        f"Found {count[0][1]}.")
+        f"Found {count[0][1]}."
+    )
     assert count[1][1] == 75, (
         "Calibration should include 75 x rest and 75 x audio. "
-        f"Found for id {count[1][0]}: {count[1][1]}.")
+        f"Found for id {count[1][0]}: {count[1][1]}."
+    )
     assert count[2][1] == 75, (
         "Calibration should include 75 x rest and 75 x audio. "
-        f"Found for id {count[2][0]}: {count[2][1]}.")
+        f"Found for id {count[2][0]}: {count[2][1]}."
+    )
 
     # check the value of each events.
     try:
@@ -203,7 +224,8 @@ def _check_events_resting_state(raw, events):
     # check count
     assert events.shape[0] == 1, (
         "Resting-State files should have only one event. "
-        f"Found {events.shape[0]}.")
+        f"Found {events.shape[0]}."
+    )
 
     # check value
     try:
@@ -220,16 +242,19 @@ def _check_events_neurofeedback(raw, events):
     count = Counter(events[:, 2])
     assert len(count.keys()) == 2, (
         "Neurofeedback should include 2 different event keys. "
-        f"Found {tuple(count.keys())}")
+        f"Found {tuple(count.keys())}"
+    )
 
     # check that the numbers of events are (10, 10).
     count = sorted(count.items(), key=lambda x: (x[1], x[0]))
     assert count[0][1] == 10, (
         "Neurofeedback should include 10 x regulation and 10 x "
-        f"non-regulation. Found for id {count[0][0]}: {count[0][1]}.")
+        f"non-regulation. Found for id {count[0][0]}: {count[0][1]}."
+    )
     assert count[1][1] == 10, (
         "Neurofeedback should include 10 x regulation and 10 x "
-        f"non-regulation. Found for id {count[1][0]}: {count[1][1]}.")
+        f"non-regulation. Found for id {count[1][0]}: {count[1][1]}."
+    )
 
     # Check the value of each events.
     try:
@@ -265,7 +290,8 @@ def replace_event_value(raw, old_value, new_value):
         old_value=old_value,
         new_value=new_value,
         picks=raw.ch_names[tch],
-        channel_wise=True)
+        channel_wise=True,
+    )
     return raw
 
 

@@ -1,9 +1,11 @@
 import pandas as pd
 
 from neurotin.psd import (
-    ratio, blocks_difference_between_consecutive_phases, blocks_count_success)
+    blocks_count_success,
+    blocks_difference_between_consecutive_phases,
+    ratio,
+)
 from neurotin.psd.viz import captlot_success_distribution
-
 
 #%% CLI commands
 """
@@ -25,25 +27,28 @@ df.to_pickle('psds/alpha_.pcl', compression=None)
 """
 
 #%% PSDs - Alpha
-fname = r''
+fname = r""
 
 df_alpha = pd.read_pickle(fname)
 diff_alpha = blocks_difference_between_consecutive_phases(
-    df_alpha, column='avg')
+    df_alpha, column="avg"
+)
 
 
 #%% PSDs - Delta
-fname = r''
+fname = r""
 
 df_delta = pd.read_pickle(fname)
 diff_delta = blocks_difference_between_consecutive_phases(
-    df_delta, column='avg')
+    df_delta, column="avg"
+)
 
 
 #%% Ratio
 df_ratio = ratio(df_alpha, df_delta)
 diff_ratio = blocks_difference_between_consecutive_phases(
-    df_ratio, column='ratio')
+    df_ratio, column="ratio"
+)
 df_positives, df_negatives = blocks_count_success(diff_ratio)
 
 participants = []

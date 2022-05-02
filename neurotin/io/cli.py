@@ -1,7 +1,7 @@
-from datetime import datetime
 import os
 import pickle
 import re
+from datetime import datetime
 
 from ..utils._checks import _check_path, _check_type
 
@@ -22,22 +22,22 @@ def write_results(results, results_file):
         appended to the file name stem.
     """
     # check results
-    _check_type(results, (list, ), item_name='results')
+    _check_type(results, (list,), item_name="results")
     for result in results:
-        _check_type(result, (tuple, ))
-        _check_type(result[0], (bool, ))
-        _check_type(result[1], ('path-like', ))
+        _check_type(result, (tuple,))
+        _check_type(result[0], (bool,))
+        _check_type(result[1], ("path-like",))
     # check results_file
-    results_file = _check_path(results_file, item_name='results_file')
-    assert results_file.suffix == '.pcl'
+    results_file = _check_path(results_file, item_name="results_file")
+    assert results_file.suffix == ".pcl"
     directory = results_file.parent
     os.makedirs(directory, exist_ok=True)
     appendix = datetime.now().strftime("_%Hh-%Mmn-%d-%m-%Y")
-    results_file = directory / (str(results_file.stem) + appendix + '.pcl')
-    results_file = _check_path(results_file, item_name='results_file')
+    results_file = directory / (str(results_file.stem) + appendix + ".pcl")
+    results_file = _check_path(results_file, item_name="results_file")
 
     # save
-    with open(results_file, 'wb') as f:
+    with open(results_file, "wb") as f:
         pickle.dump(results, f, -1)
 
 
@@ -64,18 +64,19 @@ def read_results(results_file, *, success_only=False, failure_only=False):
     date : datetime
         Date and time (hour) at which the results file has been pickled.
     """
-    results_file = _check_path(results_file, item_name='results_file',
-                               must_exist=True)
-    assert results_file.suffix == '.pcl'
+    results_file = _check_path(
+        results_file, item_name="results_file", must_exist=True
+    )
+    assert results_file.suffix == ".pcl"
 
     # extract datetime
-    pattern = re.compile(r'\d{2}h-\d{2}mn-\d{1,2}-\d{1,2}-\d{4}')
+    pattern = re.compile(r"\d{2}h-\d{2}mn-\d{1,2}-\d{1,2}-\d{4}")
     dates = re.findall(pattern, results_file.stem)
     assert len(dates) == 1
-    date = datetime.strptime(dates[0], '%Hh-%Mmn-%d-%m-%Y')
+    date = datetime.strptime(dates[0], "%Hh-%Mmn-%d-%m-%Y")
 
     # read results
-    with open(results_file, 'rb') as f:
+    with open(results_file, "rb") as f:
         results = pickle.load(f)
 
     # filter

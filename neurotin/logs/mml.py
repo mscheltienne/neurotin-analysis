@@ -3,7 +3,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from ..utils._checks import _check_type, _check_participants
+from ..utils._checks import _check_participants, _check_type
 from ..utils._docs import fill_doc
 
 
@@ -27,22 +27,35 @@ def lineplot_mml_evolution(csv, participants, figsize=(10, 5)):
     ax : Axes
     """
     participants = _check_participants(participants)
-    _check_type(figsize, (tuple, ), item_name='figsize')
+    _check_type(figsize, (tuple,), item_name="figsize")
 
     # Select data
     df = pd.read_csv(csv)
     df = pd.melt(
-        df, id_vars=('Participant', 'Session'), value_vars='MML Volume',
-        var_name='MML', value_name='Volume')
-    df = df[df['Participant'].isin(participants)]
+        df,
+        id_vars=("Participant", "Session"),
+        value_vars="MML Volume",
+        var_name="MML",
+        value_name="Volume",
+    )
+    df = df[df["Participant"].isin(participants)]
     df.drop_duplicates(
-        subset=('Participant', 'Session'), keep='last', inplace=True)
+        subset=("Participant", "Session"), keep="last", inplace=True
+    )
 
     # Plot
     f, ax = plt.subplots(1, 1, figsize=figsize)
     sns.lineplot(
-        x='Session', y='Volume', hue='Participant', data=df, palette='muted',
-        style="Participant", markers=True, dashes=False, ax=ax)
+        x="Session",
+        y="Volume",
+        hue="Participant",
+        data=df,
+        palette="muted",
+        style="Participant",
+        markers=True,
+        dashes=False,
+        ax=ax,
+    )
     ax.set_xticks(range(1, 16, 1))
     ax.set_yticks(np.arange(0, max(df.Volume) + 2.5, 2.5))
 

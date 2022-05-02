@@ -14,6 +14,6 @@ def read_csv_evamed(csv):
     -------
     df : DataFrame
     """
-    df = pd.read_csv(csv, encoding='latin1', skiprows=0, header=1)
+    df = pd.read_csv(csv, encoding="latin1", skiprows=0, header=1)
     df = df.drop(df.columns[-1], axis=1)
     return df

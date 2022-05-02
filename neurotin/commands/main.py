@@ -1,9 +1,8 @@
+import glob
 import os
 import sys
-import glob
-
-from pathlib import Path
 from importlib import import_module
+from pathlib import Path
 
 import neurotin
 
@@ -11,9 +10,10 @@ import neurotin
 def run():
     """Entrypoint for neurotin <command> usage."""
     root = Path(__file__).parent
-    valid_commands = sorted(glob.glob(str(root / 'neurotin_*.py')))
-    valid_commands = [file.split(os.path.sep)[-1][:-3]
-                      for file in valid_commands]
+    valid_commands = sorted(glob.glob(str(root / "neurotin_*.py")))
+    valid_commands = [
+        file.split(os.path.sep)[-1][:-3] for file in valid_commands
+    ]
 
     def print_help():
         print("Usage: NeuroTin command options\n")
@@ -30,6 +30,6 @@ def run():
         print_help()
     else:
         cmd = sys.argv[1]
-        cmd = import_module('.neurotin_%s' % (cmd,), 'neurotin.commands')
+        cmd = import_module(".neurotin_%s" % (cmd,), "neurotin.commands")
         sys.argv = sys.argv[1:]
         cmd.run()

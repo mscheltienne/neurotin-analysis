@@ -37,8 +37,9 @@ def _ensure_int(item, item_name=None):
         item = int(operator.index(item))
     except TypeError:
         item_name = "Item" if item_name is None else "'%s'" % item_name
-        raise TypeError("%s must be an int, got %s instead."
-                        % (item_name, type(item)))
+        raise TypeError(
+            "%s must be an int, got %s instead." % (item_name, type(item))
+        )
 
     return item
 
@@ -63,8 +64,8 @@ class _Callable:
 _types = {
     "numeric": (np.floating, float, _IntLike()),
     "path-like": (str, Path, os.PathLike),
-    "int": (_IntLike(), ),
-    "callable": (_Callable(), ),
+    "int": (_IntLike(),),
+    "callable": (_Callable(),),
 }
 
 
@@ -88,24 +89,39 @@ def _check_type(item, types, item_name=None):
     TypeError
         When the type of the item is not one of the valid options.
     """
-    check_types = sum(((type(None), ) if type_ is None else (type_, )
-                       if not isinstance(type_, str) else _types[type_]
-                       for type_ in types), ())
+    check_types = sum(
+        (
+            (type(None),)
+            if type_ is None
+            else (type_,)
+            if not isinstance(type_, str)
+            else _types[type_]
+            for type_ in types
+        ),
+        (),
+    )
 
     if not isinstance(item, check_types):
-        type_name = ["None" if cls_ is None else cls_.__name__
-                     if not isinstance(cls_, str) else cls_
-                     for cls_ in types]
+        type_name = [
+            "None"
+            if cls_ is None
+            else cls_.__name__
+            if not isinstance(cls_, str)
+            else cls_
+            for cls_ in types
+        ]
         if len(type_name) == 1:
             type_name = type_name[0]
         elif len(type_name) == 2:
-            type_name = ' or '.join(type_name)
+            type_name = " or ".join(type_name)
         else:
             type_name[-1] = "or " + type_name[-1]
             type_name = ", ".join(type_name)
         item_name = "Item" if item_name is None else "'%s'" % item_name
-        raise TypeError(f"{item_name} must be an instance of {type_name}, "
-                        f"got {type(item)} instead.")
+        raise TypeError(
+            f"{item_name} must be an instance of {type_name}, "
+            f"got {type(item)} instead."
+        )
 
     return item
 
@@ -134,20 +150,27 @@ def _check_value(item, allowed_values, item_name=None, extra=None):
     if item not in allowed_values:
         item_name = "" if item_name is None else " '%s'" % item_name
         extra = "" if extra is None else " " + extra
-        msg = ("Invalid value for the{item_name} parameter{extra}. "
-               '{options}, but got {item!r} instead.')
+        msg = (
+            "Invalid value for the{item_name} parameter{extra}. "
+            "{options}, but got {item!r} instead."
+        )
         allowed_values = tuple(allowed_values)  # e.g., if a dict was given
         if len(allowed_values) == 1:
             options = "The only allowed value is %s" % repr(allowed_values[0])
         elif len(allowed_values) == 2:
-            options = "Allowed values are %s and %s" % \
-                (repr(allowed_values[0]), repr(allowed_values[1]))
+            options = "Allowed values are %s and %s" % (
+                repr(allowed_values[0]),
+                repr(allowed_values[1]),
+            )
         else:
             options = "Allowed values are "
             options += ", ".join([f"{repr(v)}" for v in allowed_values[:-1]])
             options += f", and {repr(allowed_values[-1])}"
-        raise ValueError(msg.format(item_name=item_name, extra=extra,
-                                    options=options, item=item))
+        raise ValueError(
+            msg.format(
+                item_name=item_name, extra=extra, options=options, item=item
+            )
+        )
 
     return item
 
@@ -161,21 +184,22 @@ def _check_verbose(verbose):
         INFO=logging.INFO,
         WARNING=logging.WARNING,
         ERROR=logging.ERROR,
-        CRITICAL=logging.CRITICAL)
+        CRITICAL=logging.CRITICAL,
+    )
 
-    _check_type(verbose, (bool, str, int, None), item_name='verbose')
+    _check_type(verbose, (bool, str, int, None), item_name="verbose")
 
     if verbose is None:
-        verbose = 'INFO'
+        verbose = "INFO"
     elif isinstance(verbose, str):
         verbose = verbose.upper()
-        _check_value(verbose, logging_types, item_name='verbose')
+        _check_value(verbose, logging_types, item_name="verbose")
         verbose = logging_types[verbose]
     elif isinstance(verbose, bool):
         if verbose:
-            verbose = 'INFO'
+            verbose = "INFO"
         else:
-            verbose = 'WARNING'
+            verbose = "WARNING"
 
     return verbose
 
@@ -188,37 +212,37 @@ def _check_n_jobs(n_jobs):
     Number of cores is retrieved with multiprocessing.cpu_count(). Behavior
     may differ based on the OS.
     """
-    _check_type(n_jobs, ('int', ), item_name='n_jobs')
+    _check_type(n_jobs, ("int",), item_name="n_jobs")
     n_cores = mp.cpu_count()
     logger.debug("Checking n_jobs '%i'.", n_jobs)
     logger.debug("Number of cores found: %s", n_cores)
     if n_jobs == -1:
         n_jobs = n_cores
-    _check_value(n_jobs, tuple(range(n_cores+1)), item_name='n_jobs')
+    _check_value(n_jobs, tuple(range(n_cores + 1)), item_name="n_jobs")
 
     return n_jobs
 
 
 def _check_path(item, item_name=None, must_exist=False):
     """Check if path is a valid and return it as pathlib.Path instance."""
-    _check_type(item, ('path-like', ), item_name=item_name)
+    _check_type(item, ("path-like",), item_name=item_name)
     item = Path(item)
     logger.debug("Checking path '%s'.", item)
     if must_exist:
-        assert item.exists(), 'The path does not exists.'
+        assert item.exists(), "The path does not exists."
     return item.expanduser().absolute()
 
 
 def _check_participant(participant):
     """Checks that the participant ID is valid."""
-    _check_type(participant, ('int', ), item_name='participant')
+    _check_type(participant, ("int",), item_name="participant")
     assert 0 < participant
     return participant
 
 
 def _check_participants(participants):
     """Checks that the participant IDs are valid and return them as a list."""
-    _check_type(participants, ('int', list, tuple), item_name='participants')
+    _check_type(participants, ("int", list, tuple), item_name="participants")
     if isinstance(participants, int):
         participants = [participants]
     elif isinstance(participants, tuple):
@@ -230,6 +254,6 @@ def _check_participants(participants):
 
 def _check_session(session):
     """Checks that the session ID is valid."""
-    _check_type(session, ('int', ), item_name='session')
+    _check_type(session, ("int",), item_name="session")
     assert 1 <= session <= 15
     return session

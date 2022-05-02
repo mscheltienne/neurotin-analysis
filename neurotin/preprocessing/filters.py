@@ -8,7 +8,7 @@ def _check_bandpass(bandpass):
     """
     Checks that the argument bandpass is a 2-length valid list-like.
     """
-    _check_type(bandpass, (np.ndarray, tuple, list), item_name='bandpass')
+    _check_type(bandpass, (np.ndarray, tuple, list), item_name="bandpass")
     bandpass = tuple(bandpass)
     assert len(bandpass) == 2
     assert all(0 < fq for fq in bandpass if fq is not None)
@@ -27,7 +27,8 @@ def _apply_bandpass_filter(raw, bandpass, picks):
         phase="zero-double",
         fir_window="hamming",
         fir_design="firwin",
-        pad="edge")
+        pad="edge",
+    )
 
 
 def _apply_notch_filter(raw, picks):
@@ -42,7 +43,8 @@ def _apply_car(raw, *, projection=False):
     Adds a CAR projector based on the good EEG channels.
     """
     raw.set_eeg_reference(
-        ref_channels="average", ch_type="eeg", projection=projection)
+        ref_channels="average", ch_type="eeg", projection=projection
+    )
 
 
 @fill_doc
@@ -62,14 +64,14 @@ def apply_filter_eeg(raw, *, bandpass=(None, None), notch=False, car=False):
         If True, a CAR reference based on the good channels is added.
     """
     bandpass = _check_bandpass(bandpass)
-    _check_type(notch, (bool, ), item_name='notch')
-    _check_type(car, (bool, ), item_name='car')
+    _check_type(notch, (bool,), item_name="notch")
+    _check_type(car, (bool,), item_name="car")
 
     if not all(bp is None for bp in bandpass):
-        _apply_bandpass_filter(raw, bandpass, 'eeg')
+        _apply_bandpass_filter(raw, bandpass, "eeg")
 
     if notch:
-        _apply_notch_filter(raw, 'eeg')
+        _apply_notch_filter(raw, "eeg")
 
     if car:
         _apply_car(raw, projection=False)
@@ -89,10 +91,10 @@ def apply_filter_aux(raw, *, bandpass=(None, None), notch=False):
     %(notch)s
     """
     bandpass = _check_bandpass(bandpass)
-    _check_type(notch, (bool, ), item_name='notch')
+    _check_type(notch, (bool,), item_name="notch")
 
     if not all(bp is None for bp in bandpass):
-        _apply_bandpass_filter(raw, bandpass, ['eog', 'ecg'])
+        _apply_bandpass_filter(raw, bandpass, ["eog", "ecg"])
 
     if notch:
-        _apply_notch_filter(raw, ['eog', 'ecg'])
+        _apply_notch_filter(raw, ["eog", "ecg"])

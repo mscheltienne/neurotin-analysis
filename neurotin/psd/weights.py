@@ -1,7 +1,7 @@
 import pandas as pd
 
 from ..io.model import load_session_weights
-from ..utils._checks import _check_type, _check_path
+from ..utils._checks import _check_path, _check_type
 from ..utils._docs import fill_doc
 
 
@@ -22,13 +22,13 @@ def weights_apply_mask(df, weights, *, copy=False):
     -------
     %(df_psd)s
     """
-    _check_type(df, (pd.DataFrame, ), item_name='df')
-    _check_type(weights, (pd.DataFrame, ), item_name='weights')
-    _check_type(copy, (bool, ), item_name='copy')
+    _check_type(df, (pd.DataFrame,), item_name="df")
+    _check_type(weights, (pd.DataFrame,), item_name="weights")
+    _check_type(copy, (bool,), item_name="copy")
     df = df.copy() if copy else df
 
-    ch_names = weights['channel']
-    df.loc[:, ch_names] = df[ch_names] * weights['weight'].values
+    ch_names = weights["channel"]
+    df.loc[:, ch_names] = df[ch_names] * weights["weight"].values
     return df
 
 
@@ -47,19 +47,20 @@ def weights_apply_session_mask(df, folder, *, copy=False):
     -------
     %(df_psd)s
     """
-    _check_type(df, (pd.DataFrame, ), item_name='df')
-    folder = _check_path(folder, 'folder', must_exist=True)
-    _check_type(copy, (bool, ), item_name='copy')
+    _check_type(df, (pd.DataFrame,), item_name="df")
+    folder = _check_path(folder, "folder", must_exist=True)
+    _check_type(copy, (bool,), item_name="copy")
     df = df.copy() if copy else df
 
     participant_session = None
     for index, row in df.iterrows():
         # load weights if needed
-        if participant_session != (row['participant'], row['session']):
+        if participant_session != (row["participant"], row["session"]):
             weights = load_session_weights(
-                folder, row['participant'], row['session'])
-            participant_session = (row['participant'], row['session'])
-            ch_names = weights['channel']
+                folder, row["participant"], row["session"]
+            )
+            participant_session = (row["participant"], row["session"])
+            ch_names = weights["channel"]
 
-        df.loc[index, ch_names] = row[ch_names] * weights['weight'].values
+        df.loc[index, ch_names] = row[ch_names] * weights["weight"].values
     return df

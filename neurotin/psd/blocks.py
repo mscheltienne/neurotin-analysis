@@ -11,7 +11,7 @@ from ..utils._docs import fill_doc
 # list. If 'all', the list becomes all columns. A single pipeline should exist
 # no matter the number of columns.
 @fill_doc
-def blocks_difference_between_consecutive_phases(df, column='avg'):
+def blocks_difference_between_consecutive_phases(df, column="avg"):
     """
     Compute the difference between a column in a regulation phase and in the
     preceding non-regulation phase.
@@ -34,21 +34,22 @@ def blocks_difference_between_consecutive_phases(df, column='avg'):
             idx : ID of the phase within the run (0 to 9)
             diff or col-diff : float - PSD difference (regulation - rest)
     """
-    _check_type(column, (str, ), item_name='column')
-    if column != 'all':
+    _check_type(column, (str,), item_name="column")
+    if column != "all":
         assert column in df.columns
 
     # check keys
-    keys = ['participant', 'session', 'run', 'idx']
+    keys = ["participant", "session", "run", "idx"]
     assert all(key in df.columns for key in keys)
 
-    if column == 'all':
+    if column == "all":
         data = _blocks_difference_between_consecutive_phases_all_columns(df)
     else:
         data = _blocks_difference_between_consecutive_phases_single_column(
-            df, column)
+            df, column
+        )
 
-    return pd.DataFrame.from_dict(data, orient='columns')
+    return pd.DataFrame.from_dict(data, orient="columns")
 
 
 def _blocks_difference_between_consecutive_phases_single_column(df, column):
@@ -56,39 +57,39 @@ def _blocks_difference_between_consecutive_phases_single_column(df, column):
     Compute the difference between consecutive phases from a single column.
     """
     # container for new df with diff between phases
-    keys = ['participant', 'session', 'run', 'idx']
-    data = {key: [] for key in keys + ['diff']}
+    keys = ["participant", "session", "run", "idx"]
+    data = {key: [] for key in keys + ["diff"]}
 
-    participants = sorted(df['participant'].unique())
+    participants = sorted(df["participant"].unique())
     for participant in participants:
-        df_participant = df[df['participant'] == participant]
+        df_participant = df[df["participant"] == participant]
 
-        sessions = sorted(df_participant['session'].unique())
+        sessions = sorted(df_participant["session"].unique())
         for session in sessions:
-            df_session = df_participant[df_participant['session'] == session]
+            df_session = df_participant[df_participant["session"] == session]
 
-            runs = sorted(df_session['run'].unique())
+            runs = sorted(df_session["run"].unique())
             for run in runs:
-                df_run = df_session[df_session['run'] == run]
+                df_run = df_session[df_session["run"] == run]
 
-                index = sorted(df_session['idx'].unique())
+                index = sorted(df_session["idx"].unique())
                 for idx in index:
-                    df_idx = df_run[df_run['idx'] == idx]
+                    df_idx = df_run[df_run["idx"] == idx]
 
                     # compute the difference between regulation and rest
-                    reg = df_idx[df_idx.phase == 'regulation'][column]
-                    non_reg = df_idx[df_idx.phase == 'non-regulation'][column]
+                    reg = df_idx[df_idx.phase == "regulation"][column]
+                    non_reg = df_idx[df_idx.phase == "non-regulation"][column]
                     try:
                         diff = reg.values[0] - non_reg.values[0]
                     except IndexError:
                         continue
 
                     # fill dict
-                    data['participant'].append(participant)
-                    data['session'].append(session)
-                    data['run'].append(run)
-                    data['idx'].append(idx)
-                    data['diff'].append(diff)
+                    data["participant"].append(participant)
+                    data["session"].append(session)
+                    data["run"].append(run)
+                    data["idx"].append(idx)
+                    data["diff"].append(diff)
 
     return data
 
@@ -98,40 +99,40 @@ def _blocks_difference_between_consecutive_phases_all_columns(df):
     Compute the difference between consecutive phases for all columns.
     """
     # container for new df with diff between phases
-    keys = ['participant', 'session', 'run', 'idx']
-    columns = [col for col in df.columns if col not in keys + ['phase']]
-    data = {key: [] for key in keys + [col + '-diff' for col in columns]}
-    participants = sorted(df['participant'].unique())
+    keys = ["participant", "session", "run", "idx"]
+    columns = [col for col in df.columns if col not in keys + ["phase"]]
+    data = {key: [] for key in keys + [col + "-diff" for col in columns]}
+    participants = sorted(df["participant"].unique())
     for participant in participants:
-        df_participant = df[df['participant'] == participant]
+        df_participant = df[df["participant"] == participant]
 
-        sessions = sorted(df_participant['session'].unique())
+        sessions = sorted(df_participant["session"].unique())
         for session in sessions:
-            df_session = df_participant[df_participant['session'] == session]
+            df_session = df_participant[df_participant["session"] == session]
 
-            runs = sorted(df_session['run'].unique())
+            runs = sorted(df_session["run"].unique())
             for run in runs:
-                df_run = df_session[df_session['run'] == run]
+                df_run = df_session[df_session["run"] == run]
 
-                index = sorted(df_session['idx'].unique())
+                index = sorted(df_session["idx"].unique())
                 for idx in index:
-                    df_idx = df_run[df_run['idx'] == idx]
+                    df_idx = df_run[df_run["idx"] == idx]
 
                     # compute the difference between regulation and rest
-                    reg = df_idx[df_idx.phase == 'regulation'][columns]
-                    non_reg = df_idx[df_idx.phase == 'non-regulation'][columns]
+                    reg = df_idx[df_idx.phase == "regulation"][columns]
+                    non_reg = df_idx[df_idx.phase == "non-regulation"][columns]
                     try:
                         diff = reg.values[0, :] - non_reg.values[0, :]
                     except IndexError:
                         continue
 
                     # fill dict
-                    data['participant'].append(participant)
-                    data['session'].append(session)
-                    data['run'].append(run)
-                    data['idx'].append(idx)
+                    data["participant"].append(participant)
+                    data["session"].append(session)
+                    data["run"].append(run)
+                    data["idx"].append(idx)
                     for k, col in enumerate(columns):
-                        data[col + '-diff'].append(diff[k])
+                        data[col + "-diff"].append(diff[k])
 
     return data
 
@@ -161,35 +162,38 @@ def blocks_count_success(df, group_session: bool = False):
     df_negatives : DataFrame
         Counts of negatives 'diff'.
     """
-    assert 'diff' in df.columns
+    assert "diff" in df.columns
 
     # reset order
-    df = df.sort_values(by=['participant', 'session', 'run', 'idx'],
-                        ascending=True)
+    df = df.sort_values(
+        by=["participant", "session", "run", "idx"], ascending=True
+    )
     df.reset_index()
 
     # check sign
-    df['sign'] = np.sign(df['diff'])
+    df["sign"] = np.sign(df["diff"])
     # groupby
-    by = ['participant'] if group_session else ['participant', 'session']
-    counts = df.groupby(by=by, dropna=True)['sign'].value_counts()
+    by = ["participant"] if group_session else ["participant", "session"]
+    counts = df.groupby(by=by, dropna=True)["sign"].value_counts()
 
-    participants = df['participant'].unique()
-    sessions = df['session'].unique()
+    participants = df["participant"].unique()
+    sessions = df["session"].unique()
 
     if group_session:
         positives, negatives = _blocks_count_success_group_session(
-            counts, participants)
+            counts, participants
+        )
     else:
         positives, negatives = _blocks_count_success(
-            counts, participants, sessions)
+            counts, participants, sessions
+        )
 
     # create df
-    df_positives = pd.DataFrame.from_dict(positives, orient='columns')
-    df_negatives = pd.DataFrame.from_dict(negatives, orient='columns')
+    df_positives = pd.DataFrame.from_dict(positives, orient="columns")
+    df_negatives = pd.DataFrame.from_dict(negatives, orient="columns")
 
     # reset order
-    by = ['participant'] if group_session else ['participant', 'session']
+    by = ["participant"] if group_session else ["participant", "session"]
     df_positives.sort_values(by=by, ascending=True, inplace=True)
     df_positives.reset_index()
     df_negatives.sort_values(by=by, ascending=True, inplace=True)
@@ -200,8 +204,8 @@ def blocks_count_success(df, group_session: bool = False):
 
 def _blocks_count_success(counts, participants, sessions):
     """Counts success for each participant/session individually."""
-    positives = {key: [] for key in ('participant', 'session', 'count')}
-    negatives = {key: [] for key in ('participant', 'session', 'count')}
+    positives = {key: [] for key in ("participant", "session", "count")}
+    negatives = {key: [] for key in ("participant", "session", "count")}
 
     for participant, session in product(participants, sessions):
         try:
@@ -212,30 +216,30 @@ def _blocks_count_success(counts, participants, sessions):
             neg = np.nan
 
         # add common data to dict
-        positives['participant'].append(participant)
-        positives['session'].append(session)
-        negatives['participant'].append(participant)
-        negatives['session'].append(session)
+        positives["participant"].append(participant)
+        positives["session"].append(session)
+        negatives["participant"].append(participant)
+        negatives["session"].append(session)
 
         if any(np.isnan(x) or x == 0 for x in (pos, neg)):
-            positives['count'].append(np.nan)
-            negatives['count'].append(np.nan)
+            positives["count"].append(np.nan)
+            negatives["count"].append(np.nan)
         else:
             # normalize
-            total = (pos + neg)
+            total = pos + neg
             pos = pos / total
             neg = neg / total
             # add to dict
-            positives['count'].append(pos)
-            negatives['count'].append(-neg)
+            positives["count"].append(pos)
+            negatives["count"].append(-neg)
 
     return positives, negatives
 
 
 def _blocks_count_success_group_session(counts, participants):
     """Counts success for each participant by grouping sessions."""
-    positives = {key: [] for key in ('participant', 'count')}
-    negatives = {key: [] for key in ('participant', 'count')}
+    positives = {key: [] for key in ("participant", "count")}
+    negatives = {key: [] for key in ("participant", "count")}
 
     for participant in participants:
         try:
@@ -246,19 +250,19 @@ def _blocks_count_success_group_session(counts, participants):
             neg = np.nan
 
         # add common data to dict
-        positives['participant'].append(participant)
-        negatives['participant'].append(participant)
+        positives["participant"].append(participant)
+        negatives["participant"].append(participant)
 
         if any(np.isnan(x) or x == 0 for x in (pos, neg)):
-            positives['count'].append(np.nan)
-            negatives['count'].append(np.nan)
+            positives["count"].append(np.nan)
+            negatives["count"].append(np.nan)
         else:
             # normalize
-            total = (pos + neg)
+            total = pos + neg
             pos = pos / total
             neg = neg / total
             # add to dict
-            positives['count'].append(pos)
-            negatives['count'].append(-neg)
+            positives["count"].append(pos)
+            negatives["count"].append(-neg)
 
     return positives, negatives

@@ -1,22 +1,25 @@
 from typing import Union
 
-from matplotlib import pyplot as plt
 import pandas as pd
 import seaborn as sns
+from matplotlib import pyplot as plt
 
 from ..utils._checks import (
-    _check_type, _check_participant, _check_participants)
+    _check_participant,
+    _check_participants,
+    _check_type,
+)
 from ..utils._docs import fill_doc
 
 
 @fill_doc
 def boxplot_scores_evolution(
-        csv,
-        participant: Union[int, list, tuple],
-        scores: int = 10,
-        swarmplot: bool = False,
-        figsize: tuple = (10, 5)
-        ):
+    csv,
+    participant: Union[int, list, tuple],
+    scores: int = 10,
+    swarmplot: bool = False,
+    figsize: tuple = (10, 5),
+):
     """The NFB scores displayed are logged in a .csv file with the syntax:
         [participant, session, model_idx, online_idx, transfer, scores [...]]
 
@@ -45,38 +48,49 @@ def boxplot_scores_evolution(
     """
     _check_participant(participant)
     scores = _check_scores_idx(scores)
-    _check_type(swarmplot, (bool, ), item_name='swarmplot')
-    _check_type(figsize, (tuple, ), item_name='figsize')
+    _check_type(swarmplot, (bool,), item_name="swarmplot")
+    _check_type(figsize, (tuple,), item_name="figsize")
 
     # Select data
     df = pd.read_csv(csv)
-    df = df.loc[df['Participant'] == int(participant)]
+    df = df.loc[df["Participant"] == int(participant)]
     df = pd.melt(
-        df, id_vars='Session', value_vars=[f'Score {k}' for k in scores],
-        var_name='Score ID', value_name='Score')
+        df,
+        id_vars="Session",
+        value_vars=[f"Score {k}" for k in scores],
+        var_name="Score ID",
+        value_name="Score",
+    )
 
     # Plot
     f, ax = plt.subplots(1, 1, figsize=tuple(figsize))
     sns.boxplot(
-        x='Session', y='Score', hue='Score ID', data=df,
-        palette='muted', ax=ax)
+        x="Session", y="Score", hue="Score ID", data=df, palette="muted", ax=ax
+    )
     if swarmplot:
         sns.swarmplot(
-            x='Session', y='Score', hue='Score ID', data=df,
-            size=3, color='black', ax=ax)
+            x="Session",
+            y="Score",
+            hue="Score ID",
+            data=df,
+            size=3,
+            color="black",
+            ax=ax,
+        )
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles=handles[:len(scores)], labels=labels[:len(scores)])
+        ax.legend(handles=handles[: len(scores)], labels=labels[: len(scores)])
 
     return f, ax
 
 
 @fill_doc
 def boxplot_scores_between_participants(
-        csv,
-        participants: Union[int, list, tuple],
-        scores: int = 10,
-        swarmplot: bool = False,
-        figsize: tuple = (10, 5)):
+    csv,
+    participants: Union[int, list, tuple],
+    scores: int = 10,
+    swarmplot: bool = False,
+    figsize: tuple = (10, 5),
+):
     """The NFB scores displayed are logged in a .csv file with the syntax:
         [participant, session, model_idx, online_idx, transfer, scores [...]]
 
@@ -103,39 +117,54 @@ def boxplot_scores_between_participants(
     """
     participants = _check_participants(participants)
     scores = _check_scores_idx(scores)
-    _check_type(swarmplot, (bool, ), item_name='swarmplot')
-    _check_type(figsize, (tuple, ), item_name='figsize')
+    _check_type(swarmplot, (bool,), item_name="swarmplot")
+    _check_type(figsize, (tuple,), item_name="figsize")
 
     # Select data
     df = pd.read_csv(csv)
     df = pd.melt(
-        df, id_vars='Participant', value_vars=[f'Score {k}' for k in scores],
-        var_name='Score ID', value_name='Score')
-    df = df[df['Participant'].isin(participants)]
+        df,
+        id_vars="Participant",
+        value_vars=[f"Score {k}" for k in scores],
+        var_name="Score ID",
+        value_name="Score",
+    )
+    df = df[df["Participant"].isin(participants)]
 
     # Plot
     f, ax = plt.subplots(1, 1, figsize=tuple(figsize))
     sns.boxplot(
-        x='Participant', y='Score', hue='Score ID', data=df,
-        palette='muted', ax=ax)
+        x="Participant",
+        y="Score",
+        hue="Score ID",
+        data=df,
+        palette="muted",
+        ax=ax,
+    )
     if swarmplot:
         sns.swarmplot(
-            x='Participant', y='Score', hue='Score ID', data=df,
-            size=3, color='black', ax=ax)
+            x="Participant",
+            y="Score",
+            hue="Score ID",
+            data=df,
+            size=3,
+            color="black",
+            ax=ax,
+        )
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles=handles[:len(scores)], labels=labels[:len(scores)])
+        ax.legend(handles=handles[: len(scores)], labels=labels[: len(scores)])
 
     return f, ax
 
 
 def _check_scores_idx(scores):
     """Checks that the scores passed are valid."""
-    _check_type(scores, ('int', list, tuple), item_name='scores')
+    _check_type(scores, ("int", list, tuple), item_name="scores")
     if isinstance(scores, int):
         scores = [scores]
     elif isinstance(scores, tuple):
         scores = list(scores)
     for score in scores:
-        _check_type(score, ('int', ), item_name='score')
+        _check_type(score, ("int",), item_name="score")
     assert all(1 <= score <= 10 for score in scores)
     return scores

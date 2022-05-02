@@ -3,33 +3,38 @@ import re
 import traceback
 from typing import Union
 
+import numpy as np
+import pandas as pd
 from mne import pick_types
 from mne.io import read_raw_fif
 from mne.time_frequency import psd_welch
-import numpy as np
-import pandas as pd
 from scipy.integrate import simpson
 
-from .epochs import make_fixed_length_epochs, reject_epochs
 from .. import logger
-from ..utils.list_files import list_raw_fif
-from ..utils._checks import (_check_path, _check_participants, _check_type,
-                             _check_value, _check_n_jobs)
+from ..utils._checks import (
+    _check_n_jobs,
+    _check_participants,
+    _check_path,
+    _check_type,
+    _check_value,
+)
 from ..utils._docs import fill_doc
+from ..utils.list_files import list_raw_fif
+from .epochs import make_fixed_length_epochs, reject_epochs
 
 
 @fill_doc
 def psd_avg_band(
-        folder,
-        participants: Union[int, list, tuple],
-        duration: Union[int, float],
-        overlap: Union[int, float],
-        reject,
-        fmin: Union[int, float],
-        fmax: Union[int, float],
-        average: str = 'mean',
-        n_jobs: int = 1,
-        ):
+    folder,
+    participants: Union[int, list, tuple],
+    duration: Union[int, float],
+    overlap: Union[int, float],
+    reject,
+    fmin: Union[int, float],
+    fmax: Union[int, float],
+    average: str = "mean",
+    n_jobs: int = 1,
+):
     """
     Compute the PSD and average by frequency band for the given participants
     using the welch method.
@@ -58,12 +63,12 @@ def psd_avg_band(
     -------
     %(df_psd)s
     """
-    folder = _check_path(folder, item_name='folder', must_exist=True)
+    folder = _check_path(folder, item_name="folder", must_exist=True)
     participants = _check_participants(participants)
-    _check_type(fmin, ('numeric', ), item_name='fmin')
-    _check_type(fmax, ('numeric', ), item_name='fmax')
-    _check_type(average, (str, ), item_name='average')
-    _check_value(average, ('mean', 'integrate'), item_name='average')
+    _check_type(fmin, ("numeric",), item_name="fmin")
+    _check_type(fmax, ("numeric",), item_name="fmax")
+    _check_type(average, (str,), item_name="average")
+    _check_value(average, ("mean", "integrate"), item_name="average")
     n_jobs = _check_n_jobs(n_jobs)
 
     # create input_pool
@@ -71,18 +76,20 @@ def psd_avg_band(
     for participant in participants:
         fnames = list_raw_fif(folder / str(participant).zfill(3))
         for fname in fnames:
-            if fname.parent.name != 'Online':
+            if fname.parent.name != "Online":
                 continue
             input_pool.append(
-                (participant,
-                 fname,
-                 duration,
-                 overlap,
-                 reject,
-                 fmin,
-                 fmax,
-                 average)
+                (
+                    participant,
+                    fname,
+                    duration,
+                    overlap,
+                    reject,
+                    fmin,
+                    fmax,
+                    average,
                 )
+            )
     assert 0 < len(input_pool)  # sanity check
 
     # compute psds
@@ -100,74 +107,56 @@ def psd_avg_band(
                 run,
                 phase,
                 psds[phase],
-                ch_names
-                )
+                ch_names,
+            )
 
-    return pd.DataFrame.from_dict(psd_dict, orient='columns')
+    return pd.DataFrame.from_dict(psd_dict, orient="columns")
 
 
 def _psd_avg_band(
-        participant,
-        fname,
-        duration,
-        overlap,
-        reject,
-        fmin,
-        fmax,
-        average
-        ):
+    participant, fname, duration, overlap, reject, fmin, fmax, average
+):
     """
     Compute the PSD and average by frequency band for the given participants
     using the welch method.
     """
-    logger.info('Processing: %s' % fname)
+    logger.info("Processing: %s" % fname)
     try:
         raw = read_raw_fif(fname, preload=True)
         # find session id
-        pattern = re.compile(r'Session (\d{1,2})')
+        pattern = re.compile(r"Session (\d{1,2})")
         session = re.findall(pattern, str(fname))
         assert len(session) == 1
         session = int(session[0])
         # find run id
-        run = int(fname.name.split('-')[0])
+        run = int(fname.name.split("-")[0])
         # compute psds
         psds, freqs = _psd_welch(
-            raw,
-            duration,
-            overlap,
-            reject,
-            fmin=fmin,
-            fmax=fmax
-            )
+            raw, duration, overlap, reject, fmin=fmin, fmax=fmax
+        )
         # find channel names
         ch_names = raw.pick_types(eeg=True, exclude=[]).ch_names
         assert len(ch_names) == 64  # sanity check
 
         psds_ = dict()
         for phase in psds:
-            if average == 'mean':
+            if average == "mean":
                 psds_[phase] = np.average(psds[phase], axis=-1)
-            elif average == 'integrate':
+            elif average == "integrate":
                 psds_[phase] = simpson(psds[phase], freqs[phase], axis=-1)
-            assert psds_[phase].shape == (64, )  # sanity check
+            assert psds_[phase].shape == (64,)  # sanity check
 
         # clean up
         del raw
 
     except Exception:
-        logger.warning('FAILED: %s -> Skip.' % fname)
+        logger.warning("FAILED: %s -> Skip." % fname)
         logger.warning(traceback.format_exc())
 
     return participant, session, run, psds_, ch_names
 
 
-def _psd_welch(
-        raw,
-        duration,
-        overlap,
-        reject,
-        **kwargs
-        ):
+def _psd_welch(raw, duration, overlap, reject, **kwargs):
     """
     Compute the power spectral density on the regulation and non-regulation
     phase of the raw instance using welch method.
@@ -186,40 +175,39 @@ def _psd_welch(
 
 def _check_kwargs(kwargs, epochs):
     """Check kwargs provided to _compute_psd_welch."""
-    if 'picks' not in kwargs:
-        kwargs['picks'] = pick_types(epochs.info, eeg=True, exclude=[])
-    if 'n_fft' not in kwargs:
-        kwargs['n_fft'] = epochs._data.shape[-1]
+    if "picks" not in kwargs:
+        kwargs["picks"] = pick_types(epochs.info, eeg=True, exclude=[])
+    if "n_fft" not in kwargs:
+        kwargs["n_fft"] = epochs._data.shape[-1]
         logger.debug("Argument 'n_fft' set to %i", epochs._data.shape[-1])
     else:
-        logger.warning("Argument 'n_fft' was provided and is set to %i",
-                       kwargs['n_fft'])
-    if 'n_overlap' not in kwargs:
-        kwargs['n_overlap'] = 0
+        logger.warning(
+            "Argument 'n_fft' was provided and is set to %i", kwargs["n_fft"]
+        )
+    if "n_overlap" not in kwargs:
+        kwargs["n_overlap"] = 0
         logger.debug("Argument 'n_overlap' set to 0")
     else:
-        logger.warning("Argument 'n_overlap' was provided and is set to %i",
-                       kwargs['n_overlap'])
-    if 'n_per_seg' not in kwargs:
-        kwargs['n_per_seg'] = epochs._data.shape[-1]
+        logger.warning(
+            "Argument 'n_overlap' was provided and is set to %i",
+            kwargs["n_overlap"],
+        )
+    if "n_per_seg" not in kwargs:
+        kwargs["n_per_seg"] = epochs._data.shape[-1]
         logger.debug("Argument 'n_per_seg' set to %i", epochs._data.shape[-1])
     else:
-        logger.warning("Argument 'n_per_seg' was provided and is set to %i",
-                       kwargs['n_per_seg'])
+        logger.warning(
+            "Argument 'n_per_seg' was provided and is set to %i",
+            kwargs["n_per_seg"],
+        )
     return kwargs
 
 
 def _add_data_to_dict(
-        data_dict,
-        participant,
-        session,
-        run,
-        phase,
-        data,
-        ch_names
-        ):
+    data_dict, participant, session, run, phase, data, ch_names
+):
     """Add PSD to data dictionary."""
-    keys = ['participant', 'session', 'run', 'phase', 'idx'] + ch_names
+    keys = ["participant", "session", "run", "phase", "idx"] + ch_names
 
     # init
     for key in keys:
@@ -227,16 +215,16 @@ def _add_data_to_dict(
             data_dict[key] = list()
 
     # fill data
-    data_dict['participant'].append(participant)
-    data_dict['session'].append(session)
-    data_dict['run'].append(run)
-    data_dict['phase'].append(phase[:-2])
-    data_dict['idx'].append(int(phase[-1]))  # idx of the phase within the run
+    data_dict["participant"].append(participant)
+    data_dict["session"].append(session)
+    data_dict["run"].append(run)
+    data_dict["phase"].append(phase[:-2])
+    data_dict["idx"].append(int(phase[-1]))  # idx of the phase within the run
 
     # channel psd
     for k in range(data.shape[0]):
-        data_dict[f'{ch_names[k]}'].append(data[k])
+        data_dict[f"{ch_names[k]}"].append(data[k])
 
     # sanity check
-    entries = len(data_dict['participant'])
+    entries = len(data_dict["participant"])
     assert all(len(data_dict[key]) == entries for key in keys)

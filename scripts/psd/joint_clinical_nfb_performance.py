@@ -3,9 +3,11 @@ import pandas as pd
 from neurotin.evamed.parsers import parse_thi
 from neurotin.io import read_csv_evamed
 from neurotin.psd import (
-    blocks_difference_between_consecutive_phases, ratio, blocks_count_success)
+    blocks_count_success,
+    blocks_difference_between_consecutive_phases,
+    ratio,
+)
 from neurotin.psd.viz import plot_joint_clinical_nfb_performance
-
 
 #%% CLI commands
 """
@@ -30,27 +32,30 @@ df.to_pickle('psds/alpha_.pcl', compression=None)
 participants = []
 
 #%% PSDs - Alpha
-fname = r''
+fname = r""
 df_alpha = pd.read_pickle(fname)
 diff_alpha = blocks_difference_between_consecutive_phases(
-    df_alpha, column='avg')
+    df_alpha, column="avg"
+)
 
 #%% PSDs - Delta
-fname = r''
+fname = r""
 df_delta = pd.read_pickle(fname)
 diff_delta = blocks_difference_between_consecutive_phases(
-    df_delta, column='avg')
+    df_delta, column="avg"
+)
 
 #%% Ratio
 df_ratio = ratio(df_alpha, df_delta)
 diff_ratio = blocks_difference_between_consecutive_phases(
-    df_ratio, column='ratio')
+    df_ratio, column="ratio"
+)
 
 #%% THI
-fname = r''
+fname = r""
 df = read_csv_evamed(fname)
 thi = parse_thi(df, participants)
 
 #%% Plot
 df_positives, _ = blocks_count_success(diff_ratio, group_session=True)
-plot_joint_clinical_nfb_performance(df_positives, thi, 'THI', participants)
+plot_joint_clinical_nfb_performance(df_positives, thi, "THI", participants)
