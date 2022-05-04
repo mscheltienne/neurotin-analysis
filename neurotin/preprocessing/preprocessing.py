@@ -2,8 +2,11 @@ import os
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Tuple
 
 import mne
+from mne.io import BaseRaw
+from mne.preprocessing import ICA
 
 from .. import logger
 from ..io import read_raw_fif
@@ -16,7 +19,7 @@ from .filters import apply_filter_aux, apply_filter_eeg
 
 # -----------------------------------------------------------------------------
 @fill_doc
-def prepare_raw(raw):
+def prepare_raw(raw: BaseRaw) -> BaseRaw:
     """
     Prepare raw instance by checking events, adding events as annotations,
     marking bad channels, add montage, applying FIR filters.
@@ -60,7 +63,7 @@ def prepare_raw(raw):
 
 # -----------------------------------------------------------------------------
 @fill_doc
-def remove_artifact_ic(raw, *, semiauto=False):
+def remove_artifact_ic(raw: BaseRaw, *, semiauto: bool = False) -> BaseRaw:
     """
     Apply ICA to remove artifact-related independent components.
     The raw instance is modified in-place.
@@ -118,7 +121,7 @@ def remove_artifact_ic(raw, *, semiauto=False):
 
 # -----------------------------------------------------------------------------
 @fill_doc
-def fill_info(raw):
+def fill_info(raw: BaseRaw) -> BaseRaw:
     """
     Fill the measurement info with:
         - a description including the subject ID, session ID, recording type
@@ -152,7 +155,7 @@ def fill_info(raw):
     return raw
 
 
-def _add_description(raw):
+def _add_description(raw: BaseRaw) -> None:
     """Add a description including the subject ID, session ID, recording type
     and recording run."""
     fname = Path(raw.filenames[0])
@@ -166,7 +169,7 @@ def _add_description(raw):
     )
 
 
-def _add_device_info(raw):
+def _add_device_info(raw: BaseRaw) -> None:
     """Add device information to raw instance."""
     fname = Path(raw.filenames[0])
     raw.info["device_info"] = dict()
@@ -179,13 +182,15 @@ def _add_device_info(raw):
     ] = "https://www.ant-neuro.com/products/eego_mylab"
 
 
-def _add_experimenter_info(raw, experimenter="Mathieu Scheltienne"):
+def _add_experimenter_info(
+    raw: BaseRaw, experimenter: str = "Mathieu Scheltienne"
+) -> None:
     """Add experimenter information to raw instance."""
     _check_type(experimenter, (str,), item_name="experimenter")
     raw.info["experimenter"] = experimenter
 
 
-def _add_measurement_date(raw):
+def _add_measurement_date(raw: BaseRaw) -> None:
     """Add measurement date information to raw instance."""
     recording_type_mapping = {
         "Calibration": "Calib",
@@ -223,7 +228,7 @@ def _add_measurement_date(raw):
     raw.set_meas_date(datetime_.astimezone(timezone.utc))
 
 
-def _add_subject_info(raw):
+def _add_subject_info(raw: BaseRaw) -> None:
     """Add subject information to raw instance."""
     subject_info = dict()
     # subject ID
@@ -236,7 +241,7 @@ def _add_subject_info(raw):
 
 # -----------------------------------------------------------------------------
 @fill_doc
-def preprocess(fname):
+def preprocess(fname) -> Tuple[BaseRaw, ICA]:
     """Preprocess a raw .fif file.
 
     Parameters
@@ -273,7 +278,7 @@ def pipeline(
     fname,
     dir_in,
     dir_out,
-):
+) -> Tuple[bool, str]:
     """Preprocessing pipeline function called on every raw files.
 
     Add measurement information.
@@ -322,7 +327,9 @@ def pipeline(
         return (False, str(fname))
 
 
-def _create_output_fname(fname, dir_in, dir_out):
+def _create_output_fname(
+    fname: Path, dir_in: Path, dir_out: Path
+) -> Tuple[Path, Path]:
     """Creates the output file names based on the relative path between fname
     and input_dir_fif."""
     # this will fail if fname is not in input_dir_fif

@@ -1,7 +1,8 @@
 import numpy as np
+from matplotlib.axes import Axes
 
 
-def align_yaxis(ax1, ax2):
+def align_yaxis(ax1: Axes, ax2: Axes) -> None:
     """Align zeros of the two axes, zooming them out by same ratio"""
     axes = np.array([ax1, ax2])
     extrema = np.array([ax.get_ylim() for ax in axes])

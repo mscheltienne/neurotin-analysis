@@ -1,7 +1,10 @@
+from typing import List
+
 import mne
 import numpy as np
 import pyprep
 from autoreject import Ransac
+from mne.io import BaseRaw
 
 from ..config.events import EVENTS
 from ..utils._docs import fill_doc
@@ -14,7 +17,7 @@ else:
     assert 4 <= int(pyprep.__version__.split(".")[1])
 
 
-def _prepapre_raw(raw):
+def _prepapre_raw(raw: BaseRaw) -> BaseRaw:
     """
     Copy the raw instance and crops it based on the recording type:
         - Resting-State: Crop 2 minutes starting at the trigger.
@@ -63,7 +66,7 @@ def _prepapre_raw(raw):
 
 
 @fill_doc
-def RANSAC_bads_suggestion(raw):
+def RANSAC_bads_suggestion(raw: BaseRaw) -> List[str]:
     """
     Create fix length-epochs and apply a RANSAC algorithm to detect bad
     channels using autoreject.
@@ -88,7 +91,7 @@ def RANSAC_bads_suggestion(raw):
 
 
 @fill_doc
-def PREP_bads_suggestion(raw):
+def PREP_bads_suggestion(raw: BaseRaw) -> List[str]:
     """
     Apply the PREP pipeline to detect bad channels:
         - SNR

@@ -1,9 +1,12 @@
 from collections import Counter
+from typing import List, Optional, Tuple, Union
 
 import mne
 import numpy as np
+from mne import Annotations
 from mne.epochs import BaseEpochs
 from mne.io import BaseRaw
+from numpy.typing import NDArray
 
 from ..config.events import EVENTS, EVENTS_DURATION_MAPPING, EVENTS_MAPPING
 from ..utils._checks import _check_type, _check_value
@@ -11,7 +14,10 @@ from ..utils._docs import fill_doc
 
 
 # ----------------------------------------------------------------------------
-def find_event_channel(inst=None, ch_names=None):
+def find_event_channel(
+    inst: Optional[Union[BaseRaw, BaseEpochs, NDArray[float]]] = None,
+    ch_names: Optional[List[str]] = None,
+) -> Optional[int, List[int]]:
     """
     Find the event channel using heuristics.
 
@@ -24,10 +30,10 @@ def find_event_channel(inst=None, ch_names=None):
 
     Parameters
     ----------
-    inst : None | Raw | Epochs | `~numpy.array`
+    inst : Raw | Epochs | `~numpy.array` | None
         Data instance. If a `~numpy.array` is provided, the shape must be
         ``(n_channels, n_samples)``.
-    ch_names : None | list
+    ch_names : list | None
         Channels name list.
 
     Returns
@@ -91,7 +97,7 @@ def find_event_channel(inst=None, ch_names=None):
         return tchs
 
 
-def _search_in_ch_names(ch_names):
+def _search_in_ch_names(ch_names: List[str]) -> List[int]:
     """Search trigger channel by name in a list of valid names."""
     valid_trigger_ch_names = ["TRIGGER", "STI", "TRG", "CH_Event"]
 
@@ -108,7 +114,7 @@ def _search_in_ch_names(ch_names):
 
 # ----------------------------------------------------------------------------
 @fill_doc
-def add_annotations_from_events(raw):
+def add_annotations_from_events(raw: BaseRaw) -> Tuple[BaseRaw, Annotations]:
     """
     Add annotations from events to the raw instance.
 
@@ -139,7 +145,7 @@ def add_annotations_from_events(raw):
 
 
 @fill_doc
-def check_events(raw, recording_type):
+def check_events(raw: BaseRaw, recording_type: str) -> None:
     """
     Check that the recording has all the expected events.
 
@@ -176,7 +182,7 @@ def check_events(raw, recording_type):
     check_functions[recording_type](raw, events)
 
 
-def _check_events_calibration(raw, events):
+def _check_events_calibration(raw: BaseRaw, events: NDArray[int]) -> None:
     """
     Checks the event count and value in the calibration recordings.
     """
@@ -217,7 +223,7 @@ def _check_events_calibration(raw, events):
         replace_event_value(raw, events[2, 2], EVENTS["audio"])
 
 
-def _check_events_resting_state(raw, events):
+def _check_events_resting_state(raw: BaseRaw, events: NDArray[int]) -> None:
     """
     Checks the event count and value in the resting-state recordings.
     """
@@ -234,7 +240,7 @@ def _check_events_resting_state(raw, events):
         replace_event_value(raw, events[0, 2], EVENTS["resting-state"])
 
 
-def _check_events_neurofeedback(raw, events):
+def _check_events_neurofeedback(raw: BaseRaw, events: NDArray[int]) -> None:
     """
     Checks the event count and value in the neurofeedback recordings.
     """
@@ -268,7 +274,9 @@ def _check_events_neurofeedback(raw, events):
 
 
 @fill_doc
-def replace_event_value(raw, old_value, new_value):
+def replace_event_value(
+    raw: BaseRaw, old_value: int, new_value: int
+) -> BaseRaw:
     """
     Replace an event value on the trigger channel.
 
@@ -295,7 +303,9 @@ def replace_event_value(raw, old_value, new_value):
     return raw
 
 
-def _replace_event_values_arr(timearr, old_value, new_value):
+def _replace_event_values_arr(
+    timearr: NDArray[float], old_value: int, new_value: int
+) -> NDArray[int]:
     """
     Replace the values 'old_value' with 'new_value' for the array timearr.
     """
