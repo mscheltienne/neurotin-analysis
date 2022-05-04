@@ -19,8 +19,7 @@ from .filters import apply_filter_aux, apply_filter_eeg
 def prepare_raw(raw):
     """
     Prepare raw instance by checking events, adding events as annotations,
-    marking bad channels, add montage, applying FIR filters, and applying a
-    common average reference (CAR).
+    marking bad channels, add montage, applying FIR filters.
 
     The raw instance is modified in-place.
 
@@ -56,9 +55,6 @@ def prepare_raw(raw):
     raw.add_reference_channels(ref_channels="CPz")
     raw.set_montage("standard_1020")  # only after adding ref channel
 
-    # CAR
-    apply_filter_eeg(raw, car=True)
-
     return raw
 
 
@@ -66,8 +62,7 @@ def prepare_raw(raw):
 @fill_doc
 def remove_artifact_ic(raw, *, semiauto=False):
     """
-    Apply ICA to remove ocular and heartbeat artifacts from raw instance.
-
+    Apply ICA to remove artifact-related independent components.
     The raw instance is modified in-place.
 
     Parameters
@@ -80,7 +75,7 @@ def remove_artifact_ic(raw, *, semiauto=False):
     Returns
     -------
     %(raw)s
-    ica : ICA
+    %(ica)s
     eog_scores : Scores used for selection of the ocular component(s).
     ecg_scores : Scores used for selection of the heartbeat component(s).
     """
@@ -130,7 +125,7 @@ def fill_info(raw):
         and recording run.
         - device information with the type, model and serial.
         - experimenter name.
-        - measurement date (UTC)
+        - measurement date (UTC).
 
     The raw instance is modified in-place.
 
@@ -240,6 +235,40 @@ def _add_subject_info(raw):
 
 
 # -----------------------------------------------------------------------------
+@fill_doc
+def preprocess(fname):
+    """Preprocess a raw .fif file.
+
+    Parameters
+    ----------
+    fname : str
+        Path to the input file to the processing pipeline.
+
+    Returns
+    -------
+    %(raw)s
+    %(ica)s
+    """
+    # load
+    raw = read_raw_fif(fname)
+    # fill info
+    raw = fill_info(raw)
+    # prepare
+    raw = prepare_raw(raw)
+    assert len(raw.info["projs"]) == 0  # sanity-check
+    # ica
+    raw, ica, _, _ = remove_artifact_ic(raw)
+    # set CAR
+    raw.set_eeg_reference(
+        ref_channels="average", ch_type="eeg", projection=False
+    )
+    # interpolate bads
+    raw.interpolate_bads(reset_bads=True, mode="accurate")
+
+    return raw, ica
+
+
+# -----------------------------------------------------------------------------
 def pipeline(
     fname,
     dir_in,
@@ -278,21 +307,8 @@ def pipeline(
             fname, dir_in, dir_out
         )
 
-        # load
-        raw = read_raw_fif(fname)
-
-        # fill info
-        raw = fill_info(raw)
-
-        # prepare
-        raw = prepare_raw(raw)
-        assert len(raw.info["projs"]) == 0  # sanity-check
-
-        # ica
-        raw, ica, _, _ = remove_artifact_ic(raw)
-
-        # interpolate bads
-        raw.interpolate_bads(reset_bads=True, mode="accurate")
+        # preprocess
+        raw, ica = preprocess(fname)
 
         # export
         raw.save(output_fname_raw, fmt="double", overwrite=True)

@@ -66,6 +66,12 @@ docdict[
 ] = """
 notch : bool
     If True, a notch filter at (50, 100, 150) Hz  is applied."""
+docdict[
+    "ica"
+] = """
+ica : ICA
+    ICA decomposition using the Preconditioned ICA for Real Data algorithm
+    (PICARD)."""
 
 # ------------------------------------ psd -----------------------------------
 docdict[
