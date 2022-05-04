@@ -29,7 +29,7 @@ docdict[
     "session"
 ] = """
 session : int
-    ID of the session to include."""
+    ID of the session to include (between 1 and 15)."""
 docdict[
     "raw"
 ] = """
@@ -65,7 +65,8 @@ docdict[
     "notch"
 ] = """
 notch : bool
-    If True, a notch filter at (50, 100, 150) Hz  is applied."""
+    If True, a notch filter at (50, 100, 150) Hz  is applied, removing EU
+    powerline activity."""
 docdict[
     "ica"
 ] = """
@@ -107,7 +108,8 @@ docdict[
     "plt.figsize"
 ] = """
 figsize : tuple
-    2-sequence tuple defining the matplotlib figure size."""
+    2-sequence tuple defining the matplotlib figure size: (width, height) in
+    inches."""
 
 # ------------------------- Documentation functions --------------------------
 docdict_indented = dict()
