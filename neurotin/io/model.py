@@ -1,8 +1,11 @@
 import pickle
 from datetime import datetime
+from typing import Dict, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from mne.io import Info
+from numpy.typing import NDArray
 
 from ..utils._checks import (
     _check_participant,
@@ -14,7 +17,9 @@ from ..utils._docs import fill_doc
 
 
 @fill_doc
-def load_model(folder, participant, session, model_idx="auto"):
+def load_model(
+    folder, participant: int, session: int, model_idx: Union[int, str] = "auto"
+) -> Tuple[NDArray[float], Info, Dict[str, float], NDArray[float], int]:
     """
     Load a saved model for a given participant and session.
 
@@ -64,7 +69,7 @@ def load_model(folder, participant, session, model_idx="auto"):
     return weights, info, reject, reject_local, calib_idx
 
 
-def _check_model_idx(model_idx):
+def _check_model_idx(model_idx: Union[int, str]) -> Union[int, str]:
     """Check argument model_idx."""
     _check_type(model_idx, ("int", str), item_name="model_idx")
     if isinstance(model_idx, str):
@@ -95,7 +100,9 @@ def _read_logs(session_dir):
 
 
 @fill_doc
-def load_session_weights(folder, participant, session, replace_bad_with=0):
+def load_session_weights(
+    folder, participant: int, session: int, replace_bad_with=0
+):
     """Load the weights used during that session and return them as a
     Dataframe.
 

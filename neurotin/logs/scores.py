@@ -1,4 +1,4 @@
-from typing import Union
+from typing import List, Tuple, Union
 
 import pandas as pd
 import seaborn as sns
@@ -18,7 +18,7 @@ def boxplot_scores_evolution(
     participant: Union[int, list, tuple],
     scores: int = 10,
     swarmplot: bool = False,
-    figsize: tuple = (10, 5),
+    figsize: Tuple[float, float] = (10.0, 5.0),
 ):
     """The NFB scores displayed are logged in a .csv file with the syntax:
         [participant, session, model_idx, online_idx, transfer, scores [...]]
@@ -89,7 +89,7 @@ def boxplot_scores_between_participants(
     participants: Union[int, list, tuple],
     scores: int = 10,
     swarmplot: bool = False,
-    figsize: tuple = (10, 5),
+    figsize: Tuple[float, float] = (10.0, 5.0),
 ):
     """The NFB scores displayed are logged in a .csv file with the syntax:
         [participant, session, model_idx, online_idx, transfer, scores [...]]
@@ -157,7 +157,7 @@ def boxplot_scores_between_participants(
     return f, ax
 
 
-def _check_scores_idx(scores):
+def _check_scores_idx(scores: Union[int, list, tuple]) -> List[int]:
     """Checks that the scores passed are valid."""
     _check_type(scores, ("int", list, tuple), item_name="scores")
     if isinstance(scores, int):

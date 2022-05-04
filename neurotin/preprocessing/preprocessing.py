@@ -281,14 +281,12 @@ def pipeline(
 ) -> Tuple[bool, str]:
     """Preprocessing pipeline function called on every raw files.
 
-    Add measurement information.
-
     Parameters
     ----------
     fname : path-like
         Path to the input file to the processing pipeline.
     dir_in : path-like
-        Path to the folder containing the FIF files to process
+        Path to the folder containing the FIF files to process.
     dir_out : path-like
         Path to the folder containing the FIF files processed. The FIF files
         are saved under the same relative folder structure as in 'dir_in'.
@@ -298,7 +296,7 @@ def pipeline(
     success : bool
         False if a processing step raised an Exception.
     fname : str
-        Path to the input file to the processing pipeline.
+        Path to the input file provided to the processing function.
     """
     logger.info("Processing: %s", fname)
     try:

@@ -1,11 +1,12 @@
 from itertools import chain
-from typing import Union
+from typing import Dict, Optional, Tuple, Union
 
 import mne
 import numpy as np
 from autoreject import AutoReject, get_rejection_threshold
 from mne import BaseEpochs
 from mne.io import BaseRaw
+from numpy.typing import NDArray
 
 from ..config.events import (
     EVENTS,
@@ -19,8 +20,8 @@ from ..utils._docs import fill_doc
 
 @fill_doc
 def make_fixed_length_epochs(
-    raw, duration: Union[int, float] = 4.0, overlap: Union[int, float] = 3.0
-):
+    raw: BaseRaw, duration: float = 4.0, overlap: float = 3.0
+) -> BaseEpochs:
     """
     Create fixed length epochs for neurofeedback runs and aggregate epochs
     together from the same phase together.
@@ -98,7 +99,7 @@ def make_fixed_length_epochs(
     return epochs
 
 
-def make_epochs(raw):
+def make_epochs(raw: BaseRaw) -> Dict[str, BaseEpochs]:
     """
     Create epochs for regulation and non-regulation events. Regulation epochs
     last 16 seconds. Non-regulation epochs last 8 seconds. The first
@@ -140,7 +141,7 @@ def make_epochs(raw):
     return epochs
 
 
-def _load_events(raw):
+def _load_events(raw: BaseRaw) -> Tuple[NDArray[int], Dict[str, int]]:
     """
     Load events from raw instance and check if it is an online run.
     """
@@ -155,7 +156,9 @@ def _load_events(raw):
 
 
 @fill_doc
-def reject_epochs(epochs, reject=None):
+def reject_epochs(
+    epochs: BaseEpochs, reject: Optional[Union[Dict[str, float], str]] = None
+) -> Tuple[BaseEpochs, Optional[Dict[str, float]]]:
     """
     Reject bad epochs with a global rejection threshold.
 
@@ -187,7 +190,9 @@ def reject_epochs(epochs, reject=None):
     return epochs, reject
 
 
-def repair_epochs(epochs, thresh_method: str = "random_search"):
+def repair_epochs(
+    epochs: BaseEpochs, thresh_method: str = "random_search"
+) -> BaseEpochs:
     """
     Repair bad epochs using autoreject.
 

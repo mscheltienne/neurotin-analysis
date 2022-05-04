@@ -1,12 +1,12 @@
 import multiprocessing as mp
 import re
 import traceback
-from typing import Union
+from typing import Dict, Optional, Union
 
 import numpy as np
 import pandas as pd
-from mne import pick_types
-from mne.io import read_raw_fif
+from mne import BaseEpochs, pick_types
+from mne.io import BaseRaw, read_raw_fif
 from mne.time_frequency import psd_welch
 from scipy.integrate import simpson
 
@@ -27,11 +27,11 @@ from .epochs import make_fixed_length_epochs, reject_epochs
 def psd_avg_band(
     folder,
     participants: Union[int, list, tuple],
-    duration: Union[int, float],
-    overlap: Union[int, float],
-    reject,
-    fmin: Union[int, float],
-    fmax: Union[int, float],
+    duration: float,
+    overlap: float,
+    reject: Optional[Union[Dict[str, float], str]],
+    fmin: float,
+    fmax: float,
     average: str = "mean",
     n_jobs: int = 1,
 ):
@@ -114,7 +114,14 @@ def psd_avg_band(
 
 
 def _psd_avg_band(
-    participant, fname, duration, overlap, reject, fmin, fmax, average
+    participant,
+    fname,
+    duration: float,
+    overlap: float,
+    reject: Optional[Union[Dict[str, float], str]],
+    fmin: float,
+    fmax: float,
+    average: str,
 ):
     """
     Compute the PSD and average by frequency band for the given participants
@@ -156,7 +163,9 @@ def _psd_avg_band(
     return participant, session, run, psds_, ch_names
 
 
-def _psd_welch(raw, duration, overlap, reject, **kwargs):
+def _psd_welch(
+    raw: BaseRaw, duration: float, overlap: float, reject, **kwargs
+):
     """
     Compute the power spectral density on the regulation and non-regulation
     phase of the raw instance using welch method.
@@ -173,7 +182,7 @@ def _psd_welch(raw, duration, overlap, reject, **kwargs):
     return psds, freqs
 
 
-def _check_kwargs(kwargs, epochs):
+def _check_kwargs(kwargs: dict, epochs: BaseEpochs):
     """Check kwargs provided to _compute_psd_welch."""
     if "picks" not in kwargs:
         kwargs["picks"] = pick_types(epochs.info, eeg=True, exclude=[])
@@ -204,7 +213,13 @@ def _check_kwargs(kwargs, epochs):
 
 
 def _add_data_to_dict(
-    data_dict, participant, session, run, phase, data, ch_names
+    data_dict: dict,
+    participant: int,
+    session: int,
+    run: int,
+    phase: str,
+    data,
+    ch_names,
 ):
     """Add PSD to data dictionary."""
     keys = ["participant", "session", "run", "phase", "idx"] + ch_names

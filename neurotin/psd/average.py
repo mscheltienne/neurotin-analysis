@@ -6,7 +6,7 @@ from ..utils._docs import fill_doc
 
 
 @fill_doc
-def add_average_column(df, *, copy=False):
+def add_average_column(df, *, copy: bool = False):
     """
     Add a column averaging the power on all channels.
 
@@ -34,7 +34,7 @@ def add_average_column(df, *, copy=False):
 
 
 @fill_doc
-def remove_outliers(df, score=2.0, *, copy=False):
+def remove_outliers(df, score: float = 2.0, *, copy: bool = False):
     """
     Remove outliers from the average column.
 

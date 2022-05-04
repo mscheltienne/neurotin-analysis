@@ -11,7 +11,7 @@ from ..utils._docs import fill_doc
 # list. If 'all', the list becomes all columns. A single pipeline should exist
 # no matter the number of columns.
 @fill_doc
-def blocks_difference_between_consecutive_phases(df, column="avg"):
+def blocks_difference_between_consecutive_phases(df, column: str = "avg"):
     """
     Compute the difference between a column in a regulation phase and in the
     preceding non-regulation phase.

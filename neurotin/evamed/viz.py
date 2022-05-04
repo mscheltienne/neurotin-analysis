@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Tuple, Union
 
 import pandas as pd
 import seaborn as sns
@@ -9,7 +9,9 @@ from ..utils._docs import fill_doc
 
 
 @fill_doc
-def lineplot_evolution(df, name: str, figsize: tuple = (10, 5)):
+def lineplot_evolution(
+    df, name: str, figsize: Tuple[float, float] = (10.0, 5.0)
+):
     """Plot the evolution of clinical results from multiple participants and
     visits as lineplots with markers for the different visits.
 
@@ -78,7 +80,7 @@ def lineplot_evolution(df, name: str, figsize: tuple = (10, 5)):
 
 
 @fill_doc
-def boxplot_visits(df, name: str, figsize: tuple = (5, 5)):
+def boxplot_visits(df, name: str, figsize: Tuple[float, float] = (5.0, 5.0)):
     """Plot the comparison between different visits for a clinical outcome as
     boxplots.
 
@@ -106,7 +108,9 @@ def boxplot_visits(df, name: str, figsize: tuple = (5, 5)):
     return f, ax
 
 
-def barplot_difference_between_visits(df, name: str, figsize: tuple = (10, 5)):
+def barplot_difference_between_visits(
+    df, name: str, figsize: Tuple[float, float] = (10.0, 5.0)
+):
     """Plot the difference Baseline - Post-assessment for each participant
     as a bar plot.
 
@@ -168,7 +172,7 @@ def barplot_difference_between_visits(df, name: str, figsize: tuple = (10, 5)):
 def barplots_difference_between_visits(
     dfs: Union[list, tuple],
     names: Union[list, tuple],
-    figsize: tuple = (10, 5),
+    figsize: Tuple[float, float] = (10.0, 5.0),
 ):
     """Plot the difference Baseline - Post-assessment for each participant
     as a bar plot. One barplot is created for each dataframe in dfs.

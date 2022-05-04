@@ -126,6 +126,9 @@ def add_annotations_from_events(raw: BaseRaw) -> Tuple[BaseRaw, Annotations]:
     -------
     %(raw)s
     annotations : Annotations
+        Annotations obtained from the events on the 'TRIGGER' channel. The
+        annotations starts at the trigger onset and end after a fix duration,
+        specific to each event.
     """
     previous_annotations = raw.annotations
     tch = find_event_channel(inst=raw)
@@ -165,7 +168,7 @@ def check_events(raw: BaseRaw, recording_type: str) -> None:
     ----------
     %(raw)s
     recording_type : str
-        One of 'calibration', 'rs', 'online'.
+        Type of recording. Valid options are: 'calibration', 'rs', 'online'.
 
     Returns
     -------

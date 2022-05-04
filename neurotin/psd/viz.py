@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Tuple, Union
 
 import numpy as np
 import seaborn as sns
@@ -214,7 +214,10 @@ def plot_joint_clinical_nfb_performance(
 
 
 def plot_topomap_regulation(
-    df, participant, group_session: bool = False, figsize: tuple = (20, 4)
+    df,
+    participant,
+    group_session: bool = False,
+    figsize: Tuple[float, float] = (20.0, 4.0),
 ):
     """
     Plot 2 topographic maps from the differance observed between rest and

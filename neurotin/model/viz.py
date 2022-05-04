@@ -1,11 +1,14 @@
+from typing import Optional
+
 import mne
 import numpy as np
 import pandas as pd
+from mne.io import Info
 
 from ..utils._checks import _check_type
 
 
-def plot_topomap(weights, info=None, **kwargs):
+def plot_topomap(weights, info: Optional[Info] = None, **kwargs) -> None:
     """
     Plot the weights as a topographic map.
 
@@ -35,7 +38,7 @@ def plot_topomap(weights, info=None, **kwargs):
     mne.viz.plot_topomap(data, pos=info, **kwargs)
 
 
-def _check_info(info, n):
+def _check_info(info: Optional[Info], n: int) -> None:
     """Check that info is valid if weights is a numpy array."""
     if info is None:
         raise ValueError("Info must be provided if weights is a numpy array.")

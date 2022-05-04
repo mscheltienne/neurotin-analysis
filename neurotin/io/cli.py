@@ -16,7 +16,7 @@ def write_results(results, results_file):
     Parameters
     ----------
     results : list of tuples
-        (bool, str, ...) containing the results from the _pipeline functions.
+        (bool, str, ...) containing the results from the pipeline functions.
     results_file : path-like
         Path to the .pcl file where the results are pickled. The datetime is
         appended to the file name stem.
@@ -41,7 +41,9 @@ def write_results(results, results_file):
         pickle.dump(results, f, -1)
 
 
-def read_results(results_file, *, success_only=False, failure_only=False):
+def read_results(
+    results_file, *, success_only: bool = False, failure_only: bool = False
+):
     """
     Read results from CLI call. Each result in the list of results starts with
     (bool, str, ...). The bool in position 0 is set to False when an error was
@@ -60,7 +62,7 @@ def read_results(results_file, *, success_only=False, failure_only=False):
     Returns
     -------
     results : list of tuples
-        (bool, str, ...) containing the results from the _pipeline functions.
+        (bool, str, ...) containing the results from the pipeline functions.
     date : datetime
         Date and time (hour) at which the results file has been pickled.
     """
