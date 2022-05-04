@@ -246,7 +246,7 @@ def preprocess(fname) -> Tuple[BaseRaw, ICA]:
 
     Parameters
     ----------
-    fname : str
+    fname : path-like
         Path to the input file to the processing pipeline.
 
     Returns
@@ -285,7 +285,7 @@ def pipeline(
 
     Parameters
     ----------
-    fname : str
+    fname : path-like
         Path to the input file to the processing pipeline.
     dir_in : path-like
         Path to the folder containing the FIF files to process
@@ -300,7 +300,7 @@ def pipeline(
     fname : str
         Path to the input file to the processing pipeline.
     """
-    logger.info("Processing: %s" % fname)
+    logger.info("Processing: %s", fname)
     try:
         # checks paths
         fname = _check_path(fname, item_name="fname", must_exist=True)
@@ -322,7 +322,7 @@ def pipeline(
         return (True, str(fname))
 
     except Exception:
-        logger.warning("FAILED: %s -> Skip." % fname)
+        logger.warning("FAILED: %s -> Skip.", fname)
         logger.warning(traceback.format_exc())
         return (False, str(fname))
 
