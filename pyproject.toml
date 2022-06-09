@@ -36,6 +36,14 @@ classifiers = [
 ]
 dependencies = [
     'numpy',
+    'scipy',
+    'mne',
+    'pandas',
+    'matplotlib',
+    'seaborn',
+    'autoreject',
+    'python-picard',
+    'pyprep',
 ]
 
 [project.optional-dependencies]
