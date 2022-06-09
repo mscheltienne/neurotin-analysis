@@ -5,19 +5,19 @@ import multiprocessing as mp
 import operator
 import os
 from pathlib import Path
+from typing import Any, Optional, Union
 
 import numpy as np
 
 from .. import logger
 
 
-def _ensure_int(item, item_name=None):
-    """
-    Ensure a variable is an integer.
+def _ensure_int(item: Any, item_name: Optional[str] = None) -> int:
+    """Ensure a variable is an integer.
 
     Parameters
     ----------
-    item : object
+    item : Any
         Item to check.
     item_name : str | None
         Name of the item to show inside the error message.
@@ -69,9 +69,10 @@ _types = {
 }
 
 
-def _check_type(item, types, item_name=None):
-    """
-    Check that item is an instance of types.
+def _check_type(
+    item: Any, types: tuple, item_name: Optional[str] = None
+) -> Any:
+    """Check that item is an instance of types.
 
     Parameters
     ----------
@@ -126,9 +127,13 @@ def _check_type(item, types, item_name=None):
     return item
 
 
-def _check_value(item, allowed_values, item_name=None, extra=None):
-    """
-    Check the value of a parameter against a list of valid options.
+def _check_value(
+    item: Any,
+    allowed_values: tuple,
+    item_name: Optional[str] = None,
+    extra: Optional[str] = None,
+) -> Any:
+    """Check the value of a parameter against a list of valid options.
 
     Parameters
     ----------
@@ -175,9 +180,13 @@ def _check_value(item, allowed_values, item_name=None, extra=None):
     return item
 
 
-def _check_verbose(verbose):
-    """
-    Check that the value of verbose is valid.
+def _check_verbose(verbose: Union[bool, str, int, None]) -> int:
+    """Check that the value of verbose is valid.
+
+    Returns
+    -------
+    verbose : int
+        The verbosity level as an integer.
     """
     logging_types = dict(
         DEBUG=logging.DEBUG,
@@ -187,19 +196,25 @@ def _check_verbose(verbose):
         CRITICAL=logging.CRITICAL,
     )
 
-    _check_type(verbose, (bool, str, int, None), item_name="verbose")
+    _check_type(verbose, (bool, str, "int", None), item_name="verbose")
 
     if verbose is None:
-        verbose = "INFO"
+        verbose = logging.WARNING
     elif isinstance(verbose, str):
         verbose = verbose.upper()
         _check_value(verbose, logging_types, item_name="verbose")
         verbose = logging_types[verbose]
     elif isinstance(verbose, bool):
         if verbose:
-            verbose = "INFO"
+            verbose = logging.INFO
         else:
-            verbose = "WARNING"
+            verbose = logging.WARNING
+    elif isinstance(verbose, int):
+        if verbose <= 0:
+            raise ValueError(
+                "Argument 'verbose' can not be a negative integer, "
+                f"{verbose} is invalid."
+            )
 
     return verbose
 
