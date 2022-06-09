@@ -7,7 +7,6 @@ Inspired from mne.utils.docs.py by Eric Larson <larson.eric.d@gmail.com>
 import sys
 from typing import Callable, List
 
-
 # ------------------------- Documentation dictionary -------------------------
 docdict = dict()
 

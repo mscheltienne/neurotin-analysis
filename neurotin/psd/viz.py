@@ -220,7 +220,7 @@ def plot_topomap_regulation(
     figsize: Tuple[float, float] = (20.0, 4.0),
 ):
     """
-    Plot 2 topographic maps from the differance observed between rest and
+    Plot 2 topographic maps from the difference observed between rest and
     regulation phases: one for areas up-regulated and one for areas
     down-regulated.
     """
@@ -247,7 +247,7 @@ def plot_topomap_regulation(
         for idx in neg:
             downreg[session][idx[1]] += data[idx[0], idx[1]]
 
-    # crate mne info
+    # create mne info
     info = create_info([elt.split("-")[0] for elt in electrodes], 1, "eeg")
     info.set_montage("standard_1020")
 
