@@ -7,6 +7,7 @@ from typing import Tuple
 import mne
 from mne.io import BaseRaw
 from mne.preprocessing import ICA
+from mne_icalabel import label_components
 
 from .. import logger
 from ..io import read_raw_fif
@@ -22,8 +23,8 @@ from .filters import apply_filter_aux, apply_filter_eeg
 def prepare_raw(raw: BaseRaw) -> BaseRaw:
     """Prepare raw instance.
 
-    This function checks events, add events as annotations,
-    mark bad channels, add montage, and apply FIR filters.
+    This function checks events, adds events as annotations, marks bad
+    channels, adds montage, and applies FIR filters and CAR.
 
     The raw instance is modified in-place.
 
@@ -49,15 +50,18 @@ def prepare_raw(raw: BaseRaw) -> BaseRaw:
 
     # Filter
     apply_filter_aux(raw, bandpass=(1.0, 40.0), notch=True)
-    apply_filter_eeg(raw, bandpass=(1.0, 40.0))
+    apply_filter_eeg(raw, bandpass=(1.0, 100.0))
 
     # Mark bad channels
-    bads = PREP_bads_suggestion(raw)  # operates on a copy and applies notch
+    bads = PREP_bads_suggestion(raw)  # operates on a copy and applies filters
     raw.info["bads"] = bads
 
     # Add montage
     raw.add_reference_channels(ref_channels="CPz")
     raw.set_montage("standard_1020")  # only after adding ref channel
+
+    # Apply CAR
+    apply_filter_eeg(raw, car=True)
 
     return raw
 
@@ -83,41 +87,27 @@ def remove_artifact_ic(raw: BaseRaw, *, semiauto: bool = False) -> BaseRaw:
     eog_scores : Scores used for selection of the ocular component(s).
     ecg_scores : Scores used for selection of the heartbeat component(s).
     """
-    ica = mne.preprocessing.ICA(method="picard", max_iter="auto")
-
-    # fit ICA
     picks = mne.pick_types(raw.info, eeg=True, exclude="bads")
+    ica = mne.preprocessing.ICA(
+        n_components=picks.size - 1,
+        method="picard",
+        max_iter="auto",
+        fit_params=dict(ortho=False, extended=True),
+    )
     ica.fit(raw, picks=picks)
 
-    # select components
-    raw_ = raw.copy().pick_types(eeg=True, eog=True, ecg=True, exclude="bads")
-    eog_idx, eog_scores = ica.find_bads_eog(
-        raw_, threshold=4.8, measure="zscore"
-    )
-    ecg_idx, ecg_scores = ica.find_bads_ecg(
-        raw_, method="correlation", threshold=0.7, measure="correlation"
-    )
+    # run iclabel
+    component_dict = label_components(raw, ica, method="iclabel")
+
+    # keep only brain components
+    labels = component_dict["labels"]
+    exclude = [k for k, name in enumerate(labels) if name != "brain"]
 
     # apply ICA
-    ica.exclude = eog_idx + ecg_idx
-
-    try:
-        assert len(eog_idx) <= 2, "More than 2 EOG component detected."
-        assert len(ecg_idx) <= 1, "More than 1 ECG component detected."
-        assert len(ica.exclude) != 0, "No EOG / ECG component detected."
-    except AssertionError:
-        if semiauto:
-            ica.plot_scores(eog_scores)
-            ica.plot_scores(ecg_scores)
-            ica.plot_components(inst=raw_)
-            ica.plot_sources(raw_, block=True)
-        else:
-            raise
-
+    ica.exclude = exclude
     ica.apply(raw)
 
-    # Scores should not be returned when #9846 is fixed.
-    return raw, ica, eog_scores, ecg_scores
+    return raw, ica
 
 
 # -----------------------------------------------------------------------------
@@ -257,6 +247,8 @@ def preprocess(fname) -> Tuple[BaseRaw, ICA]:
     Returns
     -------
     %(raw)s
+    raw_pre_ica : Raw
+        Raw instance used to fit the ICA.
     %(ica)s
     """
     # load
@@ -267,15 +259,14 @@ def preprocess(fname) -> Tuple[BaseRaw, ICA]:
     raw = prepare_raw(raw)
     assert len(raw.info["projs"]) == 0  # sanity-check
     # ica
-    raw, ica, _, _ = remove_artifact_ic(raw)
-    # set CAR
-    raw.set_eeg_reference(
-        ref_channels="average", ch_type="eeg", projection=False
-    )
+    raw_pre_ica = raw.copy()
+    raw, ica = remove_artifact_ic(raw)
+    # refilter
+    apply_filter_eeg(raw, bandpass=(1.0, 40.0))
     # interpolate bads
     raw.interpolate_bads(reset_bads=True, mode="accurate")
 
-    return raw, ica
+    return raw, raw_pre_ica, ica
 
 
 # -----------------------------------------------------------------------------

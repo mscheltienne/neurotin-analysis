@@ -44,6 +44,7 @@ dependencies = [
     'autoreject',
     'python-picard',
     'pyprep',
+    'mne-icalabel>=0.2',
 ]
 
 [project.optional-dependencies]

@@ -28,7 +28,7 @@ def _prepapre_raw(raw: BaseRaw) -> BaseRaw:
     Set the montage as 'standard_1020'. The reference 'CPz' is not added.
     """
     raw = raw.copy()
-    apply_filter_eeg(raw, notch=True)
+    apply_filter_eeg(raw, bandpass=(1.0, 40.0), notch=True)
     events = mne.find_events(raw, stim_channel="TRIGGER")
     unique_events = list(set(event[2] for event in events))
 
