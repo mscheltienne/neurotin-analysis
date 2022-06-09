@@ -220,7 +220,7 @@ def _check_verbose(verbose: Union[bool, str, int, None]) -> int:
 
 
 def _check_n_jobs(n_jobs):
-    """Checks that the number of jobs is valid.
+    """Check that the number of jobs is valid.
 
     Notes
     -----
@@ -239,7 +239,7 @@ def _check_n_jobs(n_jobs):
 
 
 def _check_path(item, item_name=None, must_exist=False):
-    """Check if path is a valid and return it as pathlib.Path instance."""
+    """Check if path is valid and return it as pathlib.Path instance."""
     _check_type(item, ("path-like",), item_name=item_name)
     item = Path(item)
     logger.debug("Checking path '%s'.", item)
@@ -249,14 +249,14 @@ def _check_path(item, item_name=None, must_exist=False):
 
 
 def _check_participant(participant):
-    """Checks that the participant ID is valid."""
+    """Check that the participant ID is valid."""
     _check_type(participant, ("int",), item_name="participant")
     assert 0 < participant
     return participant
 
 
 def _check_participants(participants):
-    """Checks that the participant IDs are valid and return them as a list."""
+    """Check that the participant IDs are valid and return them as a list."""
     _check_type(participants, ("int", list, tuple), item_name="participants")
     if isinstance(participants, int):
         participants = [participants]
@@ -268,7 +268,7 @@ def _check_participants(participants):
 
 
 def _check_session(session):
-    """Checks that the session ID is valid."""
+    """Check that the session ID is valid."""
     _check_type(session, ("int",), item_name="session")
     assert 1 <= session <= 15
     return session

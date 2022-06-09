@@ -35,9 +35,10 @@ def psd_avg_band(
     average: str = "mean",
     n_jobs: int = 1,
 ):
-    """
-    Compute the PSD and average by frequency band for the given participants
-    using the welch method.
+    """Compute the PSD.
+
+    Average by frequency band for the given participants using the welch
+    method.
 
     Parameters
     ----------
@@ -123,9 +124,10 @@ def _psd_avg_band(
     fmax: float,
     average: str,
 ):
-    """
-    Compute the PSD and average by frequency band for the given participants
-    using the welch method.
+    """Compute the PSD.
+
+    Average by frequency band for the given participants using the welch
+    method.
     """
     logger.info("Processing: %s" % fname)
     try:
@@ -166,10 +168,7 @@ def _psd_avg_band(
 def _psd_welch(
     raw: BaseRaw, duration: float, overlap: float, reject, **kwargs
 ):
-    """
-    Compute the power spectral density on the regulation and non-regulation
-    phase of the raw instance using welch method.
-    """
+    """Compute the power spectral density using the welch method."""
     epochs = make_fixed_length_epochs(raw, duration, overlap)
     kwargs = _check_kwargs(kwargs, epochs)
     epochs, reject = reject_epochs(epochs, reject)

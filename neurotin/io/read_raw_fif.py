@@ -6,9 +6,10 @@ from ..utils._docs import fill_doc
 
 @fill_doc
 def read_raw_fif(fname):
-    """
-    Load a RAW instance from a .fif file. Renames the EEG channels to match the
-    standard 10/20 convention and rename the AUX channels to ECG and EOG.
+    """Load a RAW instance from a .fif file.
+
+    Renames the EEG channels to match the standard 10/20 convention and rename
+    the AUX channels to ECG and EOG.
 
     Parameters
     ----------

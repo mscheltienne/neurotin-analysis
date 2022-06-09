@@ -22,9 +22,9 @@ from ..utils._docs import fill_doc
 def make_fixed_length_epochs(
     raw: BaseRaw, duration: float = 4.0, overlap: float = 3.0
 ) -> BaseEpochs:
-    """
-    Create fixed length epochs for neurofeedback runs and aggregate epochs
-    together from the same phase together.
+    """Create fixed length epochs for neurofeedback runs.
+
+    Aggregate epochs  from the same phase together.
         non-regulation-0:   60
         regulation-0:       50
         non-regulation-1:   61
@@ -100,10 +100,10 @@ def make_fixed_length_epochs(
 
 
 def make_epochs(raw: BaseRaw) -> Dict[str, BaseEpochs]:
-    """
-    Create epochs for regulation and non-regulation events. Regulation epochs
-    last 16 seconds. Non-regulation epochs last 8 seconds. The first
-    non-regulation epoch is cropped around its last 8 seconds.
+    """Create epochs for regulation and non-regulation events.
+
+    Regulation epochs last 16 seconds. Non-regulation epochs last 8 seconds.
+    The first non-regulation epoch is cropped around its last 8 seconds.
 
     Parameters
     ----------
@@ -142,9 +142,7 @@ def make_epochs(raw: BaseRaw) -> Dict[str, BaseEpochs]:
 
 
 def _load_events(raw: BaseRaw) -> Tuple[NDArray[int], Dict[str, int]]:
-    """
-    Load events from raw instance and check if it is an online run.
-    """
+    """Load events from raw instance and check if it is an online run."""
     events = mne.find_events(raw, stim_channel="TRIGGER")
     assert events.shape == (20, 3)
     unique_events = set(ev[2] for ev in events)
@@ -159,8 +157,7 @@ def _load_events(raw: BaseRaw) -> Tuple[NDArray[int], Dict[str, int]]:
 def reject_epochs(
     epochs: BaseEpochs, reject: Optional[Union[Dict[str, float], str]] = None
 ) -> Tuple[BaseEpochs, Optional[Dict[str, float]]]:
-    """
-    Reject bad epochs with a global rejection threshold.
+    """Reject bad epochs with a global rejection threshold.
 
     Parameters
     ----------
@@ -193,8 +190,7 @@ def reject_epochs(
 def repair_epochs(
     epochs: BaseEpochs, thresh_method: str = "random_search"
 ) -> BaseEpochs:
-    """
-    Repair bad epochs using autoreject.
+    """Repair bad epochs using autoreject.
 
     Parameters
     ----------

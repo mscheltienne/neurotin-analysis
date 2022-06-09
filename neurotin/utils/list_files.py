@@ -7,8 +7,7 @@ from ._checks import (
 
 
 def list_raw_fif(directory, *, exclude=None):
-    """
-    List all raw fif files in directory and its sub-directories.
+    """List all raw fif files in directory and its sub-directories.
 
     Parameters
     ----------
@@ -31,8 +30,7 @@ def list_raw_fif(directory, *, exclude=None):
 
 
 def list_ica_fif(directory, *, exclude=None):
-    """
-    List all ICA fif files in directory and its subdirectories.
+    """List all ICA fif files in directory and its subdirectories.
 
     Parameters
     ----------
@@ -55,8 +53,7 @@ def list_ica_fif(directory, *, exclude=None):
 
 
 def _list_fif(directory, exclude, endswith):
-    """Recursive function listing fif files in directory and its
-    subdirectories."""
+    """Recursive function listing fif files in directory and subdirectories."""
     fifs = list()
     for elt in directory.iterdir():
         if elt.is_dir():
@@ -75,8 +72,9 @@ def raw_fif_selection(
     fname=None,
     ignore_existing: bool = True,
 ):
-    """List raw fif file to process. The list of files can be filtered by
-    participant / session / fname.
+    """List raw fif file to process.
+
+    The list of files can be filtered by participant / session / fname.
 
     Parameters
     ----------
@@ -141,7 +139,7 @@ def raw_fif_selection(
 
 
 def _check_fname(fname, folder):
-    """Checks that the fname is valid and present in folder."""
+    """Check that the fname is valid and present in folder."""
     if fname is None:
         return fname
     fname = _check_path(fname, must_exist=True)

@@ -1,6 +1,5 @@
-"""
-NeuroTin's logger.
-"""
+"""NeuroTin's logger."""
+
 import logging
 import sys
 
@@ -9,8 +8,9 @@ logger.propagate = False  # don't propagate (in case of multiple imports)
 
 
 def init_logger(verbosity="INFO"):
-    """
-    Initialize a logger. Assign sys.stdout as a handler of the logger.
+    """Initialize a logger.
+
+    Assign sys.stdout as a handler of the logger.
 
     Parameters
     ----------
@@ -22,9 +22,7 @@ def init_logger(verbosity="INFO"):
 
 
 def add_stream_handler(stream, verbosity="INFO"):
-    """
-    Add a handler to the logger. The handler redirects the logger output to
-    the stream.
+    """Add a stream handler to the logger.
 
     Parameters
     ----------
@@ -39,8 +37,7 @@ def add_stream_handler(stream, verbosity="INFO"):
 
 
 def add_file_handler(fname, mode="a", verbosity="INFO"):
-    """
-    Add a file handler to the logger. The handler saves the logs to file.
+    """Add a file handler to the logger.
 
     Parameters
     ----------
@@ -57,8 +54,8 @@ def add_file_handler(fname, mode="a", verbosity="INFO"):
 
 
 def set_handler_log_level(verbosity, handler_id=0):
-    """
-    Set the log level for a specific handler.
+    """Set the log level for a specific handler.
+
     First handler (ID 0) is always stdout, followed by user-defined handlers.
 
     Parameters
@@ -72,8 +69,7 @@ def set_handler_log_level(verbosity, handler_id=0):
 
 
 def set_log_level(verbosity):
-    """
-    Set the log level for the logger.
+    """Set the log level for the logger.
 
     Parameters
     ----------
@@ -84,9 +80,7 @@ def set_log_level(verbosity):
 
 
 class LoggerFormatter(logging.Formatter):
-    """
-    Format string Syntax for logger.
-    """
+    """Format string Syntax for logger."""
 
     # Format string syntax for the different Log levels
     _formatters = dict()

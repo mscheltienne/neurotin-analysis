@@ -13,25 +13,21 @@ from neurotin.utils.list_files import raw_fif_selection
 
 
 def run():
-    """Entrypoint for neurotin.preprocessing.pipeline"""
+    """Entrypoint for 'neurotin.preprocessing.pipeline'."""
     parser = argparse.ArgumentParser(
         prog="NeuroTin", description="NeuroTin auto-preprocessing pipeline."
     )
-
     parser.add_argument(
         "dir_in",
         type=str,
         help="folder where FIF files to process are stored.",
     )
-
     parser.add_argument(
         "dir_out", type=str, help="folder where processed FIF files are saved."
     )
-
     parser.add_argument(
         "--n_jobs", type=int, metavar="int", help=helpdict["n_jobs"], default=1
     )
-
     parser.add_argument(
         "--participant",
         type=int,
@@ -39,7 +35,6 @@ def run():
         help="restrict processing to files with this participant ID.",
         default=None,
     )
-
     parser.add_argument(
         "--session",
         type=int,
@@ -47,7 +42,6 @@ def run():
         help="restrict processing to files with this session ID.",
         default=None,
     )
-
     parser.add_argument(
         "--fname",
         type=str,
@@ -55,13 +49,11 @@ def run():
         help="restrict processing to this file.",
         default=None,
     )
-
     parser.add_argument(
         "--ignore_existing",
         action="store_true",
         help="ignore files already processed and saved in dir_out.",
     )
-
     parser.add_argument(
         "--loglevel",
         type=str,
@@ -69,7 +61,6 @@ def run():
         help=helpdict["loglevel"],
         default="info",
     )
-
     parser.add_argument(
         "--loglevel_mne",
         type=str,

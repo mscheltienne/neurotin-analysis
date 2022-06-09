@@ -18,11 +18,13 @@ else:
 
 
 def _prepapre_raw(raw: BaseRaw) -> BaseRaw:
-    """
-    Copy the raw instance and crops it based on the recording type:
+    """Copy the raw instance and crops it based on the recording type.
+
+    The cropping rules are:
         - Resting-State: Crop 2 minutes starting at the trigger.
         - Calibration: Crop from the first rest phase to the last stimuli.
         - Online: Crop from the first non-regulation to the last regulation.
+
     Set the montage as 'standard_1020'. The reference 'CPz' is not added.
     """
     raw = raw.copy()
@@ -67,9 +69,7 @@ def _prepapre_raw(raw: BaseRaw) -> BaseRaw:
 
 @fill_doc
 def RANSAC_bads_suggestion(raw: BaseRaw) -> List[str]:
-    """
-    Create fix length-epochs and apply a RANSAC algorithm to detect bad
-    channels using autoreject.
+    """Aapply a RANSAC algorithm to detect bad channels using autoreject.
 
     Parameters
     ----------
@@ -92,8 +92,9 @@ def RANSAC_bads_suggestion(raw: BaseRaw) -> List[str]:
 
 @fill_doc
 def PREP_bads_suggestion(raw: BaseRaw) -> List[str]:
-    """
-    Apply the PREP pipeline to detect bad channels:
+    """Apply the PREP pipeline to detect bad channels.
+
+    The PREP pipeline uses:
         - SNR
         - Correlation
         - Deviation

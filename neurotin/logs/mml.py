@@ -9,7 +9,13 @@ from ..utils._docs import fill_doc
 
 @fill_doc
 def lineplot_mml_evolution(csv, participants, figsize=(10, 5)):
-    """Minimum Masking Level test are logged in a .csv file with the syntax:
+    """Plot the MML results as lineplot.
+
+    X: Session
+    Y: MML
+    Hue: Participant
+
+    Minimum Masking Level test are logged in a .csv file with the syntax:
         [participant, session, MML volume]
     The evolution of the minimum masking level during the 15 sessions is
     plotted for each participant as a lineplot.

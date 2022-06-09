@@ -12,8 +12,11 @@ from ..utils._docs import fill_doc
 def lineplot_evolution(
     df, name: str, figsize: Tuple[float, float] = (10.0, 5.0)
 ):
-    """Plot the evolution of clinical results from multiple participants and
-    visits as lineplots with markers for the different visits.
+    """Plot the evolution of clinical outcomes as lineplots.
+
+    Level: Subject
+    X: Date (corresponds to the different vists as markers)
+    Y: Clinical outcome, e.g. THI score.
 
     Parameters
     ----------
@@ -81,8 +84,11 @@ def lineplot_evolution(
 
 @fill_doc
 def boxplot_visits(df, name: str, figsize: Tuple[float, float] = (5.0, 5.0)):
-    """Plot the comparison between different visits for a clinical outcome as
-    boxplots.
+    """Plot the evolution of clinical outcome across visits as boxplots.
+
+    Level: Group
+    X: Visit
+    Y: Clinical outcome
 
     Parameters
     ----------
@@ -111,8 +117,10 @@ def boxplot_visits(df, name: str, figsize: Tuple[float, float] = (5.0, 5.0)):
 def barplot_difference_between_visits(
     df, name: str, figsize: Tuple[float, float] = (10.0, 5.0)
 ):
-    """Plot the difference Baseline - Post-assessment for each participant
-    as a bar plot.
+    """Plot the difference Baseline - Post-assessment for a clinical outcome.
+
+    X: Participant
+    Y: Delta baseline/post-assessment for the clinical outcome
 
     Parameters
     ----------
@@ -174,8 +182,12 @@ def barplots_difference_between_visits(
     names: Union[list, tuple],
     figsize: Tuple[float, float] = (10.0, 5.0),
 ):
-    """Plot the difference Baseline - Post-assessment for each participant
-    as a bar plot. One barplot is created for each dataframe in dfs.
+    """Plot the difference Baseline - Post-assessment for a clinical outcome.
+
+    X: Participant
+    Y: Delta baseline/post-assessment for the clinical outcome
+    One barplot is created for each dataframe in dfs, e.g. one for THI, one for
+    STAI, ...
 
     Parameters
     ----------

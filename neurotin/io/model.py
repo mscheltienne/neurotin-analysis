@@ -20,8 +20,7 @@ from ..utils._docs import fill_doc
 def load_model(
     folder, participant: int, session: int, model_idx: Union[int, str] = "auto"
 ) -> Tuple[NDArray[float], Info, Dict[str, float], NDArray[float], int]:
-    """
-    Load a saved model for a given participant and session.
+    """Load a saved model for a given participant and session.
 
     Parameters
     ----------
@@ -103,8 +102,7 @@ def _read_logs(session_dir):
 def load_session_weights(
     folder, participant: int, session: int, replace_bad_with=0
 ):
-    """Load the weights used during that session and return them as a
-    Dataframe.
+    """Load the weights used during a session and return them as a Dataframe.
 
     Parameters
     ----------

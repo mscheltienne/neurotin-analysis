@@ -6,9 +6,7 @@ from .average import add_average_column
 
 @fill_doc
 def ratio(df_alpha, df_delta):
-    """
-    Compute the ratio of alpha/delta band power for all participant/session/run
-    /phase/idx.
+    """Compute the ratio of alpha/delta band power.
 
     Parameters
     ----------

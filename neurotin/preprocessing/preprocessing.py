@@ -20,9 +20,10 @@ from .filters import apply_filter_aux, apply_filter_eeg
 # -----------------------------------------------------------------------------
 @fill_doc
 def prepare_raw(raw: BaseRaw) -> BaseRaw:
-    """
-    Prepare raw instance by checking events, adding events as annotations,
-    marking bad channels, add montage, applying FIR filters.
+    """Prepare raw instance.
+
+    This function checks events, add events as annotations,
+    mark bad channels, add montage, and apply FIR filters.
 
     The raw instance is modified in-place.
 
@@ -64,8 +65,8 @@ def prepare_raw(raw: BaseRaw) -> BaseRaw:
 # -----------------------------------------------------------------------------
 @fill_doc
 def remove_artifact_ic(raw: BaseRaw, *, semiauto: bool = False) -> BaseRaw:
-    """
-    Apply ICA to remove artifact-related independent components.
+    """Apply ICA to remove artifact-related independent components.
+
     The raw instance is modified in-place.
 
     Parameters
@@ -122,8 +123,9 @@ def remove_artifact_ic(raw: BaseRaw, *, semiauto: bool = False) -> BaseRaw:
 # -----------------------------------------------------------------------------
 @fill_doc
 def fill_info(raw: BaseRaw) -> BaseRaw:
-    """
-    Fill the measurement info with:
+    """Fill the measurement info.
+
+    The filled entries are:
         - a description including the subject ID, session ID, recording type
         and recording run.
         - device information with the type, model and serial.
@@ -156,8 +158,11 @@ def fill_info(raw: BaseRaw) -> BaseRaw:
 
 
 def _add_description(raw: BaseRaw) -> None:
-    """Add a description including the subject ID, session ID, recording type
-    and recording run."""
+    """Add a description.
+
+    The description includes the subject ID, session ID, recording type
+    and recording run.
+    """
     fname = Path(raw.filenames[0])
     subject = int(fname.parent.parent.parent.name)
     session = int(fname.parent.parent.name.split()[-1])
@@ -328,8 +333,11 @@ def pipeline(
 def _create_output_fname(
     fname: Path, dir_in: Path, dir_out: Path
 ) -> Tuple[Path, Path]:
-    """Creates the output file names based on the relative path between fname
-    and input_dir_fif."""
+    """Create the output file names.
+
+    The output file names is based on the relative path between fname
+    and input_dir_fif.
+    """
     # this will fail if fname is not in input_dir_fif
     relative_fname = fname.relative_to(dir_in)
     # create output fname

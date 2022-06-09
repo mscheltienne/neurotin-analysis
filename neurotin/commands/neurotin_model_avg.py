@@ -10,20 +10,17 @@ from neurotin.utils._checks import _check_path
 
 
 def run():
-    """Entrypoint for neurotin.model.compute_average"""
+    """Entrypoint for 'neurotin.model.compute_average'."""
     parser = argparse.ArgumentParser(
         prog="NeuroTin",
         description="Compute average model from online recordings.",
     )
-
     parser.add_argument(
         "dir_in", type=str, help="folder where raw data and models are stored."
     )
-
     parser.add_argument(
         "df_fname", type=str, help="path where the dataframe is pickled."
     )
-
     parser.add_argument(
         "-p",
         "--participants",
@@ -31,7 +28,6 @@ def run():
         nargs="+",
         required=False,
     )
-
     parser.add_argument(
         "--loglevel",
         type=str,

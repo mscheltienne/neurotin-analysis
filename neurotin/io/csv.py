@@ -2,8 +2,7 @@ import pandas as pd
 
 
 def read_csv_evamed(csv):
-    """
-    Read the CSV file retrieved from evamed.
+    """Read the CSV file retrieved from evamed.
 
     Parameters
     ----------

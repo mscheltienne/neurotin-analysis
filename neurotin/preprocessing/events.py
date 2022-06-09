@@ -18,8 +18,7 @@ def find_event_channel(
     inst: Optional[Union[BaseRaw, BaseEpochs, NDArray[float]]] = None,
     ch_names: Optional[List[str]] = None,
 ) -> Optional[int, List[int]]:
-    """
-    Find the event channel using heuristics.
+    """Find the event channel using heuristics.
 
     .. warning::
 
@@ -115,8 +114,7 @@ def _search_in_ch_names(ch_names: List[str]) -> List[int]:
 # ----------------------------------------------------------------------------
 @fill_doc
 def add_annotations_from_events(raw: BaseRaw) -> Tuple[BaseRaw, Annotations]:
-    """
-    Add annotations from events to the raw instance.
+    """Add annotations from events to the raw instance.
 
     Parameters
     ----------
@@ -149,8 +147,7 @@ def add_annotations_from_events(raw: BaseRaw) -> Tuple[BaseRaw, Annotations]:
 
 @fill_doc
 def check_events(raw: BaseRaw, recording_type: str) -> None:
-    """
-    Check that the recording has all the expected events.
+    """Check that the recording has all the expected events.
 
     Calibration:
         1 x blink
@@ -186,9 +183,7 @@ def check_events(raw: BaseRaw, recording_type: str) -> None:
 
 
 def _check_events_calibration(raw: BaseRaw, events: NDArray[int]) -> None:
-    """
-    Checks the event count and value in the calibration recordings.
-    """
+    """Check the event count and value in the calibration recordings."""
     # check the number of different events.
     count = Counter(events[:, 2])
     assert len(count.keys()) == 3, (
@@ -227,9 +222,7 @@ def _check_events_calibration(raw: BaseRaw, events: NDArray[int]) -> None:
 
 
 def _check_events_resting_state(raw: BaseRaw, events: NDArray[int]) -> None:
-    """
-    Checks the event count and value in the resting-state recordings.
-    """
+    """Check the event count and value in the resting-state recordings."""
     # check count
     assert events.shape[0] == 1, (
         "Resting-State files should have only one event. "
@@ -244,9 +237,7 @@ def _check_events_resting_state(raw: BaseRaw, events: NDArray[int]) -> None:
 
 
 def _check_events_neurofeedback(raw: BaseRaw, events: NDArray[int]) -> None:
-    """
-    Checks the event count and value in the neurofeedback recordings.
-    """
+    """Check the event count and value in the neurofeedback recordings."""
     # check the number of different events.
     count = Counter(events[:, 2])
     assert len(count.keys()) == 2, (
@@ -280,8 +271,7 @@ def _check_events_neurofeedback(raw: BaseRaw, events: NDArray[int]) -> None:
 def replace_event_value(
     raw: BaseRaw, old_value: int, new_value: int
 ) -> BaseRaw:
-    """
-    Replace an event value on the trigger channel.
+    """Replace an event value on the trigger channel.
 
     Parameters
     ----------
@@ -309,8 +299,6 @@ def replace_event_value(
 def _replace_event_values_arr(
     timearr: NDArray[float], old_value: int, new_value: int
 ) -> NDArray[int]:
-    """
-    Replace the values 'old_value' with 'new_value' for the array timearr.
-    """
+    """Replace the values 'old_value' with 'new_value' for the array."""
     timearr[np.where(timearr == old_value)] = new_value
     return timearr

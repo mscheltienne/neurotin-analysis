@@ -8,9 +8,7 @@ from ..utils._docs import fill_doc
 
 
 def _check_bandpass(bandpass) -> Tuple[float, float]:
-    """
-    Checks that the argument bandpass is a 2-length valid list-like.
-    """
+    """Check that the argument bandpass is a 2-length valid list-like."""
     _check_type(bandpass, (np.ndarray, tuple, list), item_name="bandpass")
     if isinstance(bandpass, np.ndarray):
         assert bandpass.ndim == 1
@@ -21,9 +19,7 @@ def _check_bandpass(bandpass) -> Tuple[float, float]:
 
 
 def _apply_bandpass_filter(raw: BaseRaw, bandpass, picks) -> None:
-    """
-    Apply a bandpass FIR acausal filter.
-    """
+    """Apply a bandpass FIR acausal filter."""
     raw.filter(
         l_freq=bandpass[0],
         h_freq=bandpass[1],
@@ -37,16 +33,12 @@ def _apply_bandpass_filter(raw: BaseRaw, bandpass, picks) -> None:
 
 
 def _apply_notch_filter(raw: BaseRaw, picks) -> None:
-    """
-    Filter the EU powerline noise at (50, 100, 150) Hz with a notch filter.
-    """
+    """Filter the EU powerline noise at (50, 100, 150) Hz with a notch."""
     raw.notch_filter(np.arange(50, 151, 50), picks=picks)
 
 
 def _apply_car(raw: BaseRaw, *, projection: bool = False) -> None:
-    """
-    Adds a CAR projector based on the good EEG channels.
-    """
+    """Add a CAR projector based on the good EEG channels."""
     _check_type(projection, (bool,), "projection")
     raw.set_eeg_reference(
         ref_channels="average", ch_type="eeg", projection=projection
@@ -61,8 +53,9 @@ def apply_filter_eeg(
     notch: bool = False,
     car: bool = False,
 ) -> None:
-    """
-    Apply filters in-place to the EEG channels:
+    """Apply filters in-place to the EEG channels.
+
+    Available filters:
         - Bandpass
         - Notch
         - CAR
@@ -94,8 +87,9 @@ def apply_filter_eeg(
 def apply_filter_aux(
     raw: BaseRaw, *, bandpass=(None, None), notch: bool = False
 ) -> None:
-    """
-    Apply filters in-place to the AUX channels:
+    """Apply filters in-place to the AUX channels.
+
+    Availble filters:
         - Bandpass
         - Notch
 

@@ -12,9 +12,10 @@ from ..utils._docs import fill_doc
 # no matter the number of columns.
 @fill_doc
 def blocks_difference_between_consecutive_phases(df, column: str = "avg"):
-    """
-    Compute the difference between a column in a regulation phase and in the
-    preceding non-regulation phase.
+    """Compute difference between consecutive reg./non-reg. phases.
+
+    Compute the diff. between a column in a reg. phase and in the
+    preceding non-reg. phase.
 
     Parameters
     ----------
@@ -53,9 +54,7 @@ def blocks_difference_between_consecutive_phases(df, column: str = "avg"):
 
 
 def _blocks_difference_between_consecutive_phases_single_column(df, column):
-    """
-    Compute the difference between consecutive phases from a single column.
-    """
+    """Compute the diff. between consecutive phases from a single column."""
     # container for new df with diff between phases
     keys = ["participant", "session", "run", "idx"]
     data = {key: [] for key in keys + ["diff"]}
@@ -95,9 +94,7 @@ def _blocks_difference_between_consecutive_phases_single_column(df, column):
 
 
 def _blocks_difference_between_consecutive_phases_all_columns(df):
-    """
-    Compute the difference between consecutive phases for all columns.
-    """
+    """Compute the diff. between consecutive phases for all columns."""
     # container for new df with diff between phases
     keys = ["participant", "session", "run", "idx"]
     columns = [col for col in df.columns if col not in keys + ["phase"]]
@@ -138,8 +135,8 @@ def _blocks_difference_between_consecutive_phases_all_columns(df):
 
 
 def blocks_count_success(df, group_session: bool = False):
-    """
-    Count the positive/negative diff values by session.
+    """Count the positive/negative diff values by session.
+
     The count is normalized by the number of observations.
 
     Parameters
@@ -203,7 +200,7 @@ def blocks_count_success(df, group_session: bool = False):
 
 
 def _blocks_count_success(counts, participants, sessions):
-    """Counts success for each participant/session individually."""
+    """Count success for each participant/session individually."""
     positives = {key: [] for key in ("participant", "session", "count")}
     negatives = {key: [] for key in ("participant", "session", "count")}
 
@@ -237,7 +234,7 @@ def _blocks_count_success(counts, participants, sessions):
 
 
 def _blocks_count_success_group_session(counts, participants):
-    """Counts success for each participant by grouping sessions."""
+    """Count success for each participant by grouping sessions."""
     positives = {key: [] for key in ("participant", "count")}
     negatives = {key: [] for key in ("participant", "count")}
 

@@ -6,8 +6,9 @@ from ..utils._docs import fill_doc
 
 @fill_doc
 def parse_thi(df, participants):
-    """Parse the THI date/results from multiple THI questionnaires and
-    participants. The input .csv file can be obtained by exporting from evanmed
+    """Parse the THI from multiple THI questionnaires and participants.
+
+    The input .csv file can be obtained by exporting from evanmed
     with the following settings:
         -> Analysis
         -> Select group
@@ -64,8 +65,9 @@ def parse_thi(df, participants):
 
 @fill_doc
 def parse_stai(df, participants):
-    """Parse the STAI date/results from multiple STAI questionnaires and
-    participants. The input .csv file can be obtained by exporting from evanmed
+    """Parse the STAI from multiple STAI questionnaires and participants.
+
+    The input .csv file can be obtained by exporting from evanmed
     with the following settings:
         -> Analysis
         -> Select group
@@ -118,8 +120,9 @@ def parse_stai(df, participants):
 
 @fill_doc
 def parse_bdi(df, participants):
-    """Parse the BDI date/results from multiple BDI questionnaires and
-    participants. The input .csv file can be obtained by exporting from evanmed
+    """Parse the BDI from multiple BDI questionnaires and participants.
+
+    The input .csv file can be obtained by exporting from evanmed
     with the following settings:
         -> Analysis
         -> Select group
@@ -172,8 +175,9 @@ def parse_bdi(df, participants):
 
 @fill_doc
 def parse_psqi(df, participants):
-    """Parse the PSQI date/results from multiple PSQI questionnaires and
-    participants. The input .csv file can be obtained by exporting from evanmed
+    """Parse the PSQI from multiple PSQI questionnaires and participants.
+
+    The input .csv file can be obtained by exporting from evanmed
     with the following settings:
         -> Analysis
         -> Select group
@@ -226,8 +230,9 @@ def parse_psqi(df, participants):
 
 @fill_doc
 def parse_whodas(df, participants):
-    """Parse the WHODAS date/results from multiple WHODAS questionnaires and
-    participants. The input .csv file can be obtained by exporting from evanmed
+    """Parse the WHODAS from multiple WHODAS questionnaires and participants.
+
+    The input .csv file can be obtained by exporting from evanmed
     with the following settings:
         -> Analysis
         -> Select group

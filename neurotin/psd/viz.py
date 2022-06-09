@@ -21,8 +21,7 @@ from ..utils.align_axes import align_yaxis
 def catplot(
     df, participants: Union[int, list, tuple], kind: str = "box", **kwargs
 ):
-    """
-    Plot a comparison between participants.
+    """Plot a comparison between participants.
 
     Parameters
     ----------
@@ -60,8 +59,7 @@ def catplot(
 def captlot_success_distribution(
     df_positives, df_negatives, participants: Union[int, list, tuple], **kwargs
 ):
-    """
-    Plot the distribution of positive vs negative diff.
+    """Plot the distribution of positive vs negative diff.
 
     Parameters
     ----------
@@ -127,8 +125,7 @@ def captlot_success_distribution(
 def plot_joint_clinical_nfb_performance(
     df, df_clinical, name: str, participants: Union[int, list, tuple]
 ):
-    """
-    Plot a joint figure with both clinical outcomes and NFB performance.
+    """Plot a joint figure with both clinical outcomes and NFB performance.
 
     Parameters
     ----------
@@ -219,7 +216,8 @@ def plot_topomap_regulation(
     group_session: bool = False,
     figsize: Tuple[float, float] = (20.0, 4.0),
 ):
-    """
+    """Plot diff reg/rest on topographic maps.
+
     Plot 2 topographic maps from the difference observed between rest and
     regulation phases: one for areas up-regulated and one for areas
     down-regulated.

@@ -20,7 +20,13 @@ def boxplot_scores_evolution(
     swarmplot: bool = False,
     figsize: Tuple[float, float] = (10.0, 5.0),
 ):
-    """The NFB scores displayed are logged in a .csv file with the syntax:
+    """Plot the NFB scores as boxplots.
+
+    X: Session
+    Y: Score
+    Hue: Score ID (0 to 10)
+
+    The NFB scores displayed are logged in a .csv file with the syntax:
         [participant, session, model_idx, online_idx, transfer, scores [...]]
 
     The evolution of the NFB score during the 15 sessions is plotted for the
@@ -91,7 +97,13 @@ def boxplot_scores_between_participants(
     swarmplot: bool = False,
     figsize: Tuple[float, float] = (10.0, 5.0),
 ):
-    """The NFB scores displayed are logged in a .csv file with the syntax:
+    """Plot the NFB scores as boxplots.
+
+    X: Participant
+    Y: Score
+    Hue: Score ID (0 to 10)
+
+    The NFB scores displayed are logged in a .csv file with the syntax:
         [participant, session, model_idx, online_idx, transfer, scores [...]]
 
     The scores obtained during the 15 sessions are plotted in a single
@@ -158,7 +170,7 @@ def boxplot_scores_between_participants(
 
 
 def _check_scores_idx(scores: Union[int, list, tuple]) -> List[int]:
-    """Checks that the scores passed are valid."""
+    """Check that the scores passed are valid."""
     _check_type(scores, ("int", list, tuple), item_name="scores")
     if isinstance(scores, int):
         scores = [scores]

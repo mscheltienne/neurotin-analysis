@@ -3,7 +3,7 @@ from matplotlib.axes import Axes
 
 
 def align_yaxis(ax1: Axes, ax2: Axes) -> None:
-    """Align zeros of the two axes, zooming them out by same ratio"""
+    """Align zeros of the two axes, zooming them out by same ratio."""
     axes = np.array([ax1, ax2])
     extrema = np.array([ax.get_ylim() for ax in axes])
     tops = extrema[:, 1] / (extrema[:, 1] - extrema[:, 0])

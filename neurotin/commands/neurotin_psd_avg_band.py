@@ -9,21 +9,18 @@ from neurotin.psd import psd_avg_band
 
 
 def run():
-    """Entrypoint for neurotin.time_frequency.psd.compute_psd_average_bins"""
+    """Entrypoint for 'neurotin.psd.compute_psd_average_bins'."""
     parser = argparse.ArgumentParser(
         prog="NeuroTin", description="Compute PSD from online recordings."
     )
-
     parser.add_argument(
         "dir_in",
         type=str,
         help="folder where preprocessed FIF files are saved.",
     )
-
     parser.add_argument(
         "df_fname", type=str, help="path where the dataframe is pickled."
     )
-
     parser.add_argument(
         "-p",
         "--participants",
@@ -31,7 +28,6 @@ def run():
         nargs="+",
         required=True,
     )
-
     parser.add_argument(
         "-d",
         "--duration",
@@ -40,7 +36,6 @@ def run():
         help="duration of epochs for welch method.",
         required=True,
     )
-
     parser.add_argument(
         "-o",
         "--overlap",
@@ -49,13 +44,11 @@ def run():
         help="overlap duration between epochs for welch method.",
         required=True,
     )
-
     parser.add_argument(
         "--reject",
         action="store_true",
         help="flag to reject epochs for welch method with autoreject",
     )
-
     parser.add_argument(
         "--fmin",
         type=int,
@@ -63,7 +56,6 @@ def run():
         help="minimum frequency of interest.",
         required=True,
     )
-
     parser.add_argument(
         "--fmax",
         type=int,
@@ -71,7 +63,6 @@ def run():
         help="maximum frequency of interest.",
         required=True,
     )
-
     parser.add_argument(
         "-a",
         "--average",
@@ -80,11 +71,9 @@ def run():
         help="average method between frequency bins.",
         default="integrate",
     )
-
     parser.add_argument(
         "--n_jobs", type=int, metavar="int", help=helpdict["n_jobs"], default=1
     )
-
     parser.add_argument(
         "--loglevel",
         type=str,
@@ -92,7 +81,6 @@ def run():
         help=helpdict["loglevel"],
         default="info",
     )
-
     parser.add_argument(
         "--loglevel_mne",
         type=str,

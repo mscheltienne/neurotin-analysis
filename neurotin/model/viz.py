@@ -9,8 +9,7 @@ from ..utils._checks import _check_type
 
 
 def plot_topomap(weights, info: Optional[Info] = None, **kwargs) -> None:
-    """
-    Plot the weights as a topographic map.
+    """Plot the weights as a topographic map.
 
     Parameters
     ----------

@@ -11,8 +11,7 @@ from ..utils._docs import fill_doc
 
 @fill_doc
 def compute_average(folder, participants):
-    """
-    Compute the average model across all session and across all participants.
+    """Compute the average model across all session and all participants.
 
     Parameters
     ----------
