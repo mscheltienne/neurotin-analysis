@@ -10,12 +10,6 @@ from ..config.events import EVENTS
 from ..utils._docs import fill_doc
 from .filters import apply_filter_eeg
 
-# Until 0.4 release, make sure to use the development version.
-if "0.3.1" in pyprep.__version__:
-    assert pyprep.__version__.split("0.3.1")[1] != ""
-else:
-    assert 4 <= int(pyprep.__version__.split(".")[1])
-
 
 def _prepapre_raw(raw: BaseRaw) -> BaseRaw:
     """Copy the raw instance and crops it based on the recording type.
