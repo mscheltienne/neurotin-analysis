@@ -12,7 +12,7 @@ def _check_bandpass(bandpass) -> Tuple[float, float]:
     _check_type(bandpass, (np.ndarray, tuple, list), item_name="bandpass")
     if isinstance(bandpass, np.ndarray):
         assert bandpass.ndim == 1
-    bandpass = tuple([float(elt) for elt in bandpass])
+    bandpass = tuple([elt if elt is None else float(elt) for elt in bandpass])
     assert len(bandpass) == 2
     assert all(0 < fq for fq in bandpass if fq is not None)
     return bandpass

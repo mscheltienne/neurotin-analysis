@@ -17,7 +17,7 @@ from ..utils._docs import fill_doc
 def find_event_channel(
     inst: Optional[Union[BaseRaw, BaseEpochs, NDArray[float]]] = None,
     ch_names: Optional[List[str]] = None,
-) -> Optional[int, List[int]]:
+) -> Optional[Union[int, List[int]]]:
     """Find the event channel using heuristics.
 
     .. warning::
