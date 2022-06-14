@@ -63,7 +63,7 @@ def _prepapre_raw(raw: BaseRaw) -> BaseRaw:
 
 @fill_doc
 def RANSAC_bads_suggestion(raw: BaseRaw) -> List[str]:
-    """Aapply a RANSAC algorithm to detect bad channels using autoreject.
+    """Apply a RANSAC algorithm to detect bad channels using autoreject.
 
     Parameters
     ----------

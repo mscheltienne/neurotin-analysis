@@ -89,7 +89,7 @@ def apply_filter_aux(
 ) -> None:
     """Apply filters in-place to the AUX channels.
 
-    Availble filters:
+    Available filters:
         - Bandpass
         - Notch
 
