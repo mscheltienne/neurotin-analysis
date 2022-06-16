@@ -68,7 +68,7 @@ def prepare_raw(raw: BaseRaw) -> BaseRaw:
 
 # -----------------------------------------------------------------------------
 @fill_doc
-def remove_artifact_ic(raw: BaseRaw, *, semiauto: bool = False) -> BaseRaw:
+def remove_artifact_ic(raw: BaseRaw) -> BaseRaw:
     """Apply ICA to remove artifact-related independent components.
 
     The raw instance is modified in-place.
@@ -76,16 +76,11 @@ def remove_artifact_ic(raw: BaseRaw, *, semiauto: bool = False) -> BaseRaw:
     Parameters
     ----------
     %(raw)s
-    semiauto : bool
-        If True, the user will interactively exclude ICA components if
-        automatic selection failed.
 
     Returns
     -------
     %(raw)s
     %(ica)s
-    eog_scores : Scores used for selection of the ocular component(s).
-    ecg_scores : Scores used for selection of the heartbeat component(s).
     """
     picks = mne.pick_types(raw.info, eeg=True, exclude="bads")
     ica = mne.preprocessing.ICA(

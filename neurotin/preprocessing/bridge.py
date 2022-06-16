@@ -1,9 +1,10 @@
-from typing import Tuple
+from typing import List, Tuple
 
+import networkx as nx
 import numpy as np
 from matplotlib import pyplot as plt
 from mne.io import BaseRaw
-from mne.preprocessing import compute_bridged_electrodes
+from mne.preprocessing import compute_bridged_electrodes as compute_bridged_electrodes_mne
 from mne.viz import plot_bridged_electrodes as plot_bridged_electrodes_mne
 from numpy.typing import NDArray
 
@@ -26,18 +27,10 @@ def plot_bridged_electrodes(
     fig : Figure
     ax : Array of Axes
     """
-    _check_type(raw, (BaseRaw,), "raw")
-    if 0.5 < raw.info["highpass"]:
-        raise RuntimeError(
-            "The raw instance should not be highpass-filtered " "above 0.5 Hz."
-        )
-    if raw.info["lowpass"] < 30:
-        raise RuntimeError(
-            "The raw instance should not be lowpass-filtered " "below 30 Hz."
-        )
+    _check_raw(raw)
 
     # retrieve bridge electrodes, operates on a copy
-    bridged_idx, ed_matrix = compute_bridged_electrodes(raw)
+    bridged_idx, ed_matrix = compute_bridged_electrodes_mne(raw)
 
     # create figure
     fig, ax = plt.subplots(2, 2, figsize=(15, 10))
@@ -79,3 +72,47 @@ def plot_bridged_electrodes(
 
     fig.tight_layout()
     return fig, ax
+
+
+def compute_bridged_electrodes(raw: BaseRaw) -> List[str]:
+    """Compute the bridged electrodes.
+
+    This function returns the list of channels to be excluded because of a
+    gel-bridge between electrodes. It retains one electrode / bridge.
+
+    Parameters
+    ----------
+    raw : Raw
+        MNE Raw instance before filtering. The raw instance is copied, the EEG
+        channels are picked and filtered between 0.5 and 30 Hz.
+
+    Returns
+    -------
+    bads : list of str
+        List of channels to exclude because of a gel-bridge.
+    """
+    _check_raw(raw)
+
+    # retrieve bridge electrodes, operates on a copy
+    bridged_idx, ed_matrix = compute_bridged_electrodes_mne(raw)
+
+
+def _check_raw(raw: BaseRaw):
+    """Check that the raw instance filters are compatible."""
+    _check_type(raw, (BaseRaw,), "raw")
+    if 0.5 < raw.info["highpass"]:
+        raise RuntimeError(
+            "The raw instance should not be highpass-filtered " "above 0.5 Hz."
+        )
+    if raw.info["lowpass"] < 30:
+        raise RuntimeError(
+            "The raw instance should not be lowpass-filtered " "below 30 Hz."
+        )
+
+
+def _find_groups(bridged_idx):
+    """Find the groups of electrodes that are bridged."""
+    G = nx.Graph()
+    for bridge in bridged_idx:
+        G.add_edge(*bridge)
+    return [tuple(elt) for elt in nx.connected_components(G)]

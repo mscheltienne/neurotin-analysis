@@ -45,6 +45,7 @@ dependencies = [
     'python-picard',
     'pyprep>=0.4.0',
     'mne-icalabel>=0.2',
+    'networkx',
 ]
 
 [project.optional-dependencies]

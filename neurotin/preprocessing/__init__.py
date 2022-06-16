@@ -1,4 +1,9 @@
 """Preprocessing module."""
 
-from .preprocessing import remove_artifact_ic  # noqa: F401
-from .preprocessing import pipeline, prepare_raw
+from .bridge import plot_bridged_electrodes  # noqa: F401
+from .preprocessing import (  # noqa: F401
+    pipeline,
+    prepare_raw,
+    preprocess,
+    remove_artifact_ic,
+)
