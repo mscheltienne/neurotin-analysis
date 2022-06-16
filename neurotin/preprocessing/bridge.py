@@ -1,3 +1,4 @@
+import itertools
 from typing import List, Tuple
 
 import networkx as nx
@@ -98,6 +99,9 @@ def compute_bridged_electrodes(raw: BaseRaw) -> List[str]:
 
     # retrieve bridge electrodes, operates on a copy
     bridged_idx, ed_matrix = compute_bridged_electrodes_mne(raw)
+
+    if 16 <= len(set(itertools.chain(*bridged_idx))):
+        raise RuntimeError("More than 10 electrodes have gel-bridges.")
 
     # find groups of electrodes
     G = nx.Graph()
