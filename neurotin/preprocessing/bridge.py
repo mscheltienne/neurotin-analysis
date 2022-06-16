@@ -98,7 +98,12 @@ def compute_bridged_electrodes(raw: BaseRaw) -> List[str]:
 
     # retrieve bridge electrodes, operates on a copy
     bridged_idx, ed_matrix = compute_bridged_electrodes_mne(raw)
-    groups_idx = _find_groups(bridged_idx)
+
+    # find groups of electrodes
+    G = nx.Graph()
+    for bridge in bridged_idx:
+        G.add_edge(*bridge)
+    groups_idx = [tuple(elt) for elt in nx.connected_components(G)]
     groups = [[raw.ch_names[k] for k in group] for group in groups_idx]
 
     # retrieve montage
@@ -128,11 +133,3 @@ def _check_raw(raw: BaseRaw):
         raise RuntimeError(
             "The raw instance should not be lowpass-filtered " "below 30 Hz."
         )
-
-
-def _find_groups(bridged_idx):
-    """Find the groups of electrodes that are bridged."""
-    G = nx.Graph()
-    for bridge in bridged_idx:
-        G.add_edge(*bridge)
-    return [tuple(elt) for elt in nx.connected_components(G)]
