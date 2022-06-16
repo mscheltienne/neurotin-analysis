@@ -49,13 +49,15 @@ def prepare_raw(raw: BaseRaw) -> BaseRaw:
     check_events(raw, recording_type)
     raw, _ = add_annotations_from_events(raw)
 
+    # Find bridged electrodes
+    bridged = compute_bridged_electrodes(raw)
+
     # Filter
     apply_filter_aux(raw, bandpass=(1.0, 40.0), notch=True)
     apply_filter_eeg(raw, bandpass=(1.0, 100.0))
 
     # Mark bad channels
     bads = PREP_bads_suggestion(raw)  # operates on a copy and applies filters
-    bridged = compute_bridged_electrodes(raw)
     raw.info["bads"] = list(set(bads + bridged))
 
     # Add montage
@@ -86,7 +88,7 @@ def remove_artifact_ic(raw: BaseRaw) -> BaseRaw:
     """
     picks = mne.pick_types(raw.info, eeg=True, exclude="bads")
     ica = mne.preprocessing.ICA(
-        n_components=picks.size - 1,
+        n_components=0.99999999999,  # should be picks.size - 1
         method="picard",
         max_iter="auto",
         fit_params=dict(ortho=False, extended=True),
