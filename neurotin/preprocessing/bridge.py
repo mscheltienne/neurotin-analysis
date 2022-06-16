@@ -5,7 +5,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mne.channels import make_standard_montage
 from mne.io import BaseRaw
-from mne.preprocessing import compute_bridged_electrodes as compute_bridged_electrodes_mne
+from mne.preprocessing import (
+    compute_bridged_electrodes as compute_bridged_electrodes_mne,
+)
 from mne.viz import plot_bridged_electrodes as plot_bridged_electrodes_mne
 from numpy.typing import NDArray
 
@@ -106,7 +108,9 @@ def compute_bridged_electrodes(raw: BaseRaw) -> List[str]:
     for group in groups:
         # remove the electrode(s) closest to the reference as they have more
         # adjacent electrodes to use for spatial interpolation.
-        distances = [np.linalg.norm(positions["CPz"]-positions[ch]) for ch in group]
+        distances = [
+            np.linalg.norm(positions["CPz"] - positions[ch]) for ch in group
+        ]
         idx = np.argmax(distances)
         bads.extend([ch for k, ch in enumerate(group) if k != idx])
 
