@@ -312,7 +312,9 @@ def pipeline(
 
         # export
         raw.save(output_fname_raw, fmt="double", overwrite=True)
-        raw.save(output_fname_raw_pre_ica, fmt="double", overwrite=True)
+        raw_pre_ica.save(
+            output_fname_raw_pre_ica, fmt="double", overwrite=True
+        )
         ica.save(output_fname_ica)
 
         return (True, str(fname))
