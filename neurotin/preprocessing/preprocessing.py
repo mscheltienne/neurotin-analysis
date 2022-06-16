@@ -235,7 +235,7 @@ def _add_subject_info(raw: BaseRaw) -> None:
 
 # -----------------------------------------------------------------------------
 @fill_doc
-def preprocess(fname) -> Tuple[BaseRaw, ICA]:
+def preprocess(fname) -> Tuple[BaseRaw, BaseRaw, ICA]:
     """Preprocess a raw .fif file.
 
     Parameters
@@ -327,7 +327,7 @@ def pipeline(
 
 def _create_output_fname(
     fname: Path, dir_in: Path, dir_out: Path
-) -> Tuple[Path, Path]:
+) -> Tuple[Path, Path, Path]:
     """Create the output file names.
 
     The output file names is based on the relative path between fname
@@ -337,9 +337,11 @@ def _create_output_fname(
     relative_fname = fname.relative_to(dir_in)
     # create output fname
     output_fname_raw = dir_out / relative_fname
-    output_fname_raw_pre_ica = dir_out / relative_fname.replace(
+    output_fname_raw_pre_ica = dir_out / str(relative_fname).replace(
         "-raw", "-pre-ica-raw"
     )
-    output_fname_ica = dir_out / relative_fname.replace("-raw.fif", "-ica.fif")
+    output_fname_ica = dir_out / str(relative_fname).replace(
+        "-raw.fif", "-ica.fif"
+    )
     os.makedirs(output_fname_raw.parent, exist_ok=True)
     return output_fname_raw, output_fname_raw_pre_ica, output_fname_ica
