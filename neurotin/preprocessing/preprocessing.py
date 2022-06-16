@@ -301,15 +301,18 @@ def pipeline(
         dir_out = _check_path(dir_out, "dir_out", must_exist=True)
 
         # create output file name
-        output_fname_raw, output_fname_ica = _create_output_fname(
-            fname, dir_in, dir_out
-        )
+        (
+            output_fname_raw,
+            output_fname_raw_pre_ica,
+            output_fname_ica,
+        ) = _create_output_fname(fname, dir_in, dir_out)
 
         # preprocess
-        raw, ica = preprocess(fname)
+        raw, raw_pre_ica, ica = preprocess(fname)
 
         # export
         raw.save(output_fname_raw, fmt="double", overwrite=True)
+        raw.save(output_fname_raw_pre_ica, fmt="double", overwrite=True)
         ica.save(output_fname_ica)
 
         return (True, str(fname))
@@ -332,8 +335,9 @@ def _create_output_fname(
     relative_fname = fname.relative_to(dir_in)
     # create output fname
     output_fname_raw = dir_out / relative_fname
-    output_fname_ica = dir_out / str(relative_fname).replace(
-        "-raw.fif", "-ica.fif"
+    output_fname_raw_pre_ica = dir_out / relative_fname.replace(
+        "-raw", "-pre-ica-raw"
     )
+    output_fname_ica = dir_out / relative_fname.replace("-raw.fif", "-ica.fif")
     os.makedirs(output_fname_raw.parent, exist_ok=True)
-    return output_fname_raw, output_fname_ica
+    return output_fname_raw, output_fname_raw_pre_ica, output_fname_ica
