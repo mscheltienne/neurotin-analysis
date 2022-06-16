@@ -14,6 +14,7 @@ from ..io import read_raw_fif
 from ..utils._checks import _check_path, _check_type, _check_value
 from ..utils._docs import fill_doc
 from .bads import PREP_bads_suggestion
+from .bridge import compute_bridged_electrodes
 from .events import add_annotations_from_events, check_events
 from .filters import apply_filter_aux, apply_filter_eeg
 
@@ -54,7 +55,8 @@ def prepare_raw(raw: BaseRaw) -> BaseRaw:
 
     # Mark bad channels
     bads = PREP_bads_suggestion(raw)  # operates on a copy and applies filters
-    raw.info["bads"] = bads
+    bridged = compute_bridged_electrodes(raw)
+    raw.info["bads"] = list(set(bads + bridged))
 
     # Add montage
     raw.add_reference_channels(ref_channels="CPz")

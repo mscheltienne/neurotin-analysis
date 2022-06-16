@@ -3,6 +3,7 @@ from typing import List, Tuple
 import networkx as nx
 import numpy as np
 from matplotlib import pyplot as plt
+from mne.channels import make_standard_montage
 from mne.io import BaseRaw
 from mne.preprocessing import compute_bridged_electrodes as compute_bridged_electrodes_mne
 from mne.viz import plot_bridged_electrodes as plot_bridged_electrodes_mne
@@ -95,6 +96,21 @@ def compute_bridged_electrodes(raw: BaseRaw) -> List[str]:
 
     # retrieve bridge electrodes, operates on a copy
     bridged_idx, ed_matrix = compute_bridged_electrodes_mne(raw)
+    groups_idx = _find_groups(bridged_idx)
+    groups = [[raw.ch_names[k] for k in group] for group in groups_idx]
+
+    # retrieve montage
+    positions = make_standard_montage("standard_1020")._get_ch_pos()
+
+    bads = list()
+    for group in groups:
+        # remove the electrode(s) closest to the reference as they have more
+        # adjacent electrodes to use for spatial interpolation.
+        distances = [np.linalg.norm(positions["CPz"]-positions[ch]) for ch in group]
+        idx = np.argmax(distances)
+        bads.extend([ch for k, ch in enumerate(group) if k != idx])
+
+    return bads
 
 
 def _check_raw(raw: BaseRaw):
