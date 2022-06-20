@@ -89,8 +89,9 @@ def compute_bridged_electrodes(raw: BaseRaw, limit: int = 16) -> List[str]:
     raw : Raw
         MNE Raw instance before filtering. The raw instance is copied, the EEG
         channels are picked and filtered between 0.5 and 30 Hz.
-    limit : int
+    limit : int | None
         Maximum number of electrodes (inc.) that can be bridged before raising.
+        If None, disables the limit.
 
     Returns
     -------
@@ -98,13 +99,14 @@ def compute_bridged_electrodes(raw: BaseRaw, limit: int = 16) -> List[str]:
         List of channels to exclude because of a gel-bridge.
     """
     _check_raw(raw)
-    _check_type(limit, ("int",), "limit")
-    assert 0 < limit
+    if limit is not None:
+        _check_type(limit, ("int",), "limit")
+        assert 0 < limit
 
     # retrieve bridge electrodes, operates on a copy
     bridged_idx, ed_matrix = compute_bridged_electrodes_mne(raw)
 
-    if limit <= len(set(itertools.chain(*bridged_idx))):
+    if limit is not None and limit <= len(set(itertools.chain(*bridged_idx))):
         raise RuntimeError(f"More than {limit} electrodes have gel-bridges.")
 
     # find groups of electrodes
