@@ -78,7 +78,7 @@ def plot_bridged_electrodes(
     return fig, ax
 
 
-def compute_bridged_electrodes(raw: BaseRaw) -> List[str]:
+def compute_bridged_electrodes(raw: BaseRaw, limit: int = 16) -> List[str]:
     """Compute the bridged electrodes.
 
     This function returns the list of channels to be excluded because of a
@@ -89,6 +89,8 @@ def compute_bridged_electrodes(raw: BaseRaw) -> List[str]:
     raw : Raw
         MNE Raw instance before filtering. The raw instance is copied, the EEG
         channels are picked and filtered between 0.5 and 30 Hz.
+    limit : int
+        Maximum number of electrodes (inc.) that can be bridged before raising.
 
     Returns
     -------
@@ -96,12 +98,14 @@ def compute_bridged_electrodes(raw: BaseRaw) -> List[str]:
         List of channels to exclude because of a gel-bridge.
     """
     _check_raw(raw)
+    _check_type(limit, ("int",), "limit")
+    assert 0 < limit
 
     # retrieve bridge electrodes, operates on a copy
     bridged_idx, ed_matrix = compute_bridged_electrodes_mne(raw)
 
-    if 16 <= len(set(itertools.chain(*bridged_idx))):
-        raise RuntimeError("More than 10 electrodes have gel-bridges.")
+    if limit <= len(set(itertools.chain(*bridged_idx))):
+        raise RuntimeError(f"More than {limit} electrodes have gel-bridges.")
 
     # find groups of electrodes
     G = nx.Graph()
