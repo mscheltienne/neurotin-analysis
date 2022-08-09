@@ -88,7 +88,7 @@ def remove_artifact_ic(raw: BaseRaw) -> BaseRaw:
     """
     picks = mne.pick_types(raw.info, eeg=True, exclude="bads")
     ica = mne.preprocessing.ICA(
-        n_components=0.99999999999,  # should be picks.size - 1
+        n_components=None,  # should be picks.size - 1
         method="picard",
         max_iter="auto",
         fit_params=dict(ortho=False, extended=True),
