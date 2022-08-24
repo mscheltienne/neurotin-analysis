@@ -268,6 +268,9 @@ def preprocess(fname) -> Tuple[BaseRaw, BaseRaw, ICA]:
     # refilter
     apply_filter_eeg(raw, bandpass=(1.0, 40.0))
     # interpolate bads
+    bads = PREP_bads_suggestion(raw, prepare_raw=False, copy=True)  # run again
+    bads = set(bads).union(set(raw.info["bads"]))
+    raw.info["bads"] = list(bads)
     raw.interpolate_bads(reset_bads=True, mode="accurate")
 
     return raw, raw_pre_ica, ica

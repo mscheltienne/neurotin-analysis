@@ -85,7 +85,11 @@ def RANSAC_bads_suggestion(raw: BaseRaw) -> List[str]:
 
 
 @fill_doc
-def PREP_bads_suggestion(raw: BaseRaw) -> List[str]:
+def PREP_bads_suggestion(
+    raw: BaseRaw,
+    prepare_raw: bool = True,
+    copy: bool = True,
+) -> List[str]:
     """Apply the PREP pipeline to detect bad channels.
 
     The PREP pipeline uses:
@@ -99,13 +103,19 @@ def PREP_bads_suggestion(raw: BaseRaw) -> List[str]:
     Parameters
     ----------
     %(raw)s
+    prepare_raw : bool
+        If True, the provided raw is copied and cropped.
+    copy : bool
+        If True, the provided raw is copied and the EEG good channels are
+        picked regardless of prepare_raw.
 
     Returns
     -------
     bads : list
         List of bad channels.
     """
-    raw = _prepapre_raw(raw)
+    raw = _prepapre_raw(raw) if prepare_raw else raw
+    raw = raw.copy() if copy else raw
     raw.pick_types(eeg=True)
     nc = pyprep.find_noisy_channels.NoisyChannels(raw)
     nc.find_all_bads()
