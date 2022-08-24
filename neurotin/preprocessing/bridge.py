@@ -1,5 +1,5 @@
 import itertools
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import networkx as nx
 import numpy as np
@@ -9,7 +9,7 @@ from mne.io import BaseRaw, RawArray
 from mne.preprocessing import (
     compute_bridged_electrodes as compute_bridged_electrodes_mne,
 )
-from mne.transforms import _sph_to_cart, _cart_to_sph
+from mne.transforms import _cart_to_sph, _sph_to_cart
 from mne.viz import plot_bridged_electrodes as plot_bridged_electrodes_mne
 from numpy.typing import NDArray
 
@@ -80,9 +80,9 @@ def plot_bridged_electrodes(
 
 
 def interpolate_bridged_electrodes(
-        raw: BaseRaw,
-        limit: Optional[int] = 5,
-        total_limit: Optional[int] = 16,
+    raw: BaseRaw,
+    limit: Optional[int] = 5,
+    total_limit: Optional[int] = 16,
 ) -> BaseRaw:
     """Compute the bridged electrodes.
 
@@ -117,7 +117,9 @@ def interpolate_bridged_electrodes(
 
     # retrieve bridge electrodes, operates on a copy
     bridged_idx, ed_matrix = compute_bridged_electrodes_mne(raw)
-    if total_limit is not None and total_limit <= len(set(itertools.chain(*bridged_idx))):
+    if total_limit is not None and total_limit <= len(
+        set(itertools.chain(*bridged_idx))
+    ):
         raise RuntimeError(
             f"More than {total_limit} electrodes have gel-bridges."
         )
@@ -151,7 +153,9 @@ def interpolate_bridged_electrodes(
 
         # create the virtual channel info and set the position
         virtual_info = create_info(
-            ch_names=[f"virtual {k+1}"], sfreq=raw.info['sfreq'], ch_types='eeg',
+            ch_names=[f"virtual {k+1}"],
+            sfreq=raw.info["sfreq"],
+            ch_types="eeg",
         )
         virtual_info["chs"][0]["loc"][:3] = pos_virtual
 
@@ -169,8 +173,8 @@ def interpolate_bridged_electrodes(
     raw.add_channels(list(virtual_chs.values()), force_update_info=True)
 
     # interpolate
-    raw.info['bads'] = list(bads)
-    raw.interpolate_bads(reset_bads=True, mode='accurate')
+    raw.info["bads"] = list(bads)
+    raw.interpolate_bads(reset_bads=True, mode="accurate")
 
     # drop virtual channels
     raw.drop_channels(list(virtual_chs.keys()))

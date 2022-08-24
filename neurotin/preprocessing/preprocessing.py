@@ -67,7 +67,9 @@ def prepare_raw(raw: BaseRaw) -> BaseRaw:
 
     # apply CAR
     raw.set_eeg_reference(
-        ref_channels="average", ch_type="eeg", projection=False,
+        ref_channels="average",
+        ch_type="eeg",
+        projection=False,
     )
 
     return raw
