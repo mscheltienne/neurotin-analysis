@@ -37,50 +37,34 @@ def _apply_notch_filter(raw: BaseRaw, picks) -> None:
     raw.notch_filter(np.arange(50, 151, 50), picks=picks)
 
 
-def _apply_car(raw: BaseRaw, *, projection: bool = False) -> None:
-    """Add a CAR projector based on the good EEG channels."""
-    _check_type(projection, (bool,), "projection")
-    raw.set_eeg_reference(
-        ref_channels="average", ch_type="eeg", projection=projection
-    )
-
-
 @fill_doc
 def apply_filter_eeg(
     raw: BaseRaw,
     *,
     bandpass=(None, None),
     notch: bool = False,
-    car: bool = False,
 ) -> None:
     """Apply filters in-place to the EEG channels.
 
     Available filters:
         - Bandpass
         - Notch
-        - CAR
 
     Parameters
     ----------
     %(raw)s
     %(bandpass)s
     %(notch)s
-    car : bool
-        If True, a CAR reference based on the good channels is added.
     """
     _check_type(raw, (BaseRaw,), "raw")
     bandpass = _check_bandpass(bandpass)
     _check_type(notch, (bool,), item_name="notch")
-    _check_type(car, (bool,), item_name="car")
 
     if not all(bp is None for bp in bandpass):
         _apply_bandpass_filter(raw, bandpass, "eeg")
 
     if notch:
         _apply_notch_filter(raw, "eeg")
-
-    if car:
-        _apply_car(raw, projection=False)
 
 
 @fill_doc

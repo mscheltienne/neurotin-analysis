@@ -1,14 +1,15 @@
 import itertools
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import networkx as nx
 import numpy as np
 from matplotlib import pyplot as plt
-from mne.channels import make_standard_montage
-from mne.io import BaseRaw
+from mne import create_info
+from mne.io import BaseRaw, RawArray
 from mne.preprocessing import (
     compute_bridged_electrodes as compute_bridged_electrodes_mne,
 )
+from mne.transforms import _sph_to_cart, _cart_to_sph
 from mne.viz import plot_bridged_electrodes as plot_bridged_electrodes_mne
 from numpy.typing import NDArray
 
@@ -78,7 +79,11 @@ def plot_bridged_electrodes(
     return fig, ax
 
 
-def compute_bridged_electrodes(raw: BaseRaw, limit: int = 16) -> List[str]:
+def interpolate_bridged_electrodes(
+        raw: BaseRaw,
+        limit: Optional[int] = 5,
+        total_limit: Optional[int] = 16,
+) -> BaseRaw:
     """Compute the bridged electrodes.
 
     This function returns the list of channels to be excluded because of a
@@ -90,46 +95,87 @@ def compute_bridged_electrodes(raw: BaseRaw, limit: int = 16) -> List[str]:
         MNE Raw instance before filtering. The raw instance is copied, the EEG
         channels are picked and filtered between 0.5 and 30 Hz.
     limit : int | None
+        Maximum number of electrodes (inc.) that can be bridged in a group
+        before raising. If None, disables the limit.
+    total_limit : int | None
         Maximum number of electrodes (inc.) that can be bridged before raising.
         If None, disables the limit.
 
     Returns
     -------
-    bads : list of str
-        List of channels to exclude because of a gel-bridge.
+    raw : Raw
+        MNE Raw instance before filtering where the bridged channels have been
+        interpolated.
     """
     _check_raw(raw)
     if limit is not None:
         _check_type(limit, ("int",), "limit")
         assert 0 < limit
+    if total_limit is not None:
+        _check_type(total_limit, ("int",), "total_limit")
+        assert 0 < total_limit
 
     # retrieve bridge electrodes, operates on a copy
     bridged_idx, ed_matrix = compute_bridged_electrodes_mne(raw)
-
-    if limit is not None and limit <= len(set(itertools.chain(*bridged_idx))):
-        raise RuntimeError(f"More than {limit} electrodes have gel-bridges.")
+    if total_limit is not None and total_limit <= len(set(itertools.chain(*bridged_idx))):
+        raise RuntimeError(
+            f"More than {total_limit} electrodes have gel-bridges."
+        )
 
     # find groups of electrodes
     G = nx.Graph()
     for bridge in bridged_idx:
         G.add_edge(*bridge)
     groups_idx = [tuple(elt) for elt in nx.connected_components(G)]
-    groups = [[raw.ch_names[k] for k in group] for group in groups_idx]
+    if any(len(group) >= limit for group in groups_idx):
+        raise RuntimeError(
+            f"More than {limit} electrodes have a common gel-bridge."
+        )
 
-    # retrieve montage
-    positions = make_standard_montage("standard_1020")._get_ch_pos()
+    # make virtual channels
+    pos = raw.get_montage().get_positions()
+    ch_pos = pos["ch_pos"]
+    virtual_chs = dict()
+    bads = set()
+    data = raw.get_data()
+    for k, group_idx in enumerate(groups_idx):
+        group_names = [raw.ch_names[k] for k in group_idx]
+        bads = bads.union(group_names)
 
-    bads = list()
-    for group in groups:
-        # remove the electrode(s) closest to the reference as they have more
-        # adjacent electrodes to use for spatial interpolation.
-        distances = [
-            np.linalg.norm(positions["CPz"] - positions[ch]) for ch in group
-        ]
-        idx = np.argmax(distances)
-        bads.extend([ch for k, ch in enumerate(group) if k != idx])
+        # compute midway position in spherical coordinates in "head"
+        # (more accurate than cutting though the scalp by using cartesian)
+        sphere_positions = np.zeros((len(group_idx), 3))
+        for i, ch_name in enumerate(group_names):
+            sphere_positions[i, :] = _cart_to_sph(ch_pos[ch_name])
+        pos_virtual = _sph_to_cart(np.average(sphere_positions, axis=0))
 
-    return bads
+        # create the virtual channel info and set the position
+        virtual_info = create_info(
+            ch_names=[f"virtual {k+1}"], sfreq=raw.info['sfreq'], ch_types='eeg',
+        )
+        virtual_info["chs"][0]["loc"][:3] = pos_virtual
+
+        # create the virtual channel data array
+        group_data = np.zeros((len(group_idx), data.shape[1]))
+        for i, ch_idx in enumerate(group_idx):
+            group_data[i, :] = data[ch_idx, :]
+        virtual_data = np.average(group_data, axis=0).reshape(1, -1)
+
+        # create the virtual channel
+        virtual_ch = RawArray(virtual_data, virtual_info, raw.first_samp)
+        virtual_chs[f"virtual {k+1}"] = virtual_ch
+
+    # add the virtual channels
+    raw.add_channels(list(virtual_chs.values()), force_update_info=True)
+
+    # interpolate
+    raw.info['bads'] = list(bads)
+    raw.interpolate_bads(reset_bads=True, mode='accurate')
+
+    # drop virtual channels
+    raw.drop_channels(list(virtual_chs.keys()))
+
+    return raw
 
 
 def _check_raw(raw: BaseRaw):
@@ -143,3 +189,4 @@ def _check_raw(raw: BaseRaw):
         raise RuntimeError(
             "The raw instance should not be lowpass-filtered " "below 30 Hz."
         )
+    assert raw.get_montage() is not None

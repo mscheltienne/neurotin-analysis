@@ -14,7 +14,7 @@ from ..io import read_raw_fif
 from ..utils._checks import _check_path, _check_type, _check_value
 from ..utils._docs import fill_doc
 from .bads import PREP_bads_suggestion
-from .bridge import compute_bridged_electrodes
+from .bridge import interpolate_bridged_electrodes
 from .events import add_annotations_from_events, check_events
 from .filters import apply_filter_aux, apply_filter_eeg
 
@@ -37,35 +37,38 @@ def prepare_raw(raw: BaseRaw) -> BaseRaw:
     -------
     %(raw)s
     """
-    # Drop channels
-    raw.drop_channels(["M1", "M2"])
+    # drop channels
+    raw.drop_channels(["M1", "M2", "PO5", "PO6"])
 
-    # Check sampling frequency
+    # check sampling frequency
     if raw.info["sfreq"] != 512:
         raw.resample(sfreq=512)
 
-    # Check events
+    # check events
     recording_type = Path(raw.filenames[0]).stem.split("-")[1]
     check_events(raw, recording_type)
     raw, _ = add_annotations_from_events(raw)
 
-    # Find bridged electrodes
-    bridged = compute_bridged_electrodes(raw)
+    # fix bridged electrodes
+    raw.set_montage("standard_1020")
+    raw = interpolate_bridged_electrodes(raw)
+    raw.set_montage(None)
 
-    # Filter
+    # filter
     apply_filter_aux(raw, bandpass=(1.0, 40.0), notch=True)
     apply_filter_eeg(raw, bandpass=(1.0, 100.0))
 
-    # Mark bad channels
-    bads = PREP_bads_suggestion(raw)  # operates on a copy and applies filters
-    raw.info["bads"] = list(set(bads + bridged))
+    # mark bad channels, operates on a copy and applies filters
+    raw.info["bads"] = PREP_bads_suggestion(raw)
 
-    # Add montage
+    # add montage
     raw.add_reference_channels(ref_channels="CPz")
     raw.set_montage("standard_1020")  # only after adding ref channel
 
-    # Apply CAR
-    apply_filter_eeg(raw, car=True)
+    # apply CAR
+    raw.set_eeg_reference(
+        ref_channels="average", ch_type="eeg", projection=False,
+    )
 
     return raw
 

@@ -44,7 +44,7 @@ dependencies = [
     'autoreject',
     'python-picard',
     'pyprep>=0.4.0',
-    'mne-icalabel>=0.2',
+    'mne-icalabel>=0.4',
     'networkx',
 ]
 
