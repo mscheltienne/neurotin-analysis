@@ -139,7 +139,6 @@ def interpolate_bridged_electrodes(
     ch_pos = pos["ch_pos"]
     virtual_chs = dict()
     bads = set()
-    data = raw.get_data()
     for k, group_idx in enumerate(groups_idx):
         group_names = [raw.ch_names[k] for k in group_idx]
         bads = bads.union(group_names)
@@ -160,9 +159,7 @@ def interpolate_bridged_electrodes(
         virtual_info["chs"][0]["loc"][:3] = pos_virtual
 
         # create the virtual channel data array
-        group_data = np.zeros((len(group_idx), data.shape[1]))
-        for i, ch_idx in enumerate(group_idx):
-            group_data[i, :] = data[ch_idx, :]
+        group_data = raw.get_data(picks=group_names)
         virtual_data = np.average(group_data, axis=0).reshape(1, -1)
 
         # create the virtual channel
