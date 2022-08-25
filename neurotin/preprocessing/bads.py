@@ -21,7 +21,6 @@ def _prepapre_raw(raw: BaseRaw) -> BaseRaw:
 
     Set the montage as 'standard_1020'. The reference 'CPz' is not added.
     """
-    raw = raw.copy()
     apply_filter_eeg(raw, bandpass=(1.0, 40.0), notch=True)
     events = mne.find_events(raw, stim_channel="TRIGGER")
     unique_events = list(set(event[2] for event in events))
@@ -62,19 +61,25 @@ def _prepapre_raw(raw: BaseRaw) -> BaseRaw:
 
 
 @fill_doc
-def RANSAC_bads_suggestion(raw: BaseRaw) -> List[str]:
+def RANSAC_bads_suggestion(
+    raw: BaseRaw,
+    prepare_raw: bool = True,
+) -> List[str]:
     """Apply a RANSAC algorithm to detect bad channels using autoreject.
 
     Parameters
     ----------
     %(raw)s
+    prepare_raw : bool
+        If True, the provided raw is cropped and filtered.
 
     Returns
     -------
     bads : list
         List of bad channels.
     """
-    raw = _prepapre_raw(raw)
+    raw = raw.copy()
+    raw = _prepapre_raw(raw) if prepare_raw else raw
     epochs = mne.make_fixed_length_epochs(
         raw, duration=1.0, preload=True, reject_by_annotation=True
     )
@@ -88,7 +93,6 @@ def RANSAC_bads_suggestion(raw: BaseRaw) -> List[str]:
 def PREP_bads_suggestion(
     raw: BaseRaw,
     prepare_raw: bool = True,
-    copy: bool = True,
 ) -> List[str]:
     """Apply the PREP pipeline to detect bad channels.
 
@@ -104,18 +108,15 @@ def PREP_bads_suggestion(
     ----------
     %(raw)s
     prepare_raw : bool
-        If True, the provided raw is copied and cropped.
-    copy : bool
-        If True, the provided raw is copied and the EEG good channels are
-        picked regardless of prepare_raw.
+        If True, the provided raw is cropped and filtered.
 
     Returns
     -------
     bads : list
         List of bad channels.
     """
+    raw = raw.copy()
     raw = _prepapre_raw(raw) if prepare_raw else raw
-    raw = raw.copy() if copy else raw
     raw.pick_types(eeg=True)
     nc = pyprep.find_noisy_channels.NoisyChannels(raw)
     nc.find_all_bads()

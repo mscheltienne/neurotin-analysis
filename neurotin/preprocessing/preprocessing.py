@@ -59,7 +59,7 @@ def prepare_raw(raw: BaseRaw) -> BaseRaw:
     apply_filter_eeg(raw, bandpass=(1.0, 100.0))
 
     # mark bad channels, operates on a copy and applies filters
-    raw.info["bads"] = PREP_bads_suggestion(raw)
+    raw.info["bads"] = PREP_bads_suggestion(raw, prepare_raw=True)
 
     # add montage
     raw.add_reference_channels(ref_channels="CPz")
@@ -268,7 +268,7 @@ def preprocess(fname) -> Tuple[BaseRaw, BaseRaw, ICA]:
     # refilter
     apply_filter_eeg(raw, bandpass=(1.0, 40.0))
     # interpolate bads
-    bads = PREP_bads_suggestion(raw, prepare_raw=False, copy=True)  # run again
+    bads = PREP_bads_suggestion(raw, prepare_raw=False)  # run again
     bads = set(bads).union(set(raw.info["bads"]))
     raw.info["bads"] = list(bads)
     raw.interpolate_bads(reset_bads=True, mode="accurate")
