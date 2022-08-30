@@ -1,13 +1,10 @@
 import itertools
 from typing import Optional, Tuple
 
-import networkx as nx
 import numpy as np
 from matplotlib import pyplot as plt
-from mne import create_info
-from mne.io import BaseRaw, RawArray
+from mne.io import BaseRaw
 from mne.preprocessing import compute_bridged_electrodes, interpolate_bridged_electrodes
-from mne.transforms import _cart_to_sph, _sph_to_cart
 from mne.viz import plot_bridged_electrodes as plot_bridged_electrodes_mne
 from numpy.typing import NDArray
 
@@ -33,7 +30,7 @@ def plot_bridged_electrodes(
     _check_raw(raw)
 
     # retrieve bridge electrodes, operates on a copy
-    bridged_idx, ed_matrix = compute_bridged_electrodes_mne(raw)
+    bridged_idx, ed_matrix = compute_bridged_electrodes(raw)
 
     # create figure
     fig, ax = plt.subplots(2, 2, figsize=(15, 10))
