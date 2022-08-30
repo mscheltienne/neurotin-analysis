@@ -6,9 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mne import create_info
 from mne.io import BaseRaw, RawArray
-from mne.preprocessing import (
-    compute_bridged_electrodes as compute_bridged_electrodes_mne,
-)
+from mne.preprocessing import compute_bridged_electrodes, interpolate_bridged_electrodes
 from mne.transforms import _cart_to_sph, _sph_to_cart
 from mne.viz import plot_bridged_electrodes as plot_bridged_electrodes_mne
 from numpy.typing import NDArray
@@ -79,7 +77,7 @@ def plot_bridged_electrodes(
     return fig, ax
 
 
-def interpolate_bridged_electrodes(
+def repair_bridged_electrodes(
     raw: BaseRaw,
     limit: Optional[int] = 5,
     total_limit: Optional[int] = 16,
@@ -116,7 +114,7 @@ def interpolate_bridged_electrodes(
         assert 0 < total_limit
 
     # retrieve bridge electrodes, operates on a copy
-    bridged_idx, ed_matrix = compute_bridged_electrodes_mne(raw)
+    bridged_idx, _ = compute_bridged_electrodes(raw)
     if total_limit is not None and total_limit <= len(
         set(itertools.chain(*bridged_idx))
     ):
@@ -124,58 +122,8 @@ def interpolate_bridged_electrodes(
             f"More than {total_limit} electrodes have gel-bridges."
         )
 
-    # find groups of electrodes
-    G = nx.Graph()
-    for bridge in bridged_idx:
-        G.add_edge(*bridge)
-    groups_idx = [tuple(elt) for elt in nx.connected_components(G)]
-    if any(len(group) >= limit for group in groups_idx):
-        raise RuntimeError(
-            f"More than {limit} electrodes have a common gel-bridge."
-        )
-
-    # make virtual channels
-    pos = raw.get_montage().get_positions()
-    ch_pos = pos["ch_pos"]
-    virtual_chs = dict()
-    bads = set()
-    for k, group_idx in enumerate(groups_idx):
-        group_names = [raw.ch_names[k] for k in group_idx]
-        bads = bads.union(group_names)
-
-        # compute midway position in spherical coordinates in "head"
-        # (more accurate than cutting though the scalp by using cartesian)
-        sphere_positions = np.zeros((len(group_idx), 3))
-        for i, ch_name in enumerate(group_names):
-            sphere_positions[i, :] = _cart_to_sph(ch_pos[ch_name])
-        pos_virtual = _sph_to_cart(np.average(sphere_positions, axis=0))
-
-        # create the virtual channel info and set the position
-        virtual_info = create_info(
-            ch_names=[f"virtual {k+1}"],
-            sfreq=raw.info["sfreq"],
-            ch_types="eeg",
-        )
-        virtual_info["chs"][0]["loc"][:3] = pos_virtual
-
-        # create the virtual channel data array
-        group_data = raw.get_data(picks=group_names)
-        virtual_data = np.average(group_data, axis=0).reshape(1, -1)
-
-        # create the virtual channel
-        virtual_ch = RawArray(virtual_data, virtual_info, raw.first_samp)
-        virtual_chs[f"virtual {k+1}"] = virtual_ch
-
-    # add the virtual channels
-    raw.add_channels(list(virtual_chs.values()), force_update_info=True)
-
-    # interpolate
-    raw.info["bads"] = list(bads)
-    raw.interpolate_bads(reset_bads=True, mode="accurate")
-
-    # drop virtual channels
-    raw.drop_channels(list(virtual_chs.keys()))
-
+    # requires mne 1.2
+    raw = interpolate_bridged_electrodes(raw, bridged_idx, limit)
     return raw
 
 

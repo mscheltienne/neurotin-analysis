@@ -14,7 +14,7 @@ from ..io import read_raw_fif
 from ..utils._checks import _check_path, _check_type, _check_value
 from ..utils._docs import fill_doc
 from .bads import PREP_bads_suggestion
-from .bridge import interpolate_bridged_electrodes
+from .bridge import repair_bridged_electrodes
 from .events import add_annotations_from_events, check_events
 from .filters import apply_filter_aux, apply_filter_eeg
 
@@ -51,7 +51,7 @@ def prepare_raw(raw: BaseRaw) -> BaseRaw:
 
     # fix bridged electrodes
     raw.set_montage("standard_1020")
-    raw = interpolate_bridged_electrodes(raw)
+    raw = repair_bridged_electrodes(raw)
     raw.set_montage(None)
 
     # filter
