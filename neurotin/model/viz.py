@@ -25,6 +25,13 @@ def plot_topomap(
     info : Info
        MNE measurement information instance containing the channel names.
        A standard 1020 montage is added.
+
+    Returns
+    -------
+    im : matplotlib.image.AxesImage
+        The interpolated data.
+    cn : matplotlib.contour.ContourSet
+        The fieldlines.
     """
     weights = _check_type(
         weights, (pd.Series, np.ndarray), item_name="weights"
@@ -39,7 +46,8 @@ def plot_topomap(
         _check_info(info, weights.size)
         info.set_montage("standard_1020")
 
-    mne.viz.plot_topomap(data, pos=info, **kwargs)
+    im, cn = mne.viz.plot_topomap(data, pos=info, **kwargs)
+    return im, cn
 
 
 def _check_info(info: Optional[Info], n: int) -> None:
