@@ -105,7 +105,7 @@ reject : dict | 'auto' | None
     MNE-compatible rejection dictionary or 'auto' to compute it with
     autoreject. If set to None, rejection is skipped."""
 
-# -------------------------------- externals ---------------------------------
+# -------------------------------- matplotlib --------------------------------
 docdict[
     "plt.figsize"
 ] = """

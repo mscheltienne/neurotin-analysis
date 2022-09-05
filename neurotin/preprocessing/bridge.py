@@ -4,7 +4,10 @@ from typing import Optional, Tuple
 import numpy as np
 from matplotlib import pyplot as plt
 from mne.io import BaseRaw
-from mne.preprocessing import compute_bridged_electrodes, interpolate_bridged_electrodes
+from mne.preprocessing import (
+    compute_bridged_electrodes,
+    interpolate_bridged_electrodes,
+)
 from mne.viz import plot_bridged_electrodes as plot_bridged_electrodes_mne
 from numpy.typing import NDArray
 

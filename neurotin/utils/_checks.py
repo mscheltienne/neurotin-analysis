@@ -9,8 +9,8 @@ from typing import Any, Optional, Union
 
 import numpy as np
 
-from ._docs import fill_doc
 from .. import logger
+from ._docs import fill_doc
 
 
 def _ensure_int(item: Any, item_name: Optional[str] = None) -> int:

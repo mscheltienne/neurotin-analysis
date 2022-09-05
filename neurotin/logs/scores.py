@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Tuple, Union
 
 import pandas as pd
@@ -14,7 +15,7 @@ from ..utils._docs import fill_doc
 
 @fill_doc
 def boxplot_scores_evolution(
-    csv,
+    csv: Union[str, Path],
     participant: Union[int, list, tuple],
     scores: int = 10,
     swarmplot: bool = False,
@@ -22,8 +23,7 @@ def boxplot_scores_evolution(
 ):
     """Plot the NFB scores as boxplots.
 
-    X: Session
-    Y: Score
+    X: Session / Y: Score
     Hue: Score ID (0 to 10)
 
     The NFB scores displayed are logged in a .csv file with the syntax:
@@ -50,14 +50,16 @@ def boxplot_scores_evolution(
     Returns
     -------
     f : Figure
+        Maplotlib figure.
     ax : Axes
+        Matplotlib axes of shape (1,).
     """
     _check_participant(participant)
     scores = _check_scores_idx(scores)
     _check_type(swarmplot, (bool,), item_name="swarmplot")
     _check_type(figsize, (tuple,), item_name="figsize")
 
-    # Select data
+    # select data
     df = pd.read_csv(csv)
     df = df.loc[df["Participant"] == int(participant)]
     df = pd.melt(
@@ -68,7 +70,7 @@ def boxplot_scores_evolution(
         value_name="Score",
     )
 
-    # Plot
+    # plot
     f, ax = plt.subplots(1, 1, figsize=tuple(figsize))
     sns.boxplot(
         x="Session", y="Score", hue="Score ID", data=df, palette="muted", ax=ax
@@ -91,7 +93,7 @@ def boxplot_scores_evolution(
 
 @fill_doc
 def boxplot_scores_between_participants(
-    csv,
+    csv: Union[str, Path],
     participants: Union[int, list, tuple],
     scores: int = 10,
     swarmplot: bool = False,
@@ -99,8 +101,7 @@ def boxplot_scores_between_participants(
 ):
     """Plot the NFB scores as boxplots.
 
-    X: Participant
-    Y: Score
+    X: Participant / Y: Score
     Hue: Score ID (0 to 10)
 
     The NFB scores displayed are logged in a .csv file with the syntax:
@@ -125,14 +126,16 @@ def boxplot_scores_between_participants(
     Returns
     -------
     f : Figure
+        Maplotlib figure.
     ax : Axes
+        Matplotlib axes of shape (1,).
     """
     participants = _check_participants(participants)
     scores = _check_scores_idx(scores)
     _check_type(swarmplot, (bool,), item_name="swarmplot")
     _check_type(figsize, (tuple,), item_name="figsize")
 
-    # Select data
+    # select data
     df = pd.read_csv(csv)
     df = pd.melt(
         df,
@@ -143,7 +146,7 @@ def boxplot_scores_between_participants(
     )
     df = df[df["Participant"].isin(participants)]
 
-    # Plot
+    # plot
     f, ax = plt.subplots(1, 1, figsize=tuple(figsize))
     sns.boxplot(
         x="Participant",
