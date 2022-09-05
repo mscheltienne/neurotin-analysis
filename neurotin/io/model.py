@@ -1,5 +1,4 @@
 import pickle
-from datetime import datetime
 from typing import Dict, Tuple, Union
 
 import numpy as np
@@ -14,6 +13,7 @@ from ..utils._checks import (
     _check_type,
 )
 from ..utils._docs import fill_doc
+from .logs import read_logs
 
 
 @fill_doc
@@ -54,7 +54,7 @@ def load_model(
 
     if model_idx == "auto":
         # read_logs
-        logs = [log for log in _read_logs(session_dir) if log[1] == "Model"]
+        logs = [log for log in read_logs(session_dir) if log[1] == "Model"]
         valid_model_idx = [
             int(log[2].split(" ")[2]) for log in logs if len(log) == 3
         ]
@@ -77,25 +77,6 @@ def _check_model_idx(model_idx: Union[int, str]) -> Union[int, str]:
     else:
         assert 1 <= model_idx, "Invalid model ID."
     return model_idx
-
-
-def _read_logs(session_dir):
-    """Read logs for a given participant/session."""
-    session_dir = _check_path(
-        session_dir, item_name="session_dir", must_exist=True
-    )
-    logs_file = _check_path(
-        session_dir / "logs.txt", item_name="logs_file", must_exist=True
-    )
-    with open(logs_file, "r") as f:
-        lines = f.readlines()
-    lines = [line.split(" - ") for line in lines if len(line.split(" - ")) > 1]
-    logs = [
-        [datetime.strptime(line[0].strip(), "%d/%m/%Y %H:%M")]
-        + [line[k].strip() for k in range(1, len(line))]
-        for line in lines
-    ]
-    return sorted(logs, key=lambda x: x[0], reverse=False)
 
 
 @fill_doc
