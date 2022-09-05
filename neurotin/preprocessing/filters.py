@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Any, Tuple
 
 import numpy as np
 from mne.io import BaseRaw
@@ -7,7 +7,7 @@ from ..utils._checks import _check_type
 from ..utils._docs import fill_doc
 
 
-def _check_bandpass(bandpass) -> Tuple[float, float]:
+def _check_bandpass(bandpass: Any) -> Tuple[float, float]:
     """Check that the argument bandpass is a 2-length valid list-like."""
     _check_type(bandpass, (np.ndarray, tuple, list), item_name="bandpass")
     if isinstance(bandpass, np.ndarray):
@@ -46,15 +46,15 @@ def apply_filter_eeg(
 ) -> None:
     """Apply filters in-place to the EEG channels.
 
-    Available filters:
-        - Bandpass
-        - Notch
-
     Parameters
     ----------
     %(raw)s
-    %(bandpass)s
-    %(notch)s
+    bandpass : tuple
+        A 2-length tuple (highpass, lowpass), e.g. (1., 40.).
+        The lowpass or highpass filter can be disabled by using None.
+    notch : bool
+        If True, a notch filter at (50, 100, 150) Hz  is applied, removing EU
+        powerline noise.
     """
     _check_type(raw, (BaseRaw,), "raw")
     bandpass = _check_bandpass(bandpass)
@@ -73,15 +73,15 @@ def apply_filter_aux(
 ) -> None:
     """Apply filters in-place to the AUX channels.
 
-    Available filters:
-        - Bandpass
-        - Notch
-
     Parameters
     ----------
     %(raw)s
-    %(bandpass)s
-    %(notch)s
+    bandpass : tuple
+        A 2-length tuple (highpass, lowpass), e.g. (1., 40.).
+        The lowpass or highpass filter can be disabled by using None.
+    notch : bool
+        If True, a notch filter at (50, 100, 150) Hz  is applied, removing EU
+        powerline noise.
     """
     _check_type(raw, (BaseRaw,), "raw")
     bandpass = _check_bandpass(bandpass)

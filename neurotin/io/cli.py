@@ -9,14 +9,14 @@ from ..utils._checks import _check_path, _check_type
 def write_results(results, results_file):
     """Write results from CLI call to pickle.
 
-    Each entry in results is a tuple starting with (bool, str, ...). The bool
+    Each entry in results is a tuple starting with (bool, str). The bool
     in position 0 is set to False when an error was raised during processing.
     The str in position 1 is the fname processed.
 
     Parameters
     ----------
     results : list of tuples
-        (bool, str, ...) containing the results from the pipeline functions.
+        (bool, str) containing the results from the pipeline functions.
     results_file : path-like
         Path to the .pcl file where the results are pickled. The datetime is
         appended to the file name stem.
@@ -46,7 +46,7 @@ def read_results(
 ):
     """Read results from CLI call.
 
-    Each result in the list of results starts with (bool, str, ...). The bool
+    Each result in the list of results starts with (bool, str). The bool
     in position 0 is set to False when an error was raised during processing.
     The str in position 1 is the fname processed.
 

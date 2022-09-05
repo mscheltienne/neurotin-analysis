@@ -19,13 +19,19 @@ def plot_bridged_electrodes(
     Parameters
     ----------
     raw : Raw
-        MNE Raw instance before filtering. The raw instance is copied, the EEG
+        MNE raw object before filtering. The raw instance is copied, the EEG
         channels are picked and filtered between 0.5 and 30 Hz.
 
     Returns
     -------
     fig : Figure
-    ax : Array of Axes
+        Matplotlib figure.
+    ax : array of Axes
+        Matplotlib axes of shape (2, 2)
+        - ax[0, 0]: Electrical distance.
+        - ax[0, 1]: Electrical distance with vmax=5
+        - ax[1, 0]: Electrical distance matrix distribution
+        - ax[1, 1]: Topographic map
     """
     _check_raw(raw)
 
@@ -87,7 +93,7 @@ def repair_bridged_electrodes(
     Parameters
     ----------
     raw : Raw
-        MNE Raw instance before filtering. The raw instance is copied, the EEG
+        MNE raw object before filtering. The raw instance is copied, the EEG
         channels are picked and filtered between 0.5 and 30 Hz.
     limit : int | None
         Maximum number of electrodes (inc.) that can be bridged in a group
@@ -99,7 +105,7 @@ def repair_bridged_electrodes(
     Returns
     -------
     raw : Raw
-        MNE Raw instance before filtering where the bridged channels have been
+        MNE raw object before filtering where the bridged channels have been
         interpolated.
     """
     _check_raw(raw)

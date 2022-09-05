@@ -22,10 +22,7 @@ from .filters import apply_filter_aux, apply_filter_eeg
 # -----------------------------------------------------------------------------
 @fill_doc
 def prepare_raw(raw: BaseRaw) -> BaseRaw:
-    """Prepare raw instance.
-
-    This function checks events, adds events as annotations, marks bad
-    channels, adds montage, and applies FIR filters and CAR.
+    """Prepare raw object.
 
     The raw instance is modified in-place.
 
@@ -252,7 +249,7 @@ def preprocess(fname) -> Tuple[BaseRaw, BaseRaw, ICA]:
     -------
     %(raw)s
     raw_pre_ica : Raw
-        Raw instance used to fit the ICA.
+        MNE raw object used to fit the ICA.
     %(ica)s
     """
     # load
@@ -287,7 +284,7 @@ def pipeline(
     Parameters
     ----------
     fname : path-like
-        Path to the input file to the processing pipeline.
+        Path to the file inputted into the processing pipeline.
     dir_in : path-like
         Path to the folder containing the FIF files to process.
     dir_out : path-like
@@ -299,7 +296,7 @@ def pipeline(
     success : bool
         False if a processing step raised an Exception.
     fname : str
-        Path to the input file provided to the processing function.
+        Path to the file inputted into the processing function.
     """
     logger.info("Processing: %s", fname)
     try:
@@ -324,7 +321,6 @@ def pipeline(
             output_fname_raw_pre_ica, fmt="double", overwrite=True
         )
         ica.save(output_fname_ica)
-
         return (True, str(fname))
 
     except Exception:
@@ -338,10 +334,10 @@ def _create_output_fname(
 ) -> Tuple[Path, Path, Path]:
     """Create the output file names.
 
-    The output file names is based on the relative path between fname
-    and input_dir_fif.
+    The output file names is based on the relative path between 'fname'
+    and 'dir_in'.
     """
-    # this will fail if fname is not in input_dir_fif
+    # this will fail if fname is not in dir_in
     relative_fname = fname.relative_to(dir_in)
     # create output fname
     output_fname_raw = dir_out / relative_fname

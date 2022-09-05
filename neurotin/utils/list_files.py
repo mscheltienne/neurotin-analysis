@@ -1,3 +1,6 @@
+from typing import Any
+from pathlib import Path
+
 from ._checks import (
     _check_participant,
     _check_path,
@@ -7,7 +10,7 @@ from ._checks import (
 
 
 def list_raw_fif(directory, *, exclude=None):
-    """List all raw fif files in directory and its sub-directories.
+    """List all raw fif files in 'directory' and its sub-directories.
 
     Parameters
     ----------
@@ -138,7 +141,7 @@ def raw_fif_selection(
     return fifs
 
 
-def _check_fname(fname, folder):
+def _check_fname(fname: Any, folder: Path):
     """Check that the fname is valid and present in folder."""
     if fname is None:
         return fname

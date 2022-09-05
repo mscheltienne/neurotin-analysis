@@ -21,6 +21,19 @@ verbose : int | str | bool | None
     If a bool is provided, the verbosity is set to "WARNING" for False and to
     "INFO" for True."""
 
+# ------------------------------ MNE objects ---------------------------------
+docdict[
+    "raw"
+] = """
+raw : Raw
+    MNE raw object (continuous data)."""
+docdict[
+    "ica"
+] = """
+ica : ICA
+    Fitted ICA decomposition using the Preconditioned ICA for Real Data
+    algorithm (PICARD)."""
+
 # -------------------------------- general -----------------------------------
 docdict[
     "folder_data"
@@ -44,10 +57,6 @@ docdict[
 session : int
     ID of the session to include (between 1 and 15)."""
 docdict[
-    "raw"
-] = """
-raw : Raw"""
-docdict[
     "copy"
 ] = """
 copy : bool
@@ -66,26 +75,6 @@ docdict[
 df: DataFrame
     DataFrame containing the columns 'participant, 'visit', 'date', and
     'result'."""
-
-# ------------------------------ preprocessing -------------------------------
-docdict[
-    "bandpass"
-] = """
-bandpass : tuple
-    A 2-length tuple (highpass, lowpass), e.g. (1., 40.).
-    The lowpass or highpass filter can be disabled by using None."""
-docdict[
-    "notch"
-] = """
-notch : bool
-    If True, a notch filter at (50, 100, 150) Hz  is applied, removing EU
-    powerline activity."""
-docdict[
-    "ica"
-] = """
-ica : ICA
-    ICA decomposition using the Preconditioned ICA for Real Data algorithm
-    (PICARD)."""
 
 # ------------------------------------ psd -----------------------------------
 docdict[
