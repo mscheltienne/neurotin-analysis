@@ -55,7 +55,7 @@ def run():
         pattern = re.compile(r"(\d{3})")
         participants = [
             int(p.name)
-            for p in Path(args.input_dir).iterdir()
+            for p in Path(args.dir_in).iterdir()
             if pattern.match(p.name)
         ]
 
