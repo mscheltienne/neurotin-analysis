@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 from typing import Dict, List, Tuple, Union
 
 from ..io.logs import read_logs
@@ -9,7 +10,7 @@ from ._logs import logger
 
 @fill_doc
 def list_runs(
-    folder,
+    folder: Union[str, Path],
     participants: Union[int, List[int], Tuple[int, ...]],
     valid_only: bool = True,
     regular_only: bool = False,
@@ -44,7 +45,7 @@ def list_runs(
     _check_type(transfer_only, (bool,), "transfer_only")
     assert not (regular_only and transfer_only)
 
-    # participant fodler pattern
+    # participant folder pattern
     pattern = re.compile(r"(\d{3})")
     participants_folder = [
         int(p.name) for p in folder.iterdir() if pattern.match(p.name)
