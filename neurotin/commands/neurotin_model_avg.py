@@ -1,7 +1,6 @@
 import argparse
 import pickle
 import re
-from pathlib import Path
 
 from neurotin import set_log_level
 from neurotin.commands import helpdict
@@ -54,9 +53,7 @@ def run():
     else:
         pattern = re.compile(r"(\d{3})")
         participants = [
-            int(p.name)
-            for p in Path(args.dir_in).iterdir()
-            if pattern.match(p.name)
+            int(p.name) for p in dir_in.iterdir() if pattern.match(p.name)
         ]
 
     if len(participants) == 0:
