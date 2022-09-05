@@ -9,7 +9,6 @@ from typing import Any, List, Optional
 
 import numpy as np
 
-from .. import logger
 from ._docs import fill_doc
 
 
@@ -235,9 +234,6 @@ def _check_n_jobs(n_jobs: Any) -> int:
     """
     _check_type(n_jobs, ("int",), item_name="n_jobs")
     n_cores = mp.cpu_count()
-    logger.debug(
-        "Checking n_jobs '%i'. Number of cores found: '%s'.", n_jobs, n_cores
-    )
     if n_jobs == -1:
         n_jobs = n_cores
     _check_value(n_jobs, tuple(range(n_cores + 1)), item_name="n_jobs")
@@ -250,7 +246,6 @@ def _check_path(
     """Check if path is valid and return it as pathlib.Path object."""
     _check_type(item, ("path-like",), item_name=item_name)
     item = Path(item)
-    logger.debug("Checking path '%s'.", item)
     if must_exist:
         assert item.exists(), "The path does not exists."
     return item.expanduser().absolute()
