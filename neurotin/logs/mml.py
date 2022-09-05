@@ -8,11 +8,10 @@ from ..utils._docs import fill_doc
 
 
 @fill_doc
-def lineplot_mml_evolution(csv, participants, figsize=(10, 5)):
+def lineplot_mml(csv, participants, figsize=(10, 5)):
     """Plot the MML results as lineplot.
 
-    X: Session
-    Y: MML
+    X: Session / Y: MML
     Hue: Participant
 
     Minimum Masking Level test are logged in a .csv file with the syntax:
@@ -30,12 +29,14 @@ def lineplot_mml_evolution(csv, participants, figsize=(10, 5)):
     Returns
     -------
     f : Figure
+        Matplotlib figure.
     ax : Axes
+        Matplotlib axes of shape (1,).
     """
     participants = _check_participants(participants)
     _check_type(figsize, (tuple,), item_name="figsize")
 
-    # Select data
+    # select data
     df = pd.read_csv(csv)
     df = pd.melt(
         df,
@@ -49,7 +50,7 @@ def lineplot_mml_evolution(csv, participants, figsize=(10, 5)):
         subset=("Participant", "Session"), keep="last", inplace=True
     )
 
-    # Plot
+    # plot
     f, ax = plt.subplots(1, 1, figsize=figsize)
     sns.lineplot(
         x="Session",
