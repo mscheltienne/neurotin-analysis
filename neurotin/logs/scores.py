@@ -94,7 +94,7 @@ def boxplot_scores_evolution(
 @fill_doc
 def boxplot_scores_between_participants(
     csv: Union[str, Path],
-    participants: Union[int, list, tuple],
+    participants: Union[int, List[int], Tuple[int, ...]],
     scores: int = 10,
     swarmplot: bool = False,
     figsize: Tuple[float, float] = (10.0, 5.0),

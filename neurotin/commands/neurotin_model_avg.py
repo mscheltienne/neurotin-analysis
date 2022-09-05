@@ -47,7 +47,7 @@ def run():
         with open(args.df_fname, "wb") as f:
             pickle.dump("data will be written here..", f, -1)
     except Exception:
-        raise IOError("Could not write to file: '%s'." % args.df_fname)
+        raise IOError(f"Could not write to file: '{args.df_fname}'.")
 
     if args.participants is not None:
         participants = [int(participant) for participant in args.participants]

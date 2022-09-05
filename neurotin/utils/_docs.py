@@ -36,7 +36,7 @@ ica : ICA
 
 # -------------------------------- general -----------------------------------
 docdict[
-    "folder_data"
+    "folder_raw_data"
 ] = """
 folder : path-like
     Path to the directory containing raw data with recordings, logs and
@@ -60,7 +60,7 @@ docdict[
     "copy"
 ] = """
 copy : bool
-    If True, operates and return a copy. Default to False to operate
+    If True, operates on a copy and return a copy. Default to False to operate
     in-place."""
 
 # --------------------------------- evamed -----------------------------------

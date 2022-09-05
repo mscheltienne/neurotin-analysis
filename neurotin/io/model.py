@@ -24,7 +24,7 @@ def load_model(
 
     Parameters
     ----------
-    %(folder_data)s
+    %(folder_raw_data)s
     %(participant)s
     %(session)s
     model_idx : int | 'auto'
@@ -32,15 +32,15 @@ def load_model(
 
     Returns
     -------
-    weights : array
-        Array of weights between 0 and 1 of shape (64 channels, )
+    weights : array of shape (n_channels,)
+        Array of weights between 0 and 1 of shape (64 channels,).
     info : Info
-        MNE measurement info instance.
+        MNE measurement info object.
     reject : dict
         Global peak-to-peak rejection threshold. Only key should be 'eeg'.
-    reject_local : array
+    reject_local : array of shape (n_channels,)
         Array of local peak-to-peak rejection threshold of shape shape
-        (64 channels, ).
+        (64 channels,).
     calib_idx : int
         ID of the calibration used to generate the model.
     """
@@ -106,7 +106,7 @@ def load_session_weights(
 
     Parameters
     ----------
-    %(folder_data)s
+    %(folder_raw_data)s
     %(participant)s
     %(session)s
     replace_bad_with : float | np.nan

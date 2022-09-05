@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 import numpy as np
 import seaborn as sns
@@ -19,7 +19,10 @@ from ..utils.align_axes import align_yaxis
 # -----------------------------------------------------------------------------
 @fill_doc
 def catplot(
-    df, participants: Union[int, list, tuple], kind: str = "box", **kwargs
+    df,
+    participants: Union[int, List[int], Tuple[int, ...]],
+    kind: str = "box",
+    **kwargs,
 ):
     """Plot a comparison between participants.
 
@@ -57,7 +60,10 @@ def catplot(
 
 
 def captlot_success_distribution(
-    df_positives, df_negatives, participants: Union[int, list, tuple], **kwargs
+    df_positives,
+    df_negatives,
+    participants: Union[int, List[int], Tuple[int, ...]],
+    **kwargs,
 ):
     """Plot the distribution of positive vs negative diff.
 
@@ -123,7 +129,10 @@ def captlot_success_distribution(
 # x-axis: participant ids / y-axis: metric
 # -----------------------------------------------------------------------------
 def plot_joint_clinical_nfb_performance(
-    df, df_clinical, name: str, participants: Union[int, list, tuple]
+    df,
+    df_clinical,
+    name: str,
+    participants: Union[int, List[int], Tuple[int, ...]],
 ):
     """Plot a joint figure with both clinical outcomes and NFB performance.
 

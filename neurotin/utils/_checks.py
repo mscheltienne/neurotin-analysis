@@ -5,7 +5,7 @@ import multiprocessing as mp
 import operator
 import os
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, List, Optional
 
 import numpy as np
 
@@ -182,7 +182,7 @@ def _check_value(
 
 
 @fill_doc
-def _check_verbose(verbose: Union[bool, str, int, None]) -> int:
+def _check_verbose(verbose: Any) -> int:
     """Check that the value of verbose is valid.
 
     Parameters
@@ -225,7 +225,7 @@ def _check_verbose(verbose: Union[bool, str, int, None]) -> int:
     return verbose
 
 
-def _check_n_jobs(n_jobs):
+def _check_n_jobs(n_jobs: Any) -> int:
     """Check that the number of jobs is valid.
 
     Notes
@@ -244,7 +244,9 @@ def _check_n_jobs(n_jobs):
     return n_jobs
 
 
-def _check_path(item, item_name=None, must_exist=False):
+def _check_path(
+    item: Any, item_name: Optional[str] = None, must_exist: bool = False
+) -> Path:
     """Check if path is valid and return it as pathlib.Path object."""
     _check_type(item, ("path-like",), item_name=item_name)
     item = Path(item)
@@ -254,14 +256,14 @@ def _check_path(item, item_name=None, must_exist=False):
     return item.expanduser().absolute()
 
 
-def _check_participant(participant):
+def _check_participant(participant: Any) -> int:
     """Check that the participant ID is valid."""
     _check_type(participant, ("int",), item_name="participant")
     assert 0 < participant
     return participant
 
 
-def _check_participants(participants):
+def _check_participants(participants: Any) -> List[int]:
     """Check that the participant IDs are valid and return them as a list."""
     _check_type(participants, ("int", list, tuple), item_name="participants")
     if isinstance(participants, int):
@@ -273,7 +275,7 @@ def _check_participants(participants):
     return participants
 
 
-def _check_session(session):
+def _check_session(session: Any) -> int:
     """Check that the session ID is valid."""
     _check_type(session, ("int",), item_name="session")
     assert 1 <= session <= 15

@@ -1,7 +1,7 @@
 import multiprocessing as mp
 import re
 import traceback
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -26,7 +26,7 @@ from .epochs import make_fixed_length_epochs, reject_epochs
 @fill_doc
 def psd_avg_band(
     folder,
-    participants: Union[int, list, tuple],
+    participants: Union[int, List[int], Tuple[int, ...]],
     duration: float,
     overlap: float,
     reject: Optional[Union[Dict[str, float], str]],

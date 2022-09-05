@@ -38,7 +38,7 @@ def weights_apply_session_mask(df, folder, *, copy: bool = False):
     Parameters
     ----------
     %(df_psd)s
-    %(folder_data)s
+    %(folder_raw_data)s
     %(copy)s
 
     Returns

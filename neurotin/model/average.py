@@ -1,4 +1,6 @@
 import re
+from pathlib import Path
+from typing import List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -10,12 +12,15 @@ from ..utils._docs import fill_doc
 
 
 @fill_doc
-def compute_average(folder, participants):
+def compute_average(
+    folder: Union[str, Path],
+    participants: Union[int, List[int], Tuple[int, ...]],
+):
     """Compute the average model across all session and all participants.
 
     Parameters
     ----------
-    %(folder_data)s
+    %(folder_raw_data)s
     %(participants)s
 
     Returns
