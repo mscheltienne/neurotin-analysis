@@ -1,14 +1,19 @@
-from typing import Optional
+from typing import Optional, Union
 
 import mne
 import numpy as np
 import pandas as pd
 from mne.io import Info
+from numpy.typing import NDArray
 
 from ..utils._checks import _check_type
 
 
-def plot_topomap(weights, info: Optional[Info] = None, **kwargs) -> None:
+def plot_topomap(
+    weights: Union[pd.Series, NDArray[float]],
+    info: Optional[Info] = None,
+    **kwargs,
+) -> None:
     """Plot the weights as a topographic map.
 
     Parameters
