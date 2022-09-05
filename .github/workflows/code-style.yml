@@ -20,7 +20,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Setup Python 3.9
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
           architecture: 'x64'
@@ -44,6 +44,6 @@ jobs:
           check_filenames: true
           check_hidden: true
           skip: './.git,./build,./.mypy_cache,./.pytest_cache'
-          ignore_words_list: thi,THI,hist
+          ignore_words_file: ./.codespellignore
       - name: Run pydocstyle
         run: pydocstyle .
