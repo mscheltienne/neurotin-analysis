@@ -5,10 +5,21 @@ Inspired from mne.utils.docs.py by Eric Larson <larson.eric.d@gmail.com>
 """
 
 import sys
-from typing import Callable, List
+from typing import Callable, Dict, List
 
 # ------------------------- Documentation dictionary -------------------------
 docdict = dict()
+
+# ---------------------------------- verbose ---------------------------------
+docdict[
+    "verbose"
+] = """
+verbose : int | str | bool | None
+    Sets the verbosity level. The verbosity increases gradually between
+    "CRITICAL", "ERROR", "WARNING", "INFO" and "DEBUG".
+    If None is provided, the verbosity is set to "WARNING".
+    If a bool is provided, the verbosity is set to "WARNING" for False and to
+    "INFO" for True."""
 
 # -------------------------------- general -----------------------------------
 docdict[
@@ -114,7 +125,7 @@ figsize : tuple
     inches."""
 
 # ------------------------- Documentation functions --------------------------
-docdict_indented = dict()
+docdict_indented: Dict[int, Dict[str, str]] = dict()
 
 
 def fill_doc(f: Callable) -> Callable:
@@ -182,8 +193,6 @@ def _indentcount_lines(lines: List[str]) -> int:
         line_stripped = line.lstrip()
         if line_stripped:
             indent = min(indent, len(line) - len(line_stripped))
-    if indent == sys.maxsize:
-        return 0
     return indent
 
 

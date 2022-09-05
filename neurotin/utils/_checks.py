@@ -9,6 +9,7 @@ from typing import Any, Optional, Union
 
 import numpy as np
 
+from ._docs import fill_doc
 from .. import logger
 
 
@@ -180,8 +181,13 @@ def _check_value(
     return item
 
 
+@fill_doc
 def _check_verbose(verbose: Union[bool, str, int, None]) -> int:
     """Check that the value of verbose is valid.
+
+    Parameters
+    ----------
+    %(verbose)s
 
     Returns
     -------
@@ -229,17 +235,17 @@ def _check_n_jobs(n_jobs):
     """
     _check_type(n_jobs, ("int",), item_name="n_jobs")
     n_cores = mp.cpu_count()
-    logger.debug("Checking n_jobs '%i'.", n_jobs)
-    logger.debug("Number of cores found: %s", n_cores)
+    logger.debug(
+        "Checking n_jobs '%i'. Number of cores found: '%s'.", n_jobs, n_cores
+    )
     if n_jobs == -1:
         n_jobs = n_cores
     _check_value(n_jobs, tuple(range(n_cores + 1)), item_name="n_jobs")
-
     return n_jobs
 
 
 def _check_path(item, item_name=None, must_exist=False):
-    """Check if path is valid and return it as pathlib.Path instance."""
+    """Check if path is valid and return it as pathlib.Path object."""
     _check_type(item, ("path-like",), item_name=item_name)
     item = Path(item)
     logger.debug("Checking path '%s'.", item)

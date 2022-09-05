@@ -1,1 +1,1 @@
-"""Utils module."""
+"""Utilities module."""
