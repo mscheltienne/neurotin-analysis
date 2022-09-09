@@ -34,7 +34,7 @@ def hist_dropouts(
     ax : Axes
         Matplotlib axes of shape (1,).
     """
-    folder_pp = _check_path(folder_pp, "folder", must_exist=True)
+    folder_pp = _check_path(folder_pp, "folder_pp", must_exist=True)
     runs = list_runs(folder, participants)
 
     # counters
