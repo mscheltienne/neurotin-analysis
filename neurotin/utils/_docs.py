@@ -42,6 +42,11 @@ folder : path-like
     Path to the directory containing raw data with recordings, logs and
     models."""
 docdict[
+    "folder_pp_data"
+] = """
+folder_pp : path-like
+    Path to the directory containing preprocessed data."""
+docdict[
     "participant"
 ] = """
 participants : int

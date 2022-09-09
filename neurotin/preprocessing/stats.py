@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 
 from ..utils._checks import _check_path
 from ..utils._docs import fill_doc
-from ..utils.list_runs import list_runs
+from ..utils.selection import list_runs
 
 
 @fill_doc
@@ -24,8 +24,7 @@ def hist_dropouts(
     Parameters
     ----------
     %(folder_raw_data)s
-    folder_pp : path-like
-        Folder where the preprocessed data is stored.
+    %(folder_pp_data)s
     %(participants)s
 
     Returns

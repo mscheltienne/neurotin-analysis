@@ -100,3 +100,50 @@ def list_runs(
             runs[participant][session] = sorted(runs[participant][session])
 
     return runs
+
+
+@fill_doc
+def list_runs_pp(
+    folder: Union[str, Path],
+    folder_pp: Union[str, Path],
+    participants: Union[int, List[int], Tuple[int, ...]],
+    valid_only: bool = True,
+    regular_only: bool = False,
+    transfer_only: bool = False,
+) -> Dict[int, Dict[int, str]]:
+    """List online neurofeedback runs preprocessed.
+
+    Parameters
+    ----------
+    %(folder_raw_data)s
+    %(folder_pp_data)s
+    %(participants)s
+    valid_only : bool
+        If True, return only the valid runs.
+    regular_only : bool
+        If True, return only regular neurofeedback runs.
+    transfer_only : bool
+        If True, returns only transfer neurofeedback runs.
+
+    Returns
+    -------
+    runs : dict
+        Dictionary containing the selected runs.
+        Key: int - participant ID.
+        Value: dictionnary
+            Key: int - session ID.
+            Value: str - list of online runs file path.
+    """
+    folder_pp = _check_path(folder_pp, "folder_pp", must_exist=True)
+    runs = list_runs(folder, participants)
+
+    for participant in runs:
+        for session in runs[participant]:
+            files_pp = list()
+            for file in runs[participant][session]:
+                file_pp = folder_pp / Path(file).relative_to(folder)
+                if file_pp.exists():
+                    files_pp.append(file_pp)
+            runs[participant][session] = sorted(files_pp)
+
+    return runs
