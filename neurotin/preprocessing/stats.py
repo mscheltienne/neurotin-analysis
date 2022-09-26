@@ -57,8 +57,10 @@ def hist_dropouts(
     )
 
     f, ax = plt.subplots(1, 1)
-    sns.barplot(x=totals.index, y=totals["total"], color='darkblue', ax=ax)
-    sns.barplot(x=dropped.index, y=dropped["dropped"], color='lightblue', ax=ax)
+    sns.barplot(x=totals.index, y=totals["total"], color="darkblue", ax=ax)
+    sns.barplot(
+        x=dropped.index, y=dropped["dropped"], color="lightblue", ax=ax
+    )
     ax.set(xlabel="Participants", ylabel="Dropped / Total files")
 
     return f, ax

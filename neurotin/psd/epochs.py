@@ -1,11 +1,11 @@
 from itertools import chain
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Tuple, Union
 
 import mne
 import numpy as np
 from autoreject import AutoReject, get_rejection_threshold
 from mne import BaseEpochs
-from mne.io import BaseRaw
+from mne.io import BaseRaw, RawArray
 from numpy.typing import NDArray
 
 from ..config.events import (
@@ -16,6 +16,49 @@ from ..config.events import (
 )
 from ..utils._checks import _check_type, _check_value
 from ..utils._docs import fill_doc
+
+
+@fill_doc
+def make_epochs(raw: BaseRaw) -> Dict[str, BaseEpochs]:
+    """Create epochs for regulation and non-regulation events.
+
+    Regulation epochs last 16 seconds. Non-regulation epochs last 8 seconds.
+    The first non-regulation epoch is cropped around its last 8 seconds.
+
+    Parameters
+    ----------
+    %(raw)s
+
+    Returns
+    -------
+    epochs : dict of Epochs
+        Epochs for 'regulation' and for 'non-regulation'.
+    """
+    _check_type(raw, (BaseRaw,), item_name="raw")
+
+    # load events
+    events, event_id = _load_events(raw)
+
+    # change event sample of the first non-regulation phase
+    events[0, 0] += FIRST_REST_PHASE_EXT * raw.info["sfreq"]
+
+    # create epochs
+    epochs = dict()
+    for ev, idx in event_id.items():
+        epochs[ev] = mne.Epochs(
+            raw,
+            events=events,
+            event_id={ev: idx},
+            tmin=0.0,
+            tmax=EVENTS_DURATION_MAPPING[idx],
+            baseline=None,
+            picks="eeg",
+            preload=True,
+            reject=None,
+            flat=None,
+        )
+
+    return epochs
 
 
 @fill_doc
@@ -53,7 +96,7 @@ def make_fixed_length_epochs(
     # add new stim channel
     raw = raw.copy()
     info = mne.create_info(["STI"], sfreq=raw.info["sfreq"], ch_types="stim")
-    stim = mne.io.RawArray(np.zeros(shape=(1, len(raw.times))), info)
+    stim = RawArray(np.zeros(shape=(1, len(raw.times))), info)
     raw.add_channels([stim], force_update_info=True)
 
     # add fixed length events to the new stim channel
@@ -99,48 +142,6 @@ def make_fixed_length_epochs(
     return epochs
 
 
-def make_epochs(raw: BaseRaw) -> Dict[str, BaseEpochs]:
-    """Create epochs for regulation and non-regulation events.
-
-    Regulation epochs last 16 seconds. Non-regulation epochs last 8 seconds.
-    The first non-regulation epoch is cropped around its last 8 seconds.
-
-    Parameters
-    ----------
-    %(raw)s
-
-    Returns
-    -------
-    epochs : dict of Epochs
-        Epochs for 'regulation' and for 'non-regulation'.
-    """
-    _check_type(raw, (BaseRaw,), item_name="raw")
-
-    # load events
-    events, event_id = _load_events(raw)
-
-    # change event sample of the first non-regulation phase
-    events[0, 0] += FIRST_REST_PHASE_EXT * raw.info["sfreq"]
-
-    # create epochs
-    epochs = dict()
-    for ev, idx in event_id.items():
-        epochs[ev] = mne.Epochs(
-            raw,
-            events=events,
-            event_id={ev: idx},
-            tmin=0.0,
-            tmax=EVENTS_DURATION_MAPPING[idx],
-            baseline=None,
-            picks="eeg",
-            preload=True,
-            reject=None,
-            flat=None,
-        )
-
-    return epochs
-
-
 def _load_events(raw: BaseRaw) -> Tuple[NDArray[int], Dict[str, int]]:
     """Load events from raw instance and check if it is an online run."""
     events = mne.find_events(raw, stim_channel="TRIGGER")
@@ -155,8 +156,8 @@ def _load_events(raw: BaseRaw) -> Tuple[NDArray[int], Dict[str, int]]:
 
 @fill_doc
 def reject_epochs(
-    epochs: BaseEpochs, reject: Optional[Union[Dict[str, float], str]] = None
-) -> Tuple[BaseEpochs, Optional[Dict[str, float]]]:
+    epochs: BaseEpochs, reject: Union[Dict[str, float], str] = "auto"
+) -> Tuple[BaseEpochs, Dict[str, float]]:
     """Reject bad epochs with a global rejection threshold.
 
     Parameters
@@ -173,7 +174,7 @@ def reject_epochs(
         Rejection dictionary used to drop epochs.
     """
     _check_type(epochs, (BaseEpochs,), item_name="epochs")
-    _check_type(reject, (dict, str, None), item_name="reject")
+    _check_type(reject, (dict, str), item_name="reject")
     if isinstance(reject, str):
         _check_value(reject, ("auto",), item_name="reject")
     elif isinstance(reject, dict):
@@ -181,9 +182,7 @@ def reject_epochs(
 
     if reject == "auto":
         reject = get_rejection_threshold(epochs, decim=1)
-    if reject is not None:
-        epochs.drop_bad(reject=reject)
-
+    epochs.drop_bad(reject=reject)
     return epochs, reject
 
 
