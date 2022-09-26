@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from mne import BaseEpochs, pick_types
 from mne.io import BaseRaw, read_raw_fif
-from mne.time_frequency import psd_welch
+from mne.time_frequency import EpochsSpectrum
 from scipy.integrate import simpson
 
 from .. import logger
@@ -166,19 +166,17 @@ def _psd_avg_band(
 
 
 def _psd_welch(
-    raw: BaseRaw, duration: float, overlap: float, reject, **kwargs
-):
+    raw: BaseRaw, duration: float, overlap: float, reject: Optional[Union[Dict[str, float], str]], **kwargs
+) -> Dict[str, EpochsSpectrum]:
     """Compute the power spectral density using the welch method."""
     epochs = make_fixed_length_epochs(raw, duration, overlap)
+    if reject is not None:
+        epochs, _ = reject_epochs(epochs, reject)
     kwargs = _check_kwargs(kwargs, epochs)
-    epochs, reject = reject_epochs(epochs, reject)
-
-    psds, freqs = dict(), dict()
+    spectrums = dict()
     for phase in epochs.event_id:
-        psds[phase], freqs[phase] = psd_welch(epochs[phase], **kwargs)
-        psds[phase] = np.average(psds[phase], axis=0)
-
-    return psds, freqs
+        spectrums[phase] = epochs[phase].compute_psd(method="welch", **kwargs)
+    return spectrums
 
 
 def _check_kwargs(kwargs: dict, epochs: BaseEpochs):
@@ -186,17 +184,17 @@ def _check_kwargs(kwargs: dict, epochs: BaseEpochs):
     if "picks" not in kwargs:
         kwargs["picks"] = pick_types(epochs.info, eeg=True, exclude=[])
     if "n_fft" not in kwargs:
-        kwargs["n_fft"] = epochs._data.shape[-1]
+        kwargs["n_fft"] = epochs.times.size
         logger.debug("Argument 'n_fft' set to %i", epochs._data.shape[-1])
     else:
-        logger.warning(
+        logger.debug(
             "Argument 'n_fft' was provided and is set to %i", kwargs["n_fft"]
         )
     if "n_overlap" not in kwargs:
         kwargs["n_overlap"] = 0
         logger.debug("Argument 'n_overlap' set to 0")
     else:
-        logger.warning(
+        logger.debug(
             "Argument 'n_overlap' was provided and is set to %i",
             kwargs["n_overlap"],
         )
@@ -204,7 +202,7 @@ def _check_kwargs(kwargs: dict, epochs: BaseEpochs):
         kwargs["n_per_seg"] = epochs._data.shape[-1]
         logger.debug("Argument 'n_per_seg' set to %i", epochs._data.shape[-1])
     else:
-        logger.warning(
+        logger.debug(
             "Argument 'n_per_seg' was provided and is set to %i",
             kwargs["n_per_seg"],
         )
