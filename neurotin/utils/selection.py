@@ -22,12 +22,9 @@ def list_runs(
     ----------
     %(folder_raw_data)s
     %(participants)s
-    valid_only : bool
-        If True, return only the valid runs.
-    regular_only : bool
-        If True, return only regular neurofeedback runs.
-    transfer_only : bool
-        If True, returns only transfer neurofeedback runs.
+    %(valid_only)s
+    %(regular_only)s
+    %(transfer_only)s
 
     Returns
     -------
@@ -118,12 +115,9 @@ def list_runs_pp(
     %(folder_raw_data)s
     %(folder_pp_data)s
     %(participants)s
-    valid_only : bool
-        If True, return only the valid runs.
-    regular_only : bool
-        If True, return only regular neurofeedback runs.
-    transfer_only : bool
-        If True, returns only transfer neurofeedback runs.
+    %(valid_only)s
+    %(regular_only)s
+    %(transfer_only)s
 
     Returns
     -------
@@ -135,7 +129,9 @@ def list_runs_pp(
             Value: str - list of online runs file path.
     """
     folder_pp = _check_path(folder_pp, "folder_pp", must_exist=True)
-    runs = list_runs(folder, participants)
+    runs = list_runs(
+        folder, participants, valid_only, regular_only, transfer_only
+    )
 
     for participant in runs:
         for session in runs[participant]:

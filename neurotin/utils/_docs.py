@@ -67,6 +67,21 @@ docdict[
 copy : bool
     If True, operates on a copy and return a copy. Default to False to operate
     in-place."""
+docdict[
+    "valid_only"
+] = """
+valid_only : bool
+    If True, return only the valid runs."""
+docdict[
+    "regular_only"
+] = """
+regular_only : bool
+    If True, return only regular neurofeedback runs."""
+docdict[
+    "transfer_only"
+] = """
+transfer_only : bool
+    If True, returns only transfer neurofeedback runs."""
 
 # --------------------------------- evamed -----------------------------------
 docdict[

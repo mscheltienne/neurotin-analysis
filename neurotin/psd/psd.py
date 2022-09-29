@@ -1,13 +1,12 @@
 import multiprocessing as mp
 import re
 import traceback
-from typing import Dict, List, Optional, Tuple, Union
+from itertools import chain
+from pathlib import Path
+from typing import List, Tuple, Union
 
-import numpy as np
 import pandas as pd
-from mne import BaseEpochs, pick_types
-from mne.io import BaseRaw, read_raw_fif
-from mne.time_frequency import EpochsSpectrum
+from mne.io import read_raw_fif
 from scipy.integrate import simpson
 
 from .. import logger
@@ -16,23 +15,24 @@ from ..utils._checks import (
     _check_participants,
     _check_path,
     _check_type,
-    _check_value,
 )
 from ..utils._docs import fill_doc
-from ..utils.list_files import list_raw_fif
-from .epochs import make_fixed_length_epochs, reject_epochs
+from ..utils.selection import list_runs_pp
+from .epochs import make_fixed_length_epochs
 
 
 @fill_doc
-def psd_avg_band(
-    folder,
+def compute_bandpower(
+    folder: Union[str, Path],
+    folder_pp: Union[str, Path],
+    valid_only: bool,
+    regular_only: bool,
+    transfer_only: bool,
     participants: Union[int, List[int], Tuple[int, ...]],
     duration: float,
     overlap: float,
-    reject: Optional[Union[Dict[str, float], str]],
     fmin: float,
     fmax: float,
-    average: str = "mean",
     n_jobs: int = 1,
 ):
     """Compute the PSD.
@@ -42,96 +42,94 @@ def psd_avg_band(
 
     Parameters
     ----------
-    folder : path-like
-        Path to the folder containing preprocessed files.
+    %(folder_raw_data)s
+    %(folder_pp_data)s
     %(participants)s
+    %(valid_only)s
+    %(regular_only)s
+    %(transfer_only)s
     %(psd_duration)s
     %(psd_duration)s
-    %(psd_reject)s
     fmin : float
         Min frequency of interest.
     fmax : float
         Max frequency of interest.
-    average : 'mean' | 'integrate'
-        How to average the frequency bin/spectrum. Either 'mean' to calculate
-        the arithmetic mean of all bins or 'integrate' to use Simpson's rule to
-        compute integral from samples.
     n_jobs : int
         Number of parallel jobs used. Must not exceed the core count. Can be -1
         to use all cores.
 
     Returns
     -------
-    %(df_psd)s
+    df_bp_abs : DataFrame
+        Absolute band power.
+    df_bp_rel : DataFrame
+        Relative band power.
     """
     folder = _check_path(folder, item_name="folder", must_exist=True)
     participants = _check_participants(participants)
     _check_type(fmin, ("numeric",), item_name="fmin")
     _check_type(fmax, ("numeric",), item_name="fmax")
-    _check_type(average, (str,), item_name="average")
-    _check_value(average, ("mean", "integrate"), item_name="average")
     n_jobs = _check_n_jobs(n_jobs)
 
     # create input_pool
-    input_pool = list()
-    for participant in participants:
-        fnames = list_raw_fif(folder / str(participant).zfill(3))
-        for fname in fnames:
-            if fname.parent.name != "Online":
-                continue
-            input_pool.append(
-                (
-                    participant,
-                    fname,
-                    duration,
-                    overlap,
-                    reject,
-                    fmin,
-                    fmax,
-                    average,
-                )
-            )
+    files = list_runs_pp(
+        folder,
+        folder_pp,
+        participants,
+        valid_only,
+        regular_only,
+        transfer_only,
+    )
+    files = chain(*chain(elt.values() for elt in files.values()))
+    input_pool = [(file, duration, overlap, fmin, fmax) for file in files]
     assert 0 < len(input_pool)  # sanity check
 
     # compute psds
     with mp.Pool(processes=n_jobs) as p:
-        results = p.starmap(_psd_avg_band, input_pool)
+        results = p.starmap(_compute_bandpower, input_pool)
 
     # construct dataframe
-    psd_dict = dict()
-    for participant, session, run, psds, ch_names in results:
-        for phase in psds:
+    bp_abs = dict()
+    bp_rel = dict()
+    for participant, session, run, psds_abs, psds_rel, ch_names in results:
+        for phase in psds_abs:
             _add_data_to_dict(
-                psd_dict,
+                bp_abs,
                 participant,
                 session,
                 run,
                 phase,
-                psds[phase],
+                psds_abs[phase],
+                ch_names,
+            )
+            _add_data_to_dict(
+                bp_rel,
+                participant,
+                session,
+                run,
+                phase,
+                psds_rel[phase],
                 ch_names,
             )
 
-    return pd.DataFrame.from_dict(psd_dict, orient="columns")
+    return pd.DataFrame.from_dict(
+        bp_abs, orient="columns"
+    ), pd.DataFrame.from_dict(bp_rel, orient="columns")
 
 
-def _psd_avg_band(
-    participant,
-    fname,
+def _compute_bandpower(
+    fname: Path,
     duration: float,
     overlap: float,
-    reject: Optional[Union[Dict[str, float], str]],
     fmin: float,
     fmax: float,
-    average: str,
 ):
-    """Compute the PSD.
-
-    Average by frequency band for the given participants using the welch
-    method.
-    """
+    """Compute the absolute and relative band power of an online recording."""
     logger.info("Processing: %s" % fname)
     try:
         raw = read_raw_fif(fname, preload=True)
+        # find participant id
+        participant = int(fname.parent.parent.parent.name)
         # find session id
         pattern = re.compile(r"Session (\d{1,2})")
         session = re.findall(pattern, str(fname))
@@ -139,22 +137,20 @@ def _psd_avg_band(
         session = int(session[0])
         # find run id
         run = int(fname.name.split("-")[0])
-        # compute psds
-        psds, freqs = _psd_welch(
-            raw, duration, overlap, reject, fmin=fmin, fmax=fmax
-        )
-        # find channel names
-        ch_names = raw.pick_types(eeg=True, exclude=[]).ch_names
-        assert len(ch_names) == 64  # sanity check
+        # compute psd
+        epochs = make_fixed_length_epochs(raw, duration, overlap)
+        spectrum = epochs.compute_psd(method="multitaper", adaptive=True)
 
-        psds_ = dict()
-        for phase in psds:
-            if average == "mean":
-                psds_[phase] = np.average(psds[phase], axis=-1)
-            elif average == "integrate":
-                psds_[phase] = simpson(psds[phase], freqs[phase], axis=-1)
-            assert psds_[phase].shape == (64,)  # sanity check
-
+        freq_res = spectrum.freqs[1] - spectrum.freqs[0]
+        psds_absolute = dict()
+        psds_relative = dict()
+        for phase in spectrum.event_id:
+            psd = spectrum[phase].get_data(fmin=fmin, fmax=fmax)
+            psd_full = spectrum[phase].get_data(fmin=1.0, fmax=40.0)
+            psds_absolute[phase] = simpson(psd, dx=freq_res, axis=-1)
+            psds_relative[phase] = psds_absolute[phase] / simpson(
+                psd_full, dx=freq_res, axis=-1
+            )
         # clean up
         del raw
 
@@ -162,51 +158,14 @@ def _psd_avg_band(
         logger.warning("FAILED: %s -> Skip." % fname)
         logger.warning(traceback.format_exc())
 
-    return participant, session, run, psds_, ch_names
-
-
-def _psd_welch(
-    raw: BaseRaw, duration: float, overlap: float, reject: Optional[Union[Dict[str, float], str]], **kwargs
-) -> Dict[str, EpochsSpectrum]:
-    """Compute the power spectral density using the welch method."""
-    epochs = make_fixed_length_epochs(raw, duration, overlap)
-    if reject is not None:
-        epochs, _ = reject_epochs(epochs, reject)
-    kwargs = _check_kwargs(kwargs, epochs)
-    spectrums = dict()
-    for phase in epochs.event_id:
-        spectrums[phase] = epochs[phase].compute_psd(method="welch", **kwargs)
-    return spectrums
-
-
-def _check_kwargs(kwargs: dict, epochs: BaseEpochs):
-    """Check kwargs provided to _compute_psd_welch."""
-    if "picks" not in kwargs:
-        kwargs["picks"] = pick_types(epochs.info, eeg=True, exclude=[])
-    if "n_fft" not in kwargs:
-        kwargs["n_fft"] = epochs.times.size
-        logger.debug("Argument 'n_fft' set to %i", epochs._data.shape[-1])
-    else:
-        logger.debug(
-            "Argument 'n_fft' was provided and is set to %i", kwargs["n_fft"]
-        )
-    if "n_overlap" not in kwargs:
-        kwargs["n_overlap"] = 0
-        logger.debug("Argument 'n_overlap' set to 0")
-    else:
-        logger.debug(
-            "Argument 'n_overlap' was provided and is set to %i",
-            kwargs["n_overlap"],
-        )
-    if "n_per_seg" not in kwargs:
-        kwargs["n_per_seg"] = epochs._data.shape[-1]
-        logger.debug("Argument 'n_per_seg' set to %i", epochs._data.shape[-1])
-    else:
-        logger.debug(
-            "Argument 'n_per_seg' was provided and is set to %i",
-            kwargs["n_per_seg"],
-        )
-    return kwargs
+    return (
+        participant,
+        session,
+        run,
+        psds_absolute,
+        psds_relative,
+        spectrum.ch_names,
+    )
 
 
 def _add_data_to_dict(
@@ -218,7 +177,7 @@ def _add_data_to_dict(
     data,
     ch_names,
 ):
-    """Add PSD to data dictionary."""
+    """Add band-power to data dictionary."""
     keys = ["participant", "session", "run", "phase", "idx"] + ch_names
 
     # init
