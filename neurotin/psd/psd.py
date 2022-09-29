@@ -140,7 +140,7 @@ def _compute_bandpower(
         # compute psd
         epochs = make_fixed_length_epochs(raw, duration, overlap)
         spectrum = epochs.compute_psd(method="multitaper", adaptive=True)
-
+        # compute band power
         freq_res = spectrum.freqs[1] - spectrum.freqs[0]
         psds_absolute = dict()
         psds_relative = dict()

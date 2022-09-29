@@ -104,7 +104,8 @@ def make_fixed_length_epochs(
         start = event[0] / raw.info["sfreq"]
         stop = start + EVENTS_DURATION_MAPPING[event[2]]
         if k == 0:
-            stop += FIRST_REST_PHASE_EXT  # first rest phase extension
+            start += FIRST_REST_PHASE_EXT
+            stop += FIRST_REST_PHASE_EXT
         epoch_events = mne.make_fixed_length_events(
             raw,
             id=int(event[2] * 10 + k // 2),
