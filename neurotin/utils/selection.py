@@ -31,7 +31,7 @@ def list_runs(
     runs : dict
         Dictionary containing the selected runs.
         Key: int - participant ID.
-        Value: dictionnary
+        Value: dictionary
             Key: int - session ID.
             Value: str - list of online runs file path.
     """
@@ -124,7 +124,7 @@ def list_runs_pp(
     runs : dict
         Dictionary containing the selected runs.
         Key: int - participant ID.
-        Value: dictionnary
+        Value: dictionary
             Key: int - session ID.
             Value: str - list of online runs file path.
     """

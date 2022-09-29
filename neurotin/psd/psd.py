@@ -5,8 +5,10 @@ from itertools import chain
 from pathlib import Path
 from typing import List, Tuple, Union
 
+import numpy as np
 import pandas as pd
 from mne.io import read_raw_fif
+from numpy.typing import NDArray
 from scipy.integrate import simpson
 
 from .. import logger
@@ -142,15 +144,15 @@ def _compute_bandpower(
         spectrum = epochs.compute_psd(method="multitaper", adaptive=True)
         # compute band power
         freq_res = spectrum.freqs[1] - spectrum.freqs[0]
-        psds_absolute = dict()
-        psds_relative = dict()
+        bp_absolute = dict()
+        bp_relative = dict()
         for phase in spectrum.event_id:
             psd = spectrum[phase].get_data(fmin=fmin, fmax=fmax)
             psd_full = spectrum[phase].get_data(fmin=1.0, fmax=40.0)
-            psds_absolute[phase] = simpson(psd, dx=freq_res, axis=-1)
-            psds_relative[phase] = psds_absolute[phase] / simpson(
-                psd_full, dx=freq_res, axis=-1
-            )
+            bp_abs = simpson(psd, dx=freq_res, axis=-1)
+            bp_rel = bp_abs / simpson(psd_full, dx=freq_res, axis=-1)
+            bp_absolute[phase] = np.average(bp_abs, axis=0)
+            bp_relative[phase] = np.average(bp_rel, axis=0)
         # clean up
         del raw
 
@@ -162,8 +164,8 @@ def _compute_bandpower(
         participant,
         session,
         run,
-        psds_absolute,
-        psds_relative,
+        bp_absolute,
+        bp_relative,
         spectrum.ch_names,
     )
 
@@ -174,8 +176,8 @@ def _add_data_to_dict(
     session: int,
     run: int,
     phase: str,
-    data,
-    ch_names,
+    data: NDArray[float],
+    ch_names: List[str],
 ):
     """Add band-power to data dictionary."""
     keys = ["participant", "session", "run", "phase", "idx"] + ch_names
@@ -193,8 +195,8 @@ def _add_data_to_dict(
     data_dict["idx"].append(int(phase[-1]))  # idx of the phase within the run
 
     # channel psd
-    for k in range(data.shape[0]):
-        data_dict[f"{ch_names[k]}"].append(data[k])
+    for ch, value in zip(ch_names, data):
+        data_dict[ch].append(value)
 
     # sanity check
     entries = len(data_dict["participant"])
