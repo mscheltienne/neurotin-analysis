@@ -7,7 +7,7 @@ from ..utils._docs import fill_doc
 
 @fill_doc
 def weights_apply_mask(df, weights, *, copy: bool = False):
-    """Apply the weights mask to the PSD dataframe.
+    """Apply the weights mask to the dataframe.
 
     Parameters
     ----------
@@ -33,7 +33,7 @@ def weights_apply_mask(df, weights, *, copy: bool = False):
 
 @fill_doc
 def weights_apply_session_mask(df, folder, *, copy: bool = False):
-    """Apply the weights used during a given session to the PSD dataframe.
+    """Apply the weights used during a given session to the dataframe.
 
     Parameters
     ----------
