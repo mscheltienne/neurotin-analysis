@@ -65,8 +65,7 @@ docdict[
     "copy"
 ] = """
 copy : bool
-    If True, operates on a copy and return a copy. Default to False to operate
-    in-place."""
+    If True, operates on a copy and return a copy."""
 docdict[
     "valid_only"
 ] = """

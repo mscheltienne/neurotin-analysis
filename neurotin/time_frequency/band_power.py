@@ -1,7 +1,6 @@
 import multiprocessing as mp
 import re
 import traceback
-from itertools import chain
 from pathlib import Path
 from typing import List, Tuple, Union
 
