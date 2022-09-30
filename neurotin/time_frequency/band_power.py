@@ -36,22 +36,19 @@ def compute_bandpower(
     fmin: float,
     fmax: float,
     n_jobs: int = 1,
-):
-    """Compute the PSD.
-
-    Average by frequency band for the given participants using the welch
-    method.
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Compute the absolute and relative band power of an online recording.
 
     Parameters
     ----------
     %(folder_raw_data)s
     %(folder_pp_data)s
-    %(participants)s
     %(valid_only)s
     %(regular_only)s
     %(transfer_only)s
+    %(participants)s
     %(psd_duration)s
-    %(psd_duration)s
+    %(psd_overlap)s
     fmin : float
         Min frequency of interest.
     fmax : float
@@ -66,8 +63,14 @@ def compute_bandpower(
         Absolute band power.
     df_bp_rel : DataFrame
         Relative band power.
+
+    Notes
+    -----
+    The PSD is computing using a multitaper method with adaptive weights.
+    The band-power is computed using Simpson's rule for integration.
     """
     folder = _check_path(folder, item_name="folder", must_exist=True)
+    folder_pp = _check_path(folder_pp, item_name="folder_pp", must_exist=True)
     participants = _check_participants(participants)
     _check_type(fmin, ("numeric",), item_name="fmin")
     _check_type(fmax, ("numeric",), item_name="fmax")
@@ -125,7 +128,7 @@ def _compute_bandpower(
     overlap: float,
     fmin: float,
     fmax: float,
-):
+) -> Tuple[int, int, int, NDArray[float], NDArray[float], List[str]]:
     """Compute the absolute and relative band power of an online recording."""
     logger.info("Processing: %s" % fname)
     try:
@@ -178,7 +181,7 @@ def _add_data_to_dict(
     phase: str,
     data: NDArray[float],
     ch_names: List[str],
-):
+) -> None:
     """Add band-power to data dictionary."""
     keys = ["participant", "session", "run", "phase", "idx"] + ch_names
 
