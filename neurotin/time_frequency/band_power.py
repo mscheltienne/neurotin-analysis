@@ -85,8 +85,13 @@ def compute_bandpower(
         regular_only,
         transfer_only,
     )
-    files = chain(*chain(elt.values() for elt in files.values()))
-    input_pool = [(file, duration, overlap, fmin, fmax) for file in files]
+    flatten_files = list()
+    for files_dict in files.values():
+        for elt in files_dict.values():
+            flatten_files.extend(elt)
+    input_pool = [
+        (file, duration, overlap, fmin, fmax) for file in flatten_files
+    ]
     assert 0 < len(input_pool)  # sanity check
 
     # compute psds

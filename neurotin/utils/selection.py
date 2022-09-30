@@ -66,6 +66,14 @@ def list_runs(
             session_dir = (
                 folder / str(participant).zfill(3) / f"Session {session}"
             )
+            if not session_dir.exists():
+                logger.warning(
+                    "Participant %i is missing session %i",
+                    participant,
+                    session,
+                )
+                continue
+
             # read and filter the logs
             logs = read_logs(session_dir)
             onRun = [log for log in logs if log[1] == "OnRun"]
