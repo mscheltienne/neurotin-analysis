@@ -46,8 +46,8 @@ def compute_bandpower(
     %(regular_only)s
     %(transfer_only)s
     %(participants)s
-    %(psd_duration)s
-    %(psd_overlap)s
+    %(bp_duration)s
+    %(bp_overlap)s
     fmin : float
         Min frequency of interest.
     fmax : float

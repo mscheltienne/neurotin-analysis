@@ -19,7 +19,7 @@ def blocks_difference_between_consecutive_phases(df, column: str = "avg"):
 
     Parameters
     ----------
-    %(df_psd)s
+    %(df_bp)s
     column : str
         Label of the column on which the difference is computed between both
         phases. Can also be 'all' to include all columns.

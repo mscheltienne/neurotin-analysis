@@ -28,7 +28,7 @@ def catplot(
 
     Parameters
     ----------
-    %(df_psd)s
+    %(df_bp)s
     participants : list
         List of the participant IDs to compare.
     kind : str

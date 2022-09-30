@@ -95,12 +95,12 @@ df: DataFrame
     DataFrame containing the columns 'participant, 'visit', 'date', and
     'result'."""
 
-# ------------------------------------ psd -----------------------------------
+# ------------------------------- band-power ---------------------------------
 docdict[
-    "df_psd"
+    "df_bp"
 ] = """
 df : DataFrame
-    PSD in frequency band (fmin, fmax) averaged across bins. The columns are:
+    Band-power between [fmin, fmax]. The columns are:
         participant : int - Participant ID
         session : int - Session ID (1 to 15)
         run : int - Run ID
@@ -108,21 +108,15 @@ df : DataFrame
         idx : ID of the phase within the run (0 to 9)
         ch : float - Averaged PSD (1 per channel)"""
 docdict[
-    "psd_duration"
+    "bp_duration"
 ] = """
 duration : float
     Duration of an epoch in seconds."""
 docdict[
-    "psd_overlap"
+    "bp_overlap"
 ] = """
 overlap :float
     Duration of epoch overlap in seconds."""
-docdict[
-    "psd_reject"
-] = """
-reject : dict | 'auto' | None
-    MNE-compatible rejection dictionary or 'auto' to compute it with
-    autoreject. If set to None, rejection is skipped."""
 
 # -------------------------------- matplotlib --------------------------------
 docdict[

@@ -8,13 +8,12 @@ def add_average_column(df, *, copy: bool = False):
 
     Parameters
     ----------
-    %(df_psd)s
-        An 'avg' column is added averaging the power on all channels.
+    %(df_bp)s
     %(copy)s
 
     Returns
     -------
-    %(df_psd)s
+    %(df_bp)s
         The average power across channels has been added in the column 'avg'.
     """
     _check_type(copy, (bool,), item_name="copy")

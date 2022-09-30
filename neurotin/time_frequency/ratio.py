@@ -1,30 +1,21 @@
 import pandas as pd
 
-from ..utils._docs import fill_doc
 from .average import add_average_column
 
 
-@fill_doc
 def ratio(df_alpha, df_delta):
     """Compute the ratio of alpha/delta band power.
 
     Parameters
     ----------
-    %(df_psd)s
-        Contains alpha-band PSD.
-    %(df_psd)s
-        Contains delta-band PSD.
+    df_alpha : DataFrame
+        Bandpower in the alpha band.
+    df_delta : DataFrame
+        Bandpower in the delta band.
 
     Returns
     -------
     df : DataFrame
-        PSD ratio alpha/delta averaged by bin and channels. Columns:
-            participant : int - Participant ID
-            session : int - Session ID (1 to 15)
-            run : int - Run ID
-            phase : str - 'regulation' or 'non-regulation'
-            idx : ID of the phase within the run (0 to 9)
-            ratio : float - Averaged ratio alpha/delta
     """
     if "avg" not in df_alpha.columns:
         df_alpha = add_average_column(df_alpha)

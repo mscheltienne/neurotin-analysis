@@ -67,7 +67,20 @@ def make_fixed_length_epochs(
 ) -> BaseEpochs:
     """Create fixed length epochs for neurofeedback runs.
 
-    Aggregate epochs  from the same phase together.
+    Parameters
+    ----------
+    %(raw)s
+    %(bp_duration)s
+    %(bp_overlap)s
+
+    Returns
+    -------
+    epochs : Epochs
+        Epochs should contain 20 different events. See notes.
+
+    Notes
+    -----
+    Aggregates epochs from the same phase together.
         non-regulation-0:   60
         regulation-0:       50
         non-regulation-1:   61
@@ -75,16 +88,6 @@ def make_fixed_length_epochs(
         ...                 ..
         non-regulation-9:   69
         regulation-9:       59
-
-    Parameters
-    ----------
-    %(raw)s
-    %(psd_duration)s
-    %(psd_overlap)s
-
-    Returns
-    -------
-    epochs : Epochs
     """
     _check_type(raw, (BaseRaw,), item_name="raw")
     _check_type(duration, ("numeric",), item_name="duration")
@@ -165,7 +168,9 @@ def reject_epochs(
     ----------
     epochs : Epochs
         Raw epochs, before peak-to-peak rejection.
-    %(psd_reject)s
+    reject : dict | 'auto' | None
+        MNE-compatible rejection dictionary or 'auto' to compute it with
+        autoreject.
 
     Returns
     -------

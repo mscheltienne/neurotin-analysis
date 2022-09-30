@@ -11,7 +11,7 @@ def weights_apply_mask(df, weights, *, copy: bool = False):
 
     Parameters
     ----------
-    %(df_psd)s
+    %(df_bp)s
     weights : DataFrame
         Weights used during the online neurofeedback (1 per channel, bads
         included).
@@ -19,7 +19,7 @@ def weights_apply_mask(df, weights, *, copy: bool = False):
 
     Returns
     -------
-    %(df_psd)s
+    %(df_bp)s
     """
     _check_type(df, (pd.DataFrame,), item_name="df")
     _check_type(weights, (pd.DataFrame,), item_name="weights")
@@ -37,13 +37,13 @@ def weights_apply_session_mask(df, folder, *, copy: bool = False):
 
     Parameters
     ----------
-    %(df_psd)s
+    %(df_bp)s
     %(folder_raw_data)s
     %(copy)s
 
     Returns
     -------
-    %(df_psd)s
+    %(df_bp)s
     """
     _check_type(df, (pd.DataFrame,), item_name="df")
     folder = _check_path(folder, "folder", must_exist=True)
