@@ -1,27 +1,37 @@
-import re
+import os
 from pathlib import Path
 
-import pandas as pd
-
+from neurotin.config import participants
 from neurotin.model import compute_average
 from neurotin.model.viz import plot_topomap
 
-#%% Folder
-folder = r""
-folder = Path(folder)
 
-#%% Specific participants
-participants = []
-df = compute_average(folder, participants)
+data_folder = Path(r"/media/miplab-nas2/Data3/NeuroTinEEG/data/Participants/")
+model_folder = Path(r"/media/miplab-nas2/Data3/NeuroTinEEG/model/")
+# create folders
+os.makedirs(model_folder, exist_ok=True)
+os.makedirs(model_folder / "viz.eeglab", exist_ok=True)
+os.makedirs(model_folder / "viz.mne", exist_ok=True)
 
-#%% All participants
-pattern = re.compile(r"(\d{3})")
-participants = [int(p.name) for p in folder.iterdir() if pattern.match(p.name)]
-df = compute_average(folder, participants)
+# group-level average model
+df = compute_average(data_folder, participants)
+df.to_pickle(model_folder / "avg.pcl")
 
-#%% Load dataframe
-path = r""
-df = pd.read_pickle(path)
+ax, _ = plot_topomap(df, show=False)
+ax.figure.savefig(model_folder / "viz.mne" / "avg.svg")
+ax, _ = plot_topomap(df, sphere="eeglab", show=False)
+ax.figure.savefig(model_folder / "viz.eeglab" / "avg.svg")
 
-#%% Plot
-plot_topomap(df, outlines="head", contours=6, border=0, extrapolate="local")
+# subject-level average model
+for participant in participants:
+    df = compute_average(data_folder, participant)
+    df.to_pickle(model_folder / f"{str(participant).zfill(3)}.pcl")
+
+    ax, _ = plot_topomap(df, show=False)
+    ax.figure.savefig(
+        model_folder / "viz.mne" / f"{str(participant).zfill(3)}.svg"
+    )
+    ax, _ = plot_topomap(df, sphere="eeglab", show=False)
+    ax.figure.savefig(
+        model_folder / "viz.eeglab" / f"{str(participant).zfill(3)}.svg"
+    )

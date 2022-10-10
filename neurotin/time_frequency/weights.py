@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import Union
+
 import pandas as pd
 
 from ..io.model import load_session_weights
@@ -6,7 +9,9 @@ from ..utils._docs import fill_doc
 
 
 @fill_doc
-def weights_apply_mask(df, weights, *, copy: bool = False):
+def weights_apply_mask(
+    df: pd.DataFrame, weights: pd.DataFrame, *, copy: bool = False
+):
     """Apply the weights mask to the dataframe.
 
     Parameters
@@ -32,7 +37,9 @@ def weights_apply_mask(df, weights, *, copy: bool = False):
 
 
 @fill_doc
-def weights_apply_session_mask(df, folder, *, copy: bool = False):
+def weights_apply_session_mask(
+    df: pd.DataFrame, folder: Union[str, Path], *, copy: bool = False
+):
     """Apply the weights used during a given session to the dataframe.
 
     Parameters
