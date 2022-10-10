@@ -5,7 +5,6 @@ from neurotin.config import participants
 from neurotin.model import compute_average
 from neurotin.model.viz import plot_topomap
 
-
 data_folder = Path(r"/media/miplab-nas2/Data3/NeuroTinEEG/data/Participants/")
 model_folder = Path(r"/media/miplab-nas2/Data3/NeuroTinEEG/model/")
 # create folders

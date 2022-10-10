@@ -8,6 +8,8 @@ from .blocks import (  # noqa: F401
 )
 from .ratio import ratio  # noqa: F401
 from .weights import (  # noqa: F401
-    weights_apply_mask,
-    weights_apply_session_mask,
+    apply_group_avg_weights,
+    apply_participant_avg_weights,
+    apply_session_weights,
+    apply_weights,
 )

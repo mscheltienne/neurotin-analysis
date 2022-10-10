@@ -15,7 +15,7 @@ from ..utils._docs import fill_doc
 def compute_average(
     folder: Union[str, Path],
     participants: Union[int, List[int], Tuple[int, ...]],
-):
+) -> pd.Series:
     """Compute the average model across all session and all participants.
 
     Parameters
@@ -25,7 +25,7 @@ def compute_average(
 
     Returns
     -------
-    df : DataFrame
+    df : Series
         Average weight per channel.
     """
     folder = _check_path(folder, item_name="folder", must_exist=True)
