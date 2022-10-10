@@ -19,8 +19,10 @@ df.to_pickle(model_folder / "avg.pcl")
 
 ax, _ = plot_topomap(df, show=False)
 ax.figure.savefig(model_folder / "viz.mne" / "avg.svg")
+ax.figure.clf()
 ax, _ = plot_topomap(df, sphere="eeglab", show=False)
 ax.figure.savefig(model_folder / "viz.eeglab" / "avg.svg")
+ax.figure.clf()
 
 # subject-level average model
 for participant in participants:
@@ -31,7 +33,9 @@ for participant in participants:
     ax.figure.savefig(
         model_folder / "viz.mne" / f"{str(participant).zfill(3)}.svg"
     )
+    ax.figure.clf()
     ax, _ = plot_topomap(df, sphere="eeglab", show=False)
     ax.figure.savefig(
         model_folder / "viz.eeglab" / f"{str(participant).zfill(3)}.svg"
     )
+    ax.figure.clf()
