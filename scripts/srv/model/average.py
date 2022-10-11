@@ -7,7 +7,6 @@ from neurotin.model.viz import plot_topomap
 
 
 # create folders
-makedirs(MODEL_FOLDER, exist_ok=True)
 makedirs(MODEL_FOLDER / "viz.eeglab", exist_ok=True)
 makedirs(MODEL_FOLDER / "viz.mne", exist_ok=True)
 
