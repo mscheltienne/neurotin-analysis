@@ -1,6 +1,6 @@
 """Participant information."""
 
-participants = [
+PARTICIPANTS = [
     57,
     60,
     61,

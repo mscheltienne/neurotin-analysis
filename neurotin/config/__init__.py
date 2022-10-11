@@ -1,3 +1,3 @@
 """Config module."""
 
-from .participants import participants  # noqa: F401
+from .participants import PARTICIPANTS  # noqa: F401
