@@ -2,8 +2,6 @@ from neurotin.config import PARTICIPANTS
 from neurotin.config.srv import BP_FOLDER, DATA_FOLDER, DATA_PP_FOLDER
 from neurotin.time_frequency import compute_bandpower
 
-PARTICIPANTS = [57, 60]
-
 
 #%% constants
 duration = 4.0
