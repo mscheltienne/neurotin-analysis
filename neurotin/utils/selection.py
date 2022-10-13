@@ -203,31 +203,31 @@ def list_rs(
                 )
                 continue
 
-        # read and filter the logs
-        logs = read_logs(session_dir)
-        rsRun = [log for log in logs if log[1] == "RestS"]
-        if valid_only:
-            rsRun = [log for log in rsRun if len(log) == 3]
-        del logs
+            # read and filter the logs
+            logs = read_logs(session_dir)
+            rsRun = [log for log in logs if log[1] == "RestS"]
+            if valid_only:
+                rsRun = [log for log in rsRun if len(log) == 3]
+            del logs
 
-        # list resting state run files
-        files = [
-            file
-            for file in (session_dir / "RestingState").iterdir()
-            if file.is_file() and file.suffix == ".fif"
-        ]
-        for file in files:
-            if not file.name[0].isdigit():
-                logger.error("Unexpected file %s", file)
+            # list resting state run files
+            files = [
+                file
+                for file in (session_dir / "RestingState").iterdir()
+                if file.is_file() and file.suffix == ".fif"
+            ]
+            for file in files:
+                if not file.name[0].isdigit():
+                    logger.error("Unexpected file %s", file)
 
-        # retrieve files corresponding to the filtered logs
-        idx = [int(log[2][-1]) for log in rsRun]
-        for file in files:
-            if int(file.name[0]) in idx:
-                runs[participant][session].append(str(file))
+            # retrieve files corresponding to the filtered logs
+            idx = [int(log[2][-1]) for log in rsRun]
+            for file in files:
+                if int(file.name[0]) in idx:
+                    runs[participant][session].append(str(file))
 
-        # sort runs
-        runs[participant][session] = sorted(runs[participant][session])
+            # sort runs
+            runs[participant][session] = sorted(runs[participant][session])
 
     return runs
 
