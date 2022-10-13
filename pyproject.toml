@@ -78,7 +78,7 @@ tracker = 'https://github.com/mscheltienne/neurotin-analysis/issues'
 [project.scripts]
 neurotin = 'neurotin.commands.main:run'
 neurotin_preprocess = 'neurotin.commands.neurotin_preprocess:run'
-neurotin_band_power = 'neurotin.commands.neurotin_band_power:run'
+neurotin_band_power_onrun = 'neurotin.commands.neurotin_band_power_onrun:run'
 neurotin_model_avg = 'neurotin.commands.neurotin_model_avg:run'
 
 [tool.setuptools]

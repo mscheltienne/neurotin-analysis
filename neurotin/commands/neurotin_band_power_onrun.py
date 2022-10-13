@@ -6,11 +6,11 @@ import mne
 
 from neurotin import set_log_level
 from neurotin.commands import helpdict
-from neurotin.time_frequency import compute_bandpower
+from neurotin.time_frequency import compute_bandpower_onrun
 
 
 def run():
-    """Entrypoint for 'neurotin.time_frequency.compute_bandpower'."""
+    """Entrypoint for 'neurotin.time_frequency.compute_bandpower_onrun'."""
     parser = argparse.ArgumentParser(
         prog="NeuroTin",
         description="Compute band-power from online recordings.",
@@ -116,7 +116,7 @@ def run():
 
     participants = [int(participant) for participant in args.participants]
 
-    df_abs, df_rel = compute_bandpower(
+    df_abs, df_rel = compute_bandpower_onrun(
         args.dir_raw,
         args.dir_pp,
         args.valid_only,

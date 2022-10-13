@@ -1,6 +1,6 @@
 from neurotin.config import PARTICIPANTS
 from neurotin.config.srv import BP_FOLDER, DATA_FOLDER, DATA_PP_FOLDER
-from neurotin.time_frequency import compute_bandpower
+from neurotin.time_frequency import compute_bandpower_onrun
 
 #%% constants
 duration = 4.0
@@ -16,7 +16,7 @@ transfer_only = False
 
 for band, (fmin, fmax) in frequencies.items():
     df_fname = BP_FOLDER / f"{band}-full.pcl"
-    df_abs, df_rel = compute_bandpower(
+    df_abs, df_rel = compute_bandpower_onrun(
         DATA_FOLDER,
         DATA_PP_FOLDER,
         valid_only,
@@ -44,7 +44,7 @@ transfer_only = False
 
 for band, (fmin, fmax) in frequencies.items():
     df_fname = BP_FOLDER / f"{band}-regular.pcl"
-    df_abs, df_rel = compute_bandpower(
+    df_abs, df_rel = compute_bandpower_onrun(
         DATA_FOLDER,
         DATA_PP_FOLDER,
         valid_only,
@@ -71,7 +71,7 @@ transfer_only = True
 
 for band, (fmin, fmax) in frequencies.items():
     df_fname = BP_FOLDER / f"{band}-transfer.pcl"
-    df_abs, df_rel = compute_bandpower(
+    df_abs, df_rel = compute_bandpower_onrun(
         DATA_FOLDER,
         DATA_PP_FOLDER,
         valid_only,

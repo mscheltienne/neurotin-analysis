@@ -23,7 +23,7 @@ from .epochs import make_fixed_length_epochs
 
 
 @fill_doc
-def compute_bandpower(
+def compute_bandpower_onrun(
     folder: Union[str, Path],
     folder_pp: Union[str, Path],
     valid_only: bool,
@@ -95,7 +95,7 @@ def compute_bandpower(
 
     # compute psds
     with mp.Pool(processes=n_jobs) as p:
-        results = p.starmap(_compute_bandpower, input_pool)
+        results = p.starmap(_compute_bandpower_onrun, input_pool)
 
     # construct dataframe
     bp_abs = dict()
@@ -126,7 +126,7 @@ def compute_bandpower(
     ), pd.DataFrame.from_dict(bp_rel, orient="columns")
 
 
-def _compute_bandpower(
+def _compute_bandpower_onrun(
     fname: Path,
     duration: float,
     overlap: float,
@@ -208,3 +208,44 @@ def _add_data_to_dict(
     # sanity check
     entries = len(data_dict["participant"])
     assert all(len(data_dict[key]) == entries for key in keys)
+
+
+@fill_doc
+def compute_bandpower_rs(
+    folder: Union[str, Path],
+    folder_pp: Union[str, Path],
+    valid_only: bool,
+    participants: Union[int, List[int], Tuple[int, ...]],
+    fmin: float,
+    fmax: float,
+    n_jobs: int = 1,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Compute the absolute and relative band power of a resting-state.
+
+    Parameters
+    ----------
+    %(folder_raw_data)s
+    %(folder_pp_data)s
+    %(valid_only)s
+    %(participants)s
+    fmin : float
+        Min frequency of interest.
+    fmax : float
+        Max frequency of interest.
+    n_jobs : int
+        Number of parallel jobs used. Must not exceed the core count. Can be -1
+        to use all cores.
+
+    Returns
+    -------
+    df_bp_abs : DataFrame
+        Absolute band power.
+    df_bp_rel : DataFrame
+        Relative band power.
+    """
+    folder = _check_path(folder, item_name="folder", must_exist=True)
+    folder_pp = _check_path(folder_pp, item_name="folder_pp", must_exist=True)
+    participants = _check_participants(participants)
+    _check_type(fmin, ("numeric",), item_name="fmin")
+    _check_type(fmax, ("numeric",), item_name="fmax")
+    n_jobs = _check_n_jobs(n_jobs)
