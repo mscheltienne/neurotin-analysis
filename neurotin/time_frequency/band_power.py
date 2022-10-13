@@ -18,7 +18,7 @@ from ..utils._checks import (
     _check_type,
 )
 from ..utils._docs import fill_doc
-from ..utils.selection import list_runs_pp
+from ..utils.selection import list_runs_pp, list_rs_pp
 from .epochs import make_fixed_length_epochs
 
 
@@ -249,3 +249,10 @@ def compute_bandpower_rs(
     _check_type(fmin, ("numeric",), item_name="fmin")
     _check_type(fmax, ("numeric",), item_name="fmax")
     n_jobs = _check_n_jobs(n_jobs)
+
+    files = list_rs_pp(
+        folder,
+        folder_pp,
+        participants,
+        valid_only,
+    )
