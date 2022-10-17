@@ -6,7 +6,7 @@ import pyprep
 from autoreject import Ransac
 from mne.io import BaseRaw
 
-from ..config.events import EVENTS
+from ..config.events import EVENTS, EVENTS_DURATION_MAPPING
 from ..utils._docs import fill_doc
 from .filters import apply_filter_eeg
 
@@ -34,14 +34,17 @@ def _prepapre_raw(raw: BaseRaw) -> BaseRaw:
         sample_max, _, _ = events[
             np.where([ev[2] == EVENTS["audio"] for ev in events])
         ][-1]
-        tmax = sample_max / raw.info["sfreq"] + 0.8
+        tmax = (
+            sample_max / raw.info["sfreq"]
+            + EVENTS_DURATION_MAPPING[EVENTS["audio"]]
+        )
     # Resting-State
     elif EVENTS["resting-state"] in unique_events:
         sample_min, _, _ = events[
             np.where([ev[2] == EVENTS["resting-state"] for ev in events])
         ][0]
         tmin = sample_min / raw.info["sfreq"]
-        tmax = tmin + 120
+        tmax = tmin + EVENTS_DURATION_MAPPING[EVENTS["resting-state"]]
     # Online Run
     elif EVENTS["regulation"] in unique_events:
         sample_min, _, _ = events[
@@ -51,7 +54,10 @@ def _prepapre_raw(raw: BaseRaw) -> BaseRaw:
         sample_max, _, _ = events[
             np.where([ev[2] == EVENTS["regulation"] for ev in events])
         ][-1]
-        tmax = sample_max / raw.info["sfreq"] + 16
+        tmax = (
+            sample_max / raw.info["sfreq"]
+            + EVENTS_DURATION_MAPPING[EVENTS["regulation"]]
+        )
 
     assert tmin < tmax
     raw.crop(tmin, tmax, include_tmax=True)
