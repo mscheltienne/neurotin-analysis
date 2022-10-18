@@ -1,7 +1,10 @@
 """Time-Frequency analysis module."""
 
 from .average import add_average_column  # noqa: F401
-from .band_power import compute_bandpower_onrun  # noqa: F401
+from .band_power import (  # noqa: F401
+    compute_bandpower_onrun,
+    compute_bandpower_rs,
+)
 from .blocks import (  # noqa: F401
     blocks_count_success,
     blocks_difference_between_consecutive_phases,

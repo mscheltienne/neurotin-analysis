@@ -1,6 +1,9 @@
 from neurotin.config import PARTICIPANTS
 from neurotin.config.srv import BP_FOLDER, DATA_FOLDER, DATA_PP_FOLDER
-from neurotin.time_frequency import compute_bandpower_onrun
+from neurotin.time_frequency import (
+    compute_bandpower_onrun,
+    compute_bandpower_rs,
+)
 
 #%% constants
 duration = 4.0
@@ -15,7 +18,7 @@ regular_only = False
 transfer_only = False
 
 for band, (fmin, fmax) in frequencies.items():
-    df_fname = BP_FOLDER / f"{band}-full.pcl"
+    df_fname = BP_FOLDER / f"{band}-onrun-full.pcl"
     df_abs, df_rel = compute_bandpower_onrun(
         DATA_FOLDER,
         DATA_PP_FOLDER,
@@ -43,7 +46,7 @@ regular_only = True
 transfer_only = False
 
 for band, (fmin, fmax) in frequencies.items():
-    df_fname = BP_FOLDER / f"{band}-regular.pcl"
+    df_fname = BP_FOLDER / f"{band}-onrun-regular.pcl"
     df_abs, df_rel = compute_bandpower_onrun(
         DATA_FOLDER,
         DATA_PP_FOLDER,
@@ -70,7 +73,7 @@ regular_only = False
 transfer_only = True
 
 for band, (fmin, fmax) in frequencies.items():
-    df_fname = BP_FOLDER / f"{band}-transfer.pcl"
+    df_fname = BP_FOLDER / f"{band}-onrun-transfer.pcl"
     df_abs, df_rel = compute_bandpower_onrun(
         DATA_FOLDER,
         DATA_PP_FOLDER,
@@ -80,6 +83,27 @@ for band, (fmin, fmax) in frequencies.items():
         PARTICIPANTS,
         duration,
         overlap,
+        fmin,
+        fmax,
+        n_jobs,
+    )
+    df_abs.to_pickle(
+        df_fname.with_stem(df_fname.stem + "-abs"), compression=None
+    )
+    df_rel.to_pickle(
+        df_fname.with_stem(df_fname.stem + "-rel"), compression=None
+    )
+
+#%% resting-state
+valid_only = True
+
+for band, (fmin, fmax) in frequencies.items():
+    df_fname = BP_FOLDER / f"{band}-rs.pcl"
+    df_abs, df_rel = compute_bandpower_rs(
+        DATA_FOLDER,
+        DATA_PP_FOLDER,
+        valid_only,
+        PARTICIPANTS,
         fmin,
         fmax,
         n_jobs,
