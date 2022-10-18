@@ -158,7 +158,7 @@ def _compute_bandpower_onrun(
     # clean up
     del raw
     spectrum = epochs.compute_psd(
-        method="multitaper", adaptive=True, max_iter=500
+        method="multitaper", adaptive=True, max_iter=5000
     )
     # compute band power
     freq_res = spectrum.freqs[1] - spectrum.freqs[0]
@@ -323,7 +323,7 @@ def _compute_bandpower_rs(
     raw.crop(tmin, tmax, include_tmax=True)
     # compute psd
     spectrum = raw.compute_psd(
-        method="multitaper", adaptive=True, max_iter=500
+        method="multitaper", adaptive=True, max_iter=5000
     )
     # compute band power
     freq_res = spectrum.freqs[1] - spectrum.freqs[0]
