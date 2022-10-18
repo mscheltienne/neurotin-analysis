@@ -185,7 +185,7 @@ def _compute_bandpower_onrun(
 
 
 def _add_data_to_dict_onrun(
-    data_dict: dict,
+    data_dict: Dict[str, Union[float, str]],
     participant: int,
     session: int,
     run: int,
@@ -338,14 +338,14 @@ def _compute_bandpower_rs(
 
 
 def _add_data_to_dict_rs(
-    data_dict: dict,
+    data_dict: Dict[str, float],
     participant: int,
     session: int,
     data: NDArray[float],
     ch_names: List[str],
 ) -> None:
     """Add band-power to data dictionary."""
-    keys = ["participant", "session", "idx"] + ch_names
+    keys = ["participant", "session"] + ch_names
 
     # init
     for key in keys:
