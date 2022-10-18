@@ -331,12 +331,10 @@ def _compute_bandpower_rs(
     psd_full = spectrum.get_data(fmin=1.0, fmax=40.0)
     bp_abs = simpson(psd, dx=freq_res, axis=-1)
     bp_rel = bp_abs / simpson(psd_full, dx=freq_res, axis=-1)
-    bp_absolute = np.average(bp_abs, axis=0)
-    bp_relative = np.average(bp_rel, axis=0)
     # clean up
     del raw
 
-    return (participant, session, bp_absolute, bp_relative, spectrum.ch_names)
+    return (participant, session, bp_abs, bp_rel, spectrum.ch_names)
 
 
 def _add_data_to_dict_rs(
