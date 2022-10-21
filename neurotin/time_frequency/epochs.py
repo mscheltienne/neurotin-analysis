@@ -146,6 +146,41 @@ def make_fixed_length_epochs(
     return epochs
 
 
+@fill_doc
+def make_combine_epochs(raw: BaseRaw):
+    """Make epochs combining a non-regulation and a regulation phase.
+
+    Parameters
+    ----------
+    %(raw)s
+
+    Returns
+    -------
+    epochs : Epochs
+        Epochs should contain 10 different epoch: (non-reg + reg).
+    """
+    # load events
+    events, event_id = _load_events(raw)
+    # change event sample of the first non-regulation phase
+    events[0, 0] += FIRST_REST_PHASE_EXT * raw.info["sfreq"]
+    # determine duration
+    duration = sum(EVENTS_DURATION_MAPPING[ev] for ev in event_id.values())
+    del event_id["regulation"]
+    epochs = mne.Epochs(
+        raw,
+        events=events,
+        event_id=event_id,
+        tmin=0.0,
+        tmax=duration,
+        baseline=None,
+        picks="eeg",
+        preload=True,
+        reject=None,
+        flat=None,
+    )
+    return epochs
+
+
 def _load_events(raw: BaseRaw) -> Tuple[NDArray[int], Dict[str, int]]:
     """Load events from raw instance and check if it is an online run."""
     events = mne.find_events(raw, stim_channel="TRIGGER")
