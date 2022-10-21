@@ -23,7 +23,7 @@ tfrs = tfr_subject(
     n_jobs=len(PARTICIPANTS),
 )
 for participant, tfr in tfrs.items():
-    fname = TFR_FOLDER / "subject" / f"{str(participant.zfill(3))}-full.h5"
+    fname = TFR_FOLDER / "subject" / f"{str(participant).zfill(3)}-full.h5"
     tfr.save(fname, overwrite=True)
     fig = tfr.plot(combine="mean", show=False)[0]
     fig.savefig(fname.with_suffix(".svg"))
@@ -43,7 +43,7 @@ tfrs = tfr_subject(
     n_jobs=len(PARTICIPANTS),
 )
 for participant, tfr in tfrs.items():
-    fname = TFR_FOLDER / "subject" / f"{str(participant.zfill(3))}-regular.h5"
+    fname = TFR_FOLDER / "subject" / f"{str(participant).zfill(3)}-regular.h5"
     tfr.save(fname, overwrite=True)
     fig = tfr.plot(combine="mean", show=False)[0]
     fig.savefig(fname.with_suffix(".svg"))
@@ -63,7 +63,7 @@ tfrs = tfr_subject(
     n_jobs=len(PARTICIPANTS),
 )
 for participant, tfr in tfrs.items():
-    fname = TFR_FOLDER / "subject" / f"{str(participant.zfill(3))}-transfer.h5"
+    fname = TFR_FOLDER / "subject" / f"{str(participant).zfill(3)}-transfer.h5"
     tfr.save(fname, overwrite=True)
     fig = tfr.plot(combine="mean", show=False)[0]
     fig.savefig(fname.with_suffix(".svg"))
