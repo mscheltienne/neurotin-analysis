@@ -81,6 +81,13 @@ docdict[
 ] = """
 transfer_only : bool
     If True, returns only transfer neurofeedback runs."""
+docdict[
+    "n_jobs"
+] = """
+n_jobs : int
+    Number of parallel jobs used. Must not exceed the core count. Can be -1
+    to use all cores."""
+
 
 # --------------------------------- evamed -----------------------------------
 docdict[

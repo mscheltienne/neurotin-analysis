@@ -53,9 +53,7 @@ def compute_bandpower_onrun(
         Min frequency of interest.
     fmax : float
         Max frequency of interest.
-    n_jobs : int
-        Number of parallel jobs used. Must not exceed the core count. Can be -1
-        to use all cores.
+    %(n_jobs)s
 
     Returns
     -------
