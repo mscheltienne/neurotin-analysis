@@ -92,7 +92,7 @@ def _tfr_subject_multitaper(
         epochs.apply_baseline((0, 0.5))
         epochs_list.append(epochs)
         del raw
-    epochs = concatenate_epochs(epochs_list, add_offset=False)
+    epochs = concatenate_epochs(epochs_list)
     del epochs_list
 
     tfr = tfr_multitaper(
