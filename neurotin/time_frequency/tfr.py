@@ -16,6 +16,7 @@ from ..utils._checks import (
     _check_value,
 )
 from ..utils._docs import fill_doc
+from ..utils._logs import logger
 from ..utils.selection import list_runs_pp
 from .epochs import make_combine_epochs
 
@@ -74,7 +75,7 @@ def tfr_subject(
         results = p.starmap(_tfr_subject_multitaper, input_pool)
 
     # format as dictionary
-    return {idx: tfr for idx, tfr in results}
+    return {idx: tfr for idx, tfr in results if tfr is not None}
 
 
 def _tfr_subject_multitaper(
@@ -92,7 +93,13 @@ def _tfr_subject_multitaper(
         epochs.apply_baseline((0, 0.5))
         epochs_list.append(epochs)
         del raw
-    epochs = concatenate_epochs(epochs_list)
+    try:
+        epochs = concatenate_epochs(epochs_list)
+    except Exception:
+        logger.error(
+            "Could not concatenate epochs for participant %i", participant
+        )
+        return participant, None
     del epochs_list
 
     tfr = tfr_multitaper(
