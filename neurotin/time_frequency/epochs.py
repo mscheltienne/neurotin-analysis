@@ -158,7 +158,6 @@ def _load_events(raw: BaseRaw) -> Tuple[NDArray[int], Dict[str, int]]:
     return events, event_id
 
 
-@fill_doc
 def reject_epochs(
     epochs: BaseEpochs, reject: Union[Dict[str, float], str] = "auto"
 ) -> Tuple[BaseEpochs, Dict[str, float]]:
