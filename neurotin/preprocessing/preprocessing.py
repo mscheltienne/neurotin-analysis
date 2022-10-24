@@ -4,9 +4,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Tuple
 
-import mne
+import numpy as np
+from mne import pick_types
 from mne.io import BaseRaw
 from mne.preprocessing import ICA
+from mne.viz.ica import _prepare_data_ica_properties
 from mne_icalabel import label_components
 
 from .. import logger
@@ -95,8 +97,8 @@ def remove_artifact_ic(raw: BaseRaw) -> BaseRaw:
     %(raw)s
     %(ica)s
     """
-    picks = mne.pick_types(raw.info, eeg=True, exclude="bads")
-    ica = mne.preprocessing.ICA(
+    picks = pick_types(raw.info, eeg=True, exclude="bads")
+    ica = ICA(
         n_components=None,  # should be picks.size - 1
         method="picard",
         max_iter="auto",
@@ -110,6 +112,16 @@ def remove_artifact_ic(raw: BaseRaw) -> BaseRaw:
     # keep only brain components
     labels = component_dict["labels"]
     exclude = [k for k, name in enumerate(labels) if name != "brain"]
+
+    # compute variances on epochs
+    kind, dropped_indices, epochs_src, data = _prepare_data_ica_properties(
+        raw, ica, reject_by_annotation=True, reject="auto")
+    ica_data = np.swapaxes(data, 0, 1)
+    var = np.var(ica_data, axis=2)  # (n_components, n_epochs)
+    # TODO: Use var to identify which ICs don't need to be dropped because they
+    # impact the overall signal only punctualy.
+    # Ocular and Cardiac related components should be removed anyway,
+    # regardless of the variance.
 
     # apply ICA
     ica.exclude = exclude
