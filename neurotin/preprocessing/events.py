@@ -302,3 +302,65 @@ def _replace_event_values_arr(
     """Replace the values 'old_value' with 'new_value' for the array."""
     timearr[np.where(timearr == old_value)] = new_value
     return timearr
+
+
+def find_crop_tmin_tmax(raw: BaseRaw) -> Tuple[float, float]:
+    """Find timings at which to crop the recording to include all events.
+
+    Parameters
+    ----------
+    %(raw)s
+
+    Returns
+    -------
+    tmin : float
+        Beginning of the interval.
+    tmax : float
+        End of the interval.
+
+    Notes
+    -----
+    raw.crop(tmin, tmax, include_tmax=True)
+    """
+    events = mne.find_events(raw, stim_channel="TRIGGER")
+    unique_events = list(set(event[2] for event in events))
+
+    # Calibration
+    if EVENTS["audio"] in unique_events:
+        sample_min, _, _ = events[
+            np.where([ev[2] == EVENTS["rest"] for ev in events])
+        ][0]
+        tmin = sample_min / raw.info["sfreq"]
+        sample_max, _, _ = events[
+            np.where([ev[2] == EVENTS["audio"] for ev in events])
+        ][-1]
+        tmax = (
+            sample_max / raw.info["sfreq"]
+            + EVENTS_DURATION_MAPPING[EVENTS["audio"]]
+        )
+    # Resting-State
+    elif EVENTS["resting-state"] in unique_events:
+        sample_min, _, _ = events[
+            np.where([ev[2] == EVENTS["resting-state"] for ev in events])
+        ][0]
+        tmin = sample_min / raw.info["sfreq"]
+        tmax = tmin + EVENTS_DURATION_MAPPING[EVENTS["resting-state"]]
+    # Online Run
+    elif EVENTS["regulation"] in unique_events:
+        sample_min, _, _ = events[
+            np.where([ev[2] == EVENTS["non-regulation"] for ev in events])
+        ][0]
+        tmin = sample_min / raw.info["sfreq"]
+        sample_max, _, _ = events[
+            np.where([ev[2] == EVENTS["regulation"] for ev in events])
+        ][-1]
+        tmax = (
+            sample_max / raw.info["sfreq"]
+            + EVENTS_DURATION_MAPPING[EVENTS["regulation"]]
+        )
+
+    assert tmin < tmax
+    # add 10 ms (about 5 samples) of headroom
+    tmin -= 5 / raw.info["sfreq"]
+    tmax += 5 / raw.info["sfreq"]
+    return tmin, tmax

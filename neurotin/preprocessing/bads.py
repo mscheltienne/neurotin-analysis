@@ -1,13 +1,12 @@
 from typing import List
 
 import mne
-import numpy as np
 import pyprep
 from autoreject import Ransac
 from mne.io import BaseRaw
 
-from ..config.events import EVENTS, EVENTS_DURATION_MAPPING
 from ..utils._docs import fill_doc
+from .events import find_crop_tmin_tmax
 from .filters import apply_filter_eeg
 
 
@@ -22,47 +21,9 @@ def _prepapre_raw(raw: BaseRaw) -> BaseRaw:
     Set the montage as 'standard_1020'. The reference 'CPz' is not added.
     """
     apply_filter_eeg(raw, bandpass=(1.0, 40.0), notch=True)
-    events = mne.find_events(raw, stim_channel="TRIGGER")
-    unique_events = list(set(event[2] for event in events))
-
-    # Calibration
-    if EVENTS["audio"] in unique_events:
-        sample_min, _, _ = events[
-            np.where([ev[2] == EVENTS["rest"] for ev in events])
-        ][0]
-        tmin = sample_min / raw.info["sfreq"]
-        sample_max, _, _ = events[
-            np.where([ev[2] == EVENTS["audio"] for ev in events])
-        ][-1]
-        tmax = (
-            sample_max / raw.info["sfreq"]
-            + EVENTS_DURATION_MAPPING[EVENTS["audio"]]
-        )
-    # Resting-State
-    elif EVENTS["resting-state"] in unique_events:
-        sample_min, _, _ = events[
-            np.where([ev[2] == EVENTS["resting-state"] for ev in events])
-        ][0]
-        tmin = sample_min / raw.info["sfreq"]
-        tmax = tmin + EVENTS_DURATION_MAPPING[EVENTS["resting-state"]]
-    # Online Run
-    elif EVENTS["regulation"] in unique_events:
-        sample_min, _, _ = events[
-            np.where([ev[2] == EVENTS["non-regulation"] for ev in events])
-        ][0]
-        tmin = sample_min / raw.info["sfreq"]
-        sample_max, _, _ = events[
-            np.where([ev[2] == EVENTS["regulation"] for ev in events])
-        ][-1]
-        tmax = (
-            sample_max / raw.info["sfreq"]
-            + EVENTS_DURATION_MAPPING[EVENTS["regulation"]]
-        )
-
-    assert tmin < tmax
+    tmin, tmax = find_crop_tmin_tmax(raw)
     raw.crop(tmin, tmax, include_tmax=True)
     raw.set_montage("standard_1020")
-
     return raw
 
 
