@@ -105,7 +105,6 @@ def PREP_bads_suggestion(
     The PREP pipeline uses:
         - SNR
         - Correlation
-        - Deviation
         - HF Noise
         - NaN flat
         - RANSAC
