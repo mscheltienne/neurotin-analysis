@@ -111,17 +111,29 @@ def remove_artifact_ic(raw: BaseRaw) -> BaseRaw:
 
     # keep only brain components
     labels = component_dict["labels"]
-    exclude = [k for k, name in enumerate(labels) if name != "brain"]
+    exclude = [
+        k
+        for k, name in enumerate(labels)
+        if name in ("eye blink", "heart beat")
+    ]
 
     # compute variances on epochs
-    kind, dropped_indices, epochs_src, data = _prepare_data_ica_properties(
-        raw, ica, reject_by_annotation=True, reject="auto")
+    _, _, _, data = _prepare_data_ica_properties(
+        raw, ica, reject_by_annotation=True, reject="auto",
+    )
     ica_data = np.swapaxes(data, 0, 1)
     var = np.var(ica_data, axis=2)  # (n_components, n_epochs)
-    # TODO: Use var to identify which ICs don't need to be dropped because they
-    # impact the overall signal only punctualy.
-    # Ocular and Cardiac related components should be removed anyway,
-    # regardless of the variance.
+    var = np.var(var.T / np.linalg.norm(var, axis=1), axis=0)
+    # linear fit to determine the variance thresholds
+    z = np.polyfit(range(0, ica.n_components_, 1), var, 1)
+    threshold = [z[0] * x + z[1] for x in range(0, ica.n_components_, 1)]
+    # add non-brain ICs below-threshold to exclude
+    for k, label in enumerate(labels):
+        if label in ("brain", "eye blink", "heart beat"):
+            continue
+        if threshold[k] <= var[k]:
+            continue
+        exclude.append(k)
 
     # apply ICA
     ica.exclude = exclude
