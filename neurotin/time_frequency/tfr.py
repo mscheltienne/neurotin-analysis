@@ -269,7 +269,7 @@ def _tfr_session_multitaper(
     n_cycles: Union[int, NDArray[float]],
     time_bandwidth: int,
 ):
-    """Compute the TFR representaito using multitaper at the session-level."""
+    """Compute the TFR representation using multitaper at the session-level."""
     tfr = _tfr_multitaper(files, baseline, freqs, n_cycles, time_bandwidth)
     return participant, session, tfr
 
