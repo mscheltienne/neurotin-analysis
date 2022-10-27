@@ -3,7 +3,6 @@ from itertools import chain
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
 
-import numpy as np
 from mne import concatenate_epochs
 from mne.io import read_raw_fif
 from mne.time_frequency import AverageTFR, tfr_multitaper
@@ -48,6 +47,14 @@ def tfr_subject(
     %(n_jobs)s
     **kwargs
         Extra keyword arguments are passed to the TFR method.
+
+    Notes
+    -----
+    'multitaper' requires:
+        - freqs: Frequencies of interest.
+        - n_cycles: Defines the time-resolution as 'T = n_cycles / freqs'
+        - time_bandwith: Defines the frequency-resolution in combination with
+          n_cycles as 'fq_resolution / time_bandwith / T'
     """
     folder = _check_path(folder, item_name="folder", must_exist=True)
     folder_pp = _check_path(folder_pp, item_name="folder_pp", must_exist=True)
@@ -81,16 +88,16 @@ def tfr_subject(
 def _tfr_subject_multitaper(
     participant: int,
     files: List[Path],
-    freqs: NDArray[float] = np.arange(1, 15, 1),
-    n_cycles: Union[int, NDArray[float]] = np.arange(1, 15, 1) / 2,
-    time_bandwidth: int = 2,
+    freqs: NDArray[float],
+    n_cycles: Union[int, NDArray[float]],
+    time_bandwidth: int,
 ) -> Tuple[int, AverageTFR]:
     """Compute the TFR representation using multitaper at the subject-level."""
     epochs_list = list()
     for file in files:
         raw = read_raw_fif(file, preload=True)
         epochs = make_combine_epochs(raw)
-        epochs.apply_baseline((0, 0.5))
+        epochs.apply_baseline((0, 8))
         epochs_list.append(epochs)
         del raw
     try:
