@@ -21,6 +21,77 @@ from ..utils.selection import list_runs_pp
 from .epochs import make_combine_epochs
 
 
+def tfr_global(
+    folder: Union[str, Path],
+    folder_pp: Union[str, Path],
+    valid_only: bool,
+    regular_only: bool,
+    transfer_only: bool,
+    participants: Union[int, List[int], Tuple[int, ...]],
+    method: str = "multitaper",
+    baseline: Optional[Tuple[Optional[float], Optional[float]]] = None,
+    n_jobs: int = 1,
+    **kwargs,
+) -> AverageTFR:
+    """Compute the global TFR avering all selected subjects and sessions.
+
+    Parameters
+    ----------
+    %(folder_raw_data)s
+    %(folder_pp_data)s
+    %(valid_only)s
+    %(regular_only)s
+    %(transfer_only)s
+    %(participants)s
+    method : 'multitaper'
+        TFR method used.
+    baseline : None | tuple of float
+        Baseline correction applied to the 24 second epochs.
+    %(n_jobs)s
+    **kwargs
+        Extra keyword arguments are passed to the TFR method.
+
+    Notes
+    -----
+    'multitaper' requires:
+        - freqs: Frequencies of interest.
+        - n_cycles: Defines the time-resolution as 'T = n_cycles / freqs'
+        - time_bandwith: Defines the frequency-resolution in combination with
+          n_cycles as 'fq_resolution / time_bandwith / T'
+    """
+    folder = _check_path(folder, item_name="folder", must_exist=True)
+    folder_pp = _check_path(folder_pp, item_name="folder_pp", must_exist=True)
+    participants = _check_participants(participants)
+    n_jobs = _check_n_jobs(n_jobs)
+    methods = dict(
+        multitaper=_tfr_multitaper,
+    )
+    _check_value(method, methods, "method")
+    if baseline is not None:
+        _check_type(baseline, (tuple,), "baseline")
+        if len(baseline) != 2:
+            raise ValueError("Baseline should be a 2-length tuple.")
+        _check_type(baseline[0], ("numeric", None), "baseline_tmin")
+        _check_type(baseline[1], ("numeric", None), "baseline_tmax")
+
+    files = list_runs_pp(
+        folder,
+        folder_pp,
+        participants,
+        valid_only,
+        regular_only,
+        transfer_only,
+    )
+    # flatten files
+    all_files = list()
+    for _, files_ in files.items():
+        for _, files__ in files_.items():
+            all_files.extend(files__)
+
+    tfr = methods[method](all_files, baseline, **kwargs)
+    return tfr
+
+
 @fill_doc
 def tfr_subject(
     folder: Union[str, Path],
@@ -94,7 +165,7 @@ def tfr_subject(
     ]
     assert 0 < len(input_pool)  # sanity check
     with mp.Pool(processes=n_jobs) as p:
-        results = p.starmap(_tfr_subject_multitaper, input_pool)
+        results = p.starmap(methods[method], input_pool)
 
     # format as dictionary
     return {idx: tfr for idx, tfr in results if tfr is not None}
@@ -173,12 +244,12 @@ def tfr_session(
     for participant, files_ in files.items():
         for session, files__ in files_.items():
             input_pool.append(
-                (participant, session, files__, *kwargs.values())
+                (participant, session, files__, baseline, *kwargs.values())
             )
 
     assert 0 < len(input_pool)  # sanity check
     with mp.Pool(processes=n_jobs) as p:
-        results = p.starmap(_tfr_session_multitaper, input_pool)
+        results = p.starmap(methods[method], input_pool)
 
     # format results
     results_ = dict()

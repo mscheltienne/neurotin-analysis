@@ -119,7 +119,10 @@ def remove_artifact_ic(raw: BaseRaw) -> BaseRaw:
 
     # compute variances on epochs
     _, _, _, data = _prepare_data_ica_properties(
-        raw, ica, reject_by_annotation=True, reject="auto",
+        raw,
+        ica,
+        reject_by_annotation=True,
+        reject="auto",
     )
     ica_data = np.swapaxes(data, 0, 1)
     var = np.var(ica_data, axis=2)  # (n_components, n_epochs)
