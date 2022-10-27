@@ -30,7 +30,6 @@ def tfr_global(
     participants: Union[int, List[int], Tuple[int, ...]],
     method: str = "multitaper",
     baseline: Optional[Tuple[Optional[float], Optional[float]]] = None,
-    n_jobs: int = 1,
     **kwargs,
 ) -> AverageTFR:
     """Compute the global TFR avering all selected subjects and sessions.
@@ -47,7 +46,6 @@ def tfr_global(
         TFR method used.
     baseline : None | tuple of float
         Baseline correction applied to the 24 second epochs.
-    %(n_jobs)s
     **kwargs
         Extra keyword arguments are passed to the TFR method.
 
@@ -62,7 +60,6 @@ def tfr_global(
     folder = _check_path(folder, item_name="folder", must_exist=True)
     folder_pp = _check_path(folder_pp, item_name="folder_pp", must_exist=True)
     participants = _check_participants(participants)
-    n_jobs = _check_n_jobs(n_jobs)
     methods = dict(
         multitaper=_tfr_multitaper,
     )
