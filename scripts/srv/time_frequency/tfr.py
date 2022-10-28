@@ -46,7 +46,7 @@ for baseline in (None, (0, 8)):
         fname = TFR_FOLDER / name / f"global-{baseline_str}-tfr.h5"
         tfr.save(fname, overwrite=True)
         fig = tfr.plot(baseline=(0, 8), mode="mean", combine="mean")
-        fig.savefig(fname.with_suffix(".svg"))
+        fig[0].savefig(fname.with_suffix(".svg"))
 
 #%% subject TFR
 for baseline in (None, (0, 8)):
@@ -79,7 +79,7 @@ for baseline in (None, (0, 8)):
             fname = TFR_FOLDER / name / f"sub-{subject}-{baseline_str}-tfr.h5"
             tfr.save(fname, overwrite=True)
             fig = tfr.plot(baseline=(0, 8), mode="mean", combine="mean")
-            fig.savefig(fname.with_suffix(".svg"))
+            fig[0].savefig(fname.with_suffix(".svg"))
 
 #%% session TFR
 for baseline in (None, (0, 8)):
@@ -107,4 +107,4 @@ for baseline in (None, (0, 8)):
             fname = dir_ / f"sub-{subject}-ses-{session}-{baseline_str}-tfr.h5"
             tfr.save(fname, overwrite=True)
             fig = tfr.plot(baseline=(0, 8), mode="mean", combine="mean")
-            fig.savefig(fname.with_suffix(".svg"))
+            fig[0].savefig(fname.with_suffix(".svg"))
