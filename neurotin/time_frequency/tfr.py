@@ -1,7 +1,7 @@
 import multiprocessing as mp
 from itertools import chain
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 from mne import concatenate_epochs
 from mne.io import read_raw_fif
@@ -12,7 +12,6 @@ from ..utils._checks import (
     _check_n_jobs,
     _check_participants,
     _check_path,
-    _check_type,
     _check_value,
 )
 from ..utils._docs import fill_doc
@@ -29,7 +28,6 @@ def tfr_global(
     transfer_only: bool,
     participants: Union[int, List[int], Tuple[int, ...]],
     method: str = "multitaper",
-    baseline: Optional[Tuple[Optional[float], Optional[float]]] = None,
     **kwargs,
 ) -> AverageTFR:
     """Compute the global TFR avering all selected subjects and sessions.
@@ -64,12 +62,6 @@ def tfr_global(
         multitaper=_tfr_multitaper,
     )
     _check_value(method, methods, "method")
-    if baseline is not None:
-        _check_type(baseline, (tuple,), "baseline")
-        if len(baseline) != 2:
-            raise ValueError("Baseline should be a 2-length tuple.")
-        _check_type(baseline[0], ("numeric", None), "baseline_tmin")
-        _check_type(baseline[1], ("numeric", None), "baseline_tmax")
 
     files = list_runs_pp(
         folder,
@@ -85,7 +77,7 @@ def tfr_global(
         for _, files__ in files_.items():
             all_files.extend(files__)
 
-    tfr = methods[method](all_files, baseline, **kwargs)
+    tfr = methods[method](all_files, **kwargs)
     return tfr
 
 
@@ -98,7 +90,6 @@ def tfr_subject(
     transfer_only: bool,
     participants: Union[int, List[int], Tuple[int, ...]],
     method: str = "multitaper",
-    baseline: Optional[Tuple[Optional[float], Optional[float]]] = None,
     n_jobs: int = 1,
     **kwargs,
 ) -> Dict[int, AverageTFR]:
@@ -114,8 +105,6 @@ def tfr_subject(
     %(participants)s
     method : 'multitaper'
         TFR method used.
-    baseline : None | tuple of float
-        Baseline correction applied to the 24 second epochs.
     %(n_jobs)s
     **kwargs
         Extra keyword arguments are passed to the TFR method.
@@ -136,12 +125,6 @@ def tfr_subject(
         multitaper=_tfr_subject_multitaper,
     )
     _check_value(method, methods, "method")
-    if baseline is not None:
-        _check_type(baseline, (tuple,), "baseline")
-        if len(baseline) != 2:
-            raise ValueError("Baseline should be a 2-length tuple.")
-        _check_type(baseline[0], ("numeric", None), "baseline_tmin")
-        _check_type(baseline[1], ("numeric", None), "baseline_tmax")
 
     files = list_runs_pp(
         folder,
@@ -155,7 +138,6 @@ def tfr_subject(
         (
             participant,
             list(chain(*values.values())),
-            baseline,
             *kwargs.values(),
         )
         for participant, values in files.items()
@@ -171,13 +153,12 @@ def tfr_subject(
 def _tfr_subject_multitaper(
     participant: int,
     files: List[Path],
-    baseline: Optional[Tuple[Optional[float], Optional[float]]],
     freqs: NDArray[float],
     n_cycles: Union[int, NDArray[float]],
     time_bandwidth: int,
 ) -> Tuple[int, AverageTFR]:
     """Compute the TFR representation using multitaper at the subject-level."""
-    tfr = _tfr_multitaper(files, baseline, freqs, n_cycles, time_bandwidth)
+    tfr = _tfr_multitaper(files, freqs, n_cycles, time_bandwidth)
     return participant, tfr
 
 
@@ -188,7 +169,6 @@ def tfr_session(
     valid_only: bool,
     participants: Union[int, List[int], Tuple[int, ...]],
     method: str = "multitaper",
-    baseline: Optional[Tuple[Optional[float], Optional[float]]] = None,
     n_jobs: int = 1,
     **kwargs,
 ) -> Dict[int, Dict[int, AverageTFR]]:
@@ -202,8 +182,6 @@ def tfr_session(
     %(participants)s
     method : 'multitaper'
         TFR method used.
-    baseline : None | tuple of float
-        Baseline correction applied to the 24 second epochs.
     %(n_jobs)s
     **kwargs
         Extra keyword arguments are passed to the TFR method.
@@ -224,12 +202,6 @@ def tfr_session(
         multitaper=_tfr_session_multitaper,
     )
     _check_value(method, methods, "method")
-    if baseline is not None:
-        _check_type(baseline, (tuple,), "baseline")
-        if len(baseline) != 2:
-            raise ValueError("Baseline should be a 2-length tuple.")
-        _check_type(baseline[0], ("numeric", None), "baseline_tmin")
-        _check_type(baseline[1], ("numeric", None), "baseline_tmax")
 
     files = list_runs_pp(
         folder,
@@ -241,7 +213,7 @@ def tfr_session(
     for participant, files_ in files.items():
         for session, files__ in files_.items():
             input_pool.append(
-                (participant, session, files__, baseline, *kwargs.values())
+                (participant, session, files__, *kwargs.values())
             )
 
     assert 0 < len(input_pool)  # sanity check
@@ -261,19 +233,17 @@ def _tfr_session_multitaper(
     participant: int,
     session: int,
     files: List[Path],
-    baseline: Optional[Tuple[Optional[float], Optional[float]]],
     freqs: NDArray[float],
     n_cycles: Union[int, NDArray[float]],
     time_bandwidth: int,
 ):
     """Compute the TFR representation using multitaper at the session-level."""
-    tfr = _tfr_multitaper(files, baseline, freqs, n_cycles, time_bandwidth)
+    tfr = _tfr_multitaper(files, freqs, n_cycles, time_bandwidth)
     return participant, session, tfr
 
 
 def _tfr_multitaper(
     files: List[Path],
-    baseline: Optional[Tuple[Optional[float], Optional[float]]],
     freqs: NDArray[float],
     n_cycles: Union[int, NDArray[float]],
     time_bandwidth: int,
@@ -283,8 +253,6 @@ def _tfr_multitaper(
     for file in files:
         raw = read_raw_fif(file, preload=True)
         epochs = make_combine_epochs(raw)
-        if baseline is not None:
-            epochs.apply_baseline(baseline)
         epochs_list.append(epochs)
         del raw
     try:
