@@ -219,6 +219,7 @@ def tfr_session(
     return results_
 
 
+@fill_doc
 def tfr_session_groupby(
     folder: Union[str, Path],
     folder_pp: Union[str, Path],
@@ -300,7 +301,7 @@ def tfr_session_groupby(
         itc = res[1]
         idx = res[2]
         sessions = res[3:]
-        sessions_str = f"S{'-'.join(str(s)for s in sessions)}"
+        sessions_str = f"ses-{'-'.join(str(s)for s in sessions)}"
         if idx not in results_:
             results_[idx] = dict()
         results_[idx][sessions_str] = (tfr, itc)
