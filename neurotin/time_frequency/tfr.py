@@ -3,9 +3,9 @@ from itertools import chain
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
 
-from mne import concatenate_epochs
+from mne import BaseEpochs, concatenate_epochs
 from mne.io import read_raw_fif
-from mne.time_frequency import AverageTFR, tfr_multitaper
+from mne.time_frequency import AverageTFR, tfr_morlet, tfr_multitaper
 from numpy.typing import NDArray
 
 from ..utils._checks import (
@@ -29,7 +29,7 @@ def tfr_global(
     participants: Union[int, List[int], Tuple[int, ...]],
     method: str = "multitaper",
     **kwargs,
-) -> AverageTFR:
+) -> Tuple[AverageTFR, AverageTFR]:
     """Compute the global TFR avering all selected subjects and sessions.
 
     Parameters
@@ -42,8 +42,6 @@ def tfr_global(
     %(participants)s
     method : 'multitaper'
         TFR method used.
-    baseline : None | tuple of float
-        Baseline correction applied to the 24 second epochs.
     **kwargs
         Extra keyword arguments are passed to the TFR method.
 
@@ -54,14 +52,15 @@ def tfr_global(
         - n_cycles: Defines the time-resolution as 'T = n_cycles / freqs'
         - time_bandwith: Defines the frequency-resolution in combination with
           n_cycles as 'fq_resolution / time_bandwith / T'
+
+    'morlet' requires:
+        - freqs: Frequencies of interest.
+        - n_cycles: Defines the time-resolution as 'T = n_cycles / freqs'
     """
     folder = _check_path(folder, item_name="folder", must_exist=True)
     folder_pp = _check_path(folder_pp, item_name="folder_pp", must_exist=True)
     participants = _check_participants(participants)
-    methods = dict(
-        multitaper=_tfr_multitaper,
-    )
-    _check_value(method, methods, "method")
+    _check_value(method, METHODS, "method")
 
     files = list_runs_pp(
         folder,
@@ -77,8 +76,8 @@ def tfr_global(
         for _, files__ in files_.items():
             all_files.extend(files__)
 
-    tfr = methods[method](all_files, **kwargs)
-    return tfr
+    tfr, itc = METHODS[method](all_files, **kwargs)
+    return tfr, itc
 
 
 @fill_doc
@@ -92,7 +91,7 @@ def tfr_subject(
     method: str = "multitaper",
     n_jobs: int = 1,
     **kwargs,
-) -> Dict[int, AverageTFR]:
+) -> Dict[int, Tuple[AverageTFR, AverageTFR]]:
     """Compute the per-subject TFR.
 
     Parameters
@@ -116,15 +115,16 @@ def tfr_subject(
         - n_cycles: Defines the time-resolution as 'T = n_cycles / freqs'
         - time_bandwith: Defines the frequency-resolution in combination with
           n_cycles as 'fq_resolution / time_bandwith / T'
+
+    'morlet' requires:
+        - freqs: Frequencies of interest.
+        - n_cycles: Defines the time-resolution as 'T = n_cycles / freqs'
     """
     folder = _check_path(folder, item_name="folder", must_exist=True)
     folder_pp = _check_path(folder_pp, item_name="folder_pp", must_exist=True)
     participants = _check_participants(participants)
     n_jobs = _check_n_jobs(n_jobs)
-    methods = dict(
-        multitaper=_tfr_subject_multitaper,
-    )
-    _check_value(method, methods, "method")
+    _check_value(method, METHODS, "method")
 
     files = list_runs_pp(
         folder,
@@ -136,30 +136,18 @@ def tfr_subject(
     )
     input_pool = [
         (
-            participant,
             list(chain(*values.values())),
             *kwargs.values(),
+            participant,
         )
         for participant, values in files.items()
     ]
     assert 0 < len(input_pool)  # sanity check
     with mp.Pool(processes=n_jobs) as p:
-        results = p.starmap(methods[method], input_pool)
+        results = p.starmap(METHODS[method], input_pool)
 
     # format as dictionary
-    return {idx: tfr for idx, tfr in results if tfr is not None}
-
-
-def _tfr_subject_multitaper(
-    participant: int,
-    files: List[Path],
-    freqs: NDArray[float],
-    n_cycles: Union[int, NDArray[float]],
-    time_bandwidth: int,
-) -> Tuple[int, AverageTFR]:
-    """Compute the TFR representation using multitaper at the subject-level."""
-    tfr = _tfr_multitaper(files, freqs, n_cycles, time_bandwidth)
-    return participant, tfr
+    return {idx: (tfr, itc) for tfr, itc, idx in results if tfr is not None}
 
 
 @fill_doc
@@ -171,7 +159,7 @@ def tfr_session(
     method: str = "multitaper",
     n_jobs: int = 1,
     **kwargs,
-) -> Dict[int, Dict[int, AverageTFR]]:
+) -> Dict[int, Dict[int, Tuple[AverageTFR, AverageTFR]]]:
     """Compute the per-session TFR.
 
     Parameters
@@ -193,15 +181,16 @@ def tfr_session(
         - n_cycles: Defines the time-resolution as 'T = n_cycles / freqs'
         - time_bandwith: Defines the frequency-resolution in combination with
           n_cycles as 'fq_resolution / time_bandwith / T'
+
+    'morlet' requires:
+        - freqs: Frequencies of interest.
+        - n_cycles: Defines the time-resolution as 'T = n_cycles / freqs'
     """
     folder = _check_path(folder, item_name="folder", must_exist=True)
     folder_pp = _check_path(folder_pp, item_name="folder_pp", must_exist=True)
     participants = _check_participants(participants)
     n_jobs = _check_n_jobs(n_jobs)
-    methods = dict(
-        multitaper=_tfr_session_multitaper,
-    )
-    _check_value(method, methods, "method")
+    _check_value(method, METHODS, "method")
 
     files = list_runs_pp(
         folder,
@@ -213,42 +202,25 @@ def tfr_session(
     for participant, files_ in files.items():
         for session, files__ in files_.items():
             input_pool.append(
-                (participant, session, files__, *kwargs.values())
+                (files__, *kwargs.values(), participant, session)
             )
 
     assert 0 < len(input_pool)  # sanity check
     with mp.Pool(processes=n_jobs) as p:
-        results = p.starmap(methods[method], input_pool)
+        results = p.starmap(METHODS[method], input_pool)
 
     # format results
     results_ = dict()
-    for idx, session, tfr in results:
+    for tfr, itc, idx, session in results:
         if idx not in results_:
             results_[idx] = dict()
-        results_[idx][session] = tfr
+        results_[idx][session] = (tfr, itc)
     return results_
 
 
-def _tfr_session_multitaper(
-    participant: int,
-    session: int,
-    files: List[Path],
-    freqs: NDArray[float],
-    n_cycles: Union[int, NDArray[float]],
-    time_bandwidth: int,
-):
-    """Compute the TFR representation using multitaper at the session-level."""
-    tfr = _tfr_multitaper(files, freqs, n_cycles, time_bandwidth)
-    return participant, session, tfr
-
-
-def _tfr_multitaper(
-    files: List[Path],
-    freqs: NDArray[float],
-    n_cycles: Union[int, NDArray[float]],
-    time_bandwidth: int,
-) -> AverageTFR:
-    """Compute the TFR representation of the given files."""
+# -----------------------------------------------------------------------------
+def _load_files(files: List[Path]) -> BaseEpochs:
+    """Load the files and concatenate the online runs in an Epochs object."""
     epochs_list = list()
     for file in files:
         raw = read_raw_fif(file, preload=True)
@@ -262,8 +234,45 @@ def _tfr_multitaper(
         return None
     del epochs_list
 
-    tfr = tfr_multitaper(
-        epochs, freqs, n_cycles, time_bandwidth, return_itc=False
-    )
+    return epochs
 
-    return tfr
+
+def _tfr_multitaper(
+    files: List[Path],
+    freqs: NDArray[float],
+    n_cycles: Union[int, NDArray[float]],
+    time_bandwidth: int,
+    *args,
+    **kwargs,
+) -> AverageTFR:
+    """Compute the TFR representation using multitapers."""
+    epochs = _load_files(files)
+    if epochs is None:
+        return None, None, *args, *kwargs.values()
+    tfr, itc = tfr_multitaper(
+        epochs, freqs, n_cycles, time_bandwidth, return_itc=True
+    )
+    return tfr, itc, *args, *kwargs.values()
+
+
+def _tfr_morlet(
+    files: List[Path],
+    freqs: NDArray[float],
+    n_cycles: Union[int, NDArray[float]],
+    *args,
+    **kwargs,
+) -> AverageTFR:
+    """Compute the TFR representation using morlet wavelets."""
+    epochs = _load_files(files)
+    if epochs is None:
+        return None, None, *args, *kwargs.values()
+    tfr, itc = tfr_morlet(
+        epochs, freqs, n_cycles, return_itc=True
+    )
+    return tfr, itc, *args, *kwargs.values()
+
+
+METHODS = dict(
+    morlet=_tfr_morlet,
+    multitaper=_tfr_multitaper,
+)
