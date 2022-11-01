@@ -266,9 +266,7 @@ def _tfr_morlet(
     epochs = _load_files(files)
     if epochs is None:
         return None, None, *args, *kwargs.values()
-    tfr, itc = tfr_morlet(
-        epochs, freqs, n_cycles, return_itc=True
-    )
+    tfr, itc = tfr_morlet(epochs, freqs, n_cycles, return_itc=True)
     return tfr, itc, *args, *kwargs.values()
 
 

@@ -8,7 +8,7 @@ from neurotin.time_frequency import tfr_session
 
 #%% create folders
 os.makedirs(TFR_FOLDER, exist_ok=True)
-os.makedirs(TFR_FOLDER / "session-level", exist_ok=True)
+os.makedirs(TFR_FOLDER / "multitaper" / "session-level", exist_ok=True)
 
 #%% multitaper settings
 freqs = np.arange(1, 15, 1)
@@ -24,17 +24,14 @@ results = tfr_session(
     valid_only=True,
     participants=PARTICIPANTS,
     method="multitaper",
-    baseline=None,
     n_jobs=len(PARTICIPANTS),
     freqs=freqs,
     n_cycles=n_cycles,
     time_bandwidth=time_bandwidth,
 )
 
+dir_ = TFR_FOLDER / "multitaper" / "session-level"
 for subject, session_tfrs in results.items():
-    for session, tfr in session_tfrs.items():
-        dir_ = TFR_FOLDER / "session-level"
-        fname = dir_ / f"sub-{subject}-ses-{session}-tfr.h5"
-        tfr.save(fname, overwrite=True)
-        fig = tfr.plot(baseline=(0, 8), mode="mean", combine="mean")
-        fig[0].savefig(fname.with_suffix(".svg"))
+    for session, (tfr, itc) in session_tfrs.items():
+        tfr.save(dir_ / f"sub-{subject}-ses-{session}-tfr.h5", overwrite=True)
+        itc.save(dir_ / f"sub-{subject}-ses-{session}-itc.h5", overwrite=True)
