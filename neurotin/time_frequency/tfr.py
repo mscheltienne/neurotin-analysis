@@ -213,6 +213,8 @@ def tfr_session(
     # format results
     results_ = dict()
     for tfr, itc, idx, session in results:
+        if tfr is None:
+            continue
         if idx not in results_:
             results_[idx] = dict()
         results_[idx][session] = (tfr, itc)
@@ -298,6 +300,8 @@ def tfr_session_groupby(
     results_ = dict()
     for res in results:
         tfr = res[0]
+        if tfr is None:
+            continue
         itc = res[1]
         idx = res[2]
         sessions = res[3:]
