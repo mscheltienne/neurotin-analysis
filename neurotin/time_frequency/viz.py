@@ -64,36 +64,37 @@ def plot_tfr_subject(
     # plot
     if timefreqs is None:
         fig = tfr.plot(combine="mean")[0]
-        # add vertical separation and text
-        fig.axes[0].axvline(x=8, color="darkslategray", linestyle="--")
-        fig.axes[0].text(
-            0.160,
-            1.03,
-            "Rest",
-            horizontalalignment="center",
-            verticalalignment="center",
-            transform=fig.axes[0].transAxes,
-        )
-        fig.axes[0].text(
-            0.69,
-            1.03,
-            "Regulation",
-            horizontalalignment="center",
-            verticalalignment="center",
-            transform=fig.axes[0].transAxes,
-        )
-        if resolutions is not None:  # resolutions is (time, frequency)
-            rect = Rectangle(
-                (1, 15 - 1 - resolutions[1]),
-                resolutions[0],
-                resolutions[1],
-                linewidth=1,
-                edgecolor="darkslategray",
-                facecolor="none",
-            )
-            fig.axes[0].add_patch(rect)
     else:
         fig = tfr.plot_joint(timefreqs, combine="mean")
+
+    fig.axes[0].axvline(x=8, color="darkslategray", linestyle="--")
+    fig.axes[0].text(
+        0.160,
+        1.03,
+        "Rest",
+        horizontalalignment="center",
+        verticalalignment="center",
+        transform=fig.axes[0].transAxes,
+    )
+    fig.axes[0].text(
+        0.69,
+        1.03,
+        "Regulation",
+        horizontalalignment="center",
+        verticalalignment="center",
+        transform=fig.axes[0].transAxes,
+    )
+    if resolutions is not None:  # resolutions is (time, frequency)
+        rect = Rectangle(
+            (1, 15 - 1 - resolutions[1]),
+            resolutions[0],
+            resolutions[1],
+            linewidth=1,
+            edgecolor="darkslategray",
+            facecolor="none",
+        )
+        fig.axes[0].add_patch(rect)
+    fig.suptitle(f"Subject {participant}")
 
     return fig
 
