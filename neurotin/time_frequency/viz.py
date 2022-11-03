@@ -111,6 +111,7 @@ def plot_itc_subject(
             Dict[Tuple[float, float], Tuple[float, float]],
         ]
     ] = None,
+    resolutions: Optional[Tuple[float, float]] = None,
 ) -> plt.Figure:
     """Plot a subject-level ITC."""
     folder_tfr = _check_path(
@@ -124,6 +125,9 @@ def plot_itc_subject(
     assert (regular_only or transfer_only) or (
         not regular_only and not transfer_only
     )
+    if resolutions is not None:
+        assert len(resolutions) == 2
+        assert all(0 < r for r in resolutions)
 
     # figure out where to look for the tfr
     if regular_only:
@@ -145,6 +149,36 @@ def plot_itc_subject(
         fig = itc.plot(combine="mean")[0]
     else:
         fig = itc.plot_joint(timefreqs, combine="mean")
+
+    fig.axes[0].axvline(x=8, color="darkslategray", linestyle="--")
+    fig.axes[0].text(
+        0.160,
+        1.03,
+        "Rest",
+        horizontalalignment="center",
+        verticalalignment="center",
+        transform=fig.axes[0].transAxes,
+    )
+    fig.axes[0].text(
+        0.69,
+        1.03,
+        "Regulation",
+        horizontalalignment="center",
+        verticalalignment="center",
+        transform=fig.axes[0].transAxes,
+    )
+    if resolutions is not None:  # resolutions is (time, frequency)
+        rect = Rectangle(
+            (1, 15 - 1 - resolutions[1]),
+            resolutions[0],
+            resolutions[1],
+            linewidth=1,
+            edgecolor="darkslategray",
+            facecolor="none",
+        )
+        fig.axes[0].add_patch(rect)
+    fig.suptitle(f"Subject {participant}")
+
     return fig
 
 
@@ -164,6 +198,7 @@ def plot_tfr_session(
     _check_value(method, METHODS, "method")
     _check_type(groupby, ("int",), "groupby")
     _check_value(groupby, (1, 3, 5), "groupby")
+    _check_type(resolutions, (None, tuple), "resolutions")
 
     # figure out where to look for the tfr and create figure
     if groupby == 1:
