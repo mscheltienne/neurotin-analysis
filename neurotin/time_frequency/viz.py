@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 from matplotlib import pyplot as plt
+from matplotlib.patches import Rectangle
 from mne.time_frequency import read_tfrs
 
 from ..utils._checks import (
@@ -25,6 +26,7 @@ def plot_tfr_subject(
             Dict[Tuple[float, float], Tuple[float, float]],
         ]
     ] = None,
+    resolutions: Optional[Tuple[float, float]] = None,
 ) -> plt.Figure:
     """Plot a subject-level TFR."""
     folder_tfr = _check_path(
@@ -39,6 +41,10 @@ def plot_tfr_subject(
         (regular_only or transfer_only)
         and not (regular_only and transfer_only)
     ) or (not regular_only and not transfer_only)
+    _check_type(resolutions, (None, tuple), "resolutions")
+    if resolutions is not None:
+        assert len(resolutions) == 2
+        assert all(0 < r for r in resolutions)
 
     # figure out where to look for the tfr
     if regular_only:
@@ -53,13 +59,42 @@ def plot_tfr_subject(
     tfr = read_tfrs(fname)
     assert len(tfr) == 1
     tfr = tfr[0]
-    tfr.apply_baseline((0, 8), mode="percent")
+    tfr.apply_baseline((2, 6), mode="percent")
 
     # plot
     if timefreqs is None:
         fig = tfr.plot(combine="mean")[0]
+        # add vertical separation and text
+        fig.axes[0].axvline(x=8, color="darkslategray", linestyle="--")
+        fig.axes[0].text(
+            0.160,
+            1.03,
+            "Rest",
+            horizontalalignment="center",
+            verticalalignment="center",
+            transform=fig.axes[0].transAxes,
+        )
+        fig.axes[0].text(
+            0.69,
+            1.03,
+            "Regulation",
+            horizontalalignment="center",
+            verticalalignment="center",
+            transform=fig.axes[0].transAxes,
+        )
+        if resolutions is not None:  # resolutions is (time, frequency)
+            rect = Rectangle(
+                (1, 15 - 1 - resolutions[1]),
+                resolutions[0],
+                resolutions[1],
+                linewidth=1,
+                edgecolor="darkslategray",
+                facecolor="none",
+            )
+            fig.axes[0].add_patch(rect)
     else:
         fig = tfr.plot_joint(timefreqs, combine="mean")
+
     return fig
 
 
@@ -102,7 +137,7 @@ def plot_itc_subject(
     itc = read_tfrs(fname)
     assert len(itc) == 1
     itc = itc[0]
-    itc.apply_baseline((0, 8), mode="percent")
+    itc.apply_baseline((2, 6), mode="percent")
 
     # plot
     if timefreqs is None:
@@ -179,7 +214,7 @@ def plot_tfr_session(
         tfr = read_tfrs(file)
         assert len(tfr) == 1
         tfr = tfr[0]
-        tfr.apply_baseline((0, 8), mode="percent")
+        tfr.apply_baseline((2, 6), mode="percent")
         # plot
         tfr.plot(combine="mean", axes=axes)
 
@@ -275,7 +310,7 @@ def plot_itc_session(
         itc = read_tfrs(file)
         assert len(itc) == 1
         itc = itc[0]
-        itc.apply_baseline((0, 8), mode="percent")
+        itc.apply_baseline((2, 6), mode="percent")
         # plot
         itc.plot(combine="mean", axes=axes)
 
