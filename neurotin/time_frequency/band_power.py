@@ -20,7 +20,7 @@ from ..utils._checks import (
 )
 from ..utils._docs import fill_doc
 from ..utils.selection import list_rs_pp, list_runs_pp
-from .epochs import make_fixed_length_epochs
+from .epochs import make_epochs
 
 
 @fill_doc
@@ -31,10 +31,10 @@ def compute_bandpower_onrun(
     regular_only: bool,
     transfer_only: bool,
     participants: Union[int, List[int], Tuple[int, ...]],
-    duration: float,
-    overlap: float,
     fmin: float,
     fmax: float,
+    duration: float = 2,
+    overlap: float = 1.9,
     n_jobs: int = 1,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Compute the absolute and relative band power of an online recording.
@@ -47,12 +47,14 @@ def compute_bandpower_onrun(
     %(regular_only)s
     %(transfer_only)s
     %(participants)s
-    %(bp_duration)s
-    %(bp_overlap)s
     fmin : float
         Min frequency of interest.
     fmax : float
         Max frequency of interest.
+    duration : float
+        Duration of a welch's segment in seconds.
+    overlap : float
+        Overlap between 2 welch's segment in seconds.
     %(n_jobs)s
 
     Returns
@@ -61,17 +63,19 @@ def compute_bandpower_onrun(
         Absolute band power.
     df_bp_rel : DataFrame
         Relative band power.
-
-    Notes
-    -----
-    The PSD is computing using a multitaper method with adaptive weights.
-    The band-power is computed using Simpson's rule for integration.
     """
     folder = _check_path(folder, item_name="folder", must_exist=True)
     folder_pp = _check_path(folder_pp, item_name="folder_pp", must_exist=True)
     participants = _check_participants(participants)
     _check_type(fmin, ("numeric",), item_name="fmin")
     _check_type(fmax, ("numeric",), item_name="fmax")
+    assert 0 < fmin
+    assert 0 < fmax
+    _check_type(duration, ("numeric",), item_name="duration")
+    _check_type(overlap, ("numeric",), item_name="overlap")
+    assert 0 < duration
+    assert 0 < overlap
+    assert overlap < duration
     n_jobs = _check_n_jobs(n_jobs)
 
     # create input_pool
@@ -88,7 +92,7 @@ def compute_bandpower_onrun(
         for elt in files_dict.values():
             flatten_files.extend(elt)
     input_pool = [
-        (file, duration, overlap, fmin, fmax) for file in flatten_files
+        (file, fmin, fmax, duration, overlap) for file in flatten_files
     ]
     assert 0 < len(input_pool)  # sanity check
 
@@ -100,45 +104,37 @@ def compute_bandpower_onrun(
     bp_abs = dict()
     bp_rel = dict()
     for participant, session, run, psds_abs, psds_rel, ch_names in results:
-        for phase in psds_abs:
-            _add_data_to_dict_onrun(
-                bp_abs,
-                participant,
-                session,
-                run,
-                phase,
-                psds_abs[phase],
-                ch_names,
-            )
-            _add_data_to_dict_onrun(
-                bp_rel,
-                participant,
-                session,
-                run,
-                phase,
-                psds_rel[phase],
-                ch_names,
-            )
+        _add_data_to_dict_onrun(
+            bp_abs,
+            participant,
+            session,
+            run,
+            psds_abs,
+            ch_names,
+        )
+        _add_data_to_dict_onrun(
+            bp_rel,
+            participant,
+            session,
+            run,
+            psds_rel,
+            ch_names,
+        )
 
-    return pd.DataFrame.from_dict(
-        bp_abs, orient="columns"
-    ), pd.DataFrame.from_dict(bp_rel, orient="columns")
+    # convert to dataframes
+    bp_abs = pd.DataFrame.from_dict(bp_abs, orient="columns")
+    bp_rel = pd.DataFrame.from_dict(bp_rel, orient="columns")
+
+    return bp_abs, bp_rel
 
 
 def _compute_bandpower_onrun(
     fname: Path,
-    duration: float,
-    overlap: float,
     fmin: float,
     fmax: float,
-) -> Tuple[
-    int,
-    int,
-    int,
-    Dict[str, NDArray[float]],
-    Dict[str, NDArray[float]],
-    List[str],
-]:
+    duration: float,
+    overlap: float,
+) -> Tuple[int, int, int, NDArray[float], NDArray[float], List[str]]:
     """Compute the absolute and relative band power of an online recording."""
     logger.info("Processing: %s", fname)
     raw = read_raw_fif(fname, preload=True)
@@ -151,34 +147,70 @@ def _compute_bandpower_onrun(
     session = int(session[0])
     # find run id
     run = int(fname.name.split("-")[0])
-    # compute psd
-    epochs = make_fixed_length_epochs(raw, duration, overlap)
+
+    # convert durations to samples
+    n_fft = int(duration * raw.info["sfreq"])
+    n_overlap = int(overlap * raw.info["sfreq"])
+
+    # create regulation / non-regulation epochs
+    epochs = make_epochs(raw)
     # clean up
     del raw
-    spectrum = epochs.compute_psd(
-        method="multitaper", adaptive=True, max_iter=5000
+    # compute PSD
+    spectrum_reg = epochs["regulation"].compute_psd(
+        method="welch",
+        n_fft=n_fft,
+        n_overlap=n_overlap,
+        tmin=1.0,
+        tmax=epochs["regulation"].times[-1] - 1,
+        fmin=1.0,
+        fmax=40.0,
     )
-    # compute band power
-    freq_res = spectrum.freqs[1] - spectrum.freqs[0]
-    bp_absolute = dict()
-    bp_relative = dict()
-    for phase in spectrum.event_id:
-        psd = spectrum[phase].get_data(fmin=fmin, fmax=fmax)
-        psd_full = spectrum[phase].get_data(fmin=1.0, fmax=40.0)
-        bp_abs = simpson(psd, dx=freq_res, axis=-1)
-        bp_rel = bp_abs / simpson(psd_full, dx=freq_res, axis=-1)
-        bp_absolute[phase] = np.average(bp_abs, axis=0)
-        bp_relative[phase] = np.average(bp_rel, axis=0)
+    spectrum_rest = epochs["non-regulation"].compute_psd(
+        method="welch",
+        n_fft=n_fft,
+        n_overlap=n_overlap,
+        tmin=1.0,
+        tmax=epochs["non-regulation"].times[-1] - 1,
+        fmin=1.0,
+        fmax=40.0,
+    )
+    assert np.allclose(spectrum_reg.freqs, spectrum_rest.freqs)
+    assert spectrum_reg.ch_names == spectrum_rest.ch_names
+
+    # compute the band-power
+    freq_res = spectrum_reg.freqs[1] - spectrum_reg.freqs[0]
+    psd = spectrum_reg.get_data(fmin=fmin, fmax=fmax)
+    psd_full = spectrum_reg.get_data(fmin=1.0, fmax=40.0)
+    bp_abs_reg = simpson(psd, dx=freq_res, axis=-1)
+    bp_rel_reg = bp_abs_reg / simpson(psd_full, dx=freq_res, axis=-1)
+    del psd_full
+    del psd
+    psd = spectrum_rest.get_data(fmin=fmin, fmax=fmax)
+    psd_full = spectrum_rest.get_data(fmin=1.0, fmax=40.0)
+    bp_abs_rest = simpson(psd, dx=freq_res, axis=-1)
+    bp_rel_rest = bp_abs_reg / simpson(psd_full, dx=freq_res, axis=-1)
+    del psd_full
+    del psd
+
+    # baseline-correction by dividing both
+    bp_abs = bp_abs_reg / bp_abs_rest
+    bp_rel = bp_rel_reg / bp_rel_rest
+
     # clean up
+    del bp_abs_reg
+    del bp_abs_rest
+    del bp_rel_reg
+    del bp_rel_rest
     del epochs
 
     return (
         participant,
         session,
         run,
-        bp_absolute,
-        bp_relative,
-        spectrum.ch_names,
+        bp_abs,
+        bp_rel,
+        spectrum_reg.ch_names,
     )
 
 
@@ -187,12 +219,11 @@ def _add_data_to_dict_onrun(
     participant: int,
     session: int,
     run: int,
-    phase: str,
     data: NDArray[float],
     ch_names: List[str],
 ) -> None:
     """Add band-power to data dictionary."""
-    keys = ["participant", "session", "run", "phase", "idx"] + ch_names
+    keys = ["participant", "session", "run", "idx"] + ch_names
 
     # init
     for key in keys:
@@ -200,15 +231,14 @@ def _add_data_to_dict_onrun(
             data_dict[key] = list()
 
     # fill data
-    data_dict["participant"].append(participant)
-    data_dict["session"].append(session)
-    data_dict["run"].append(run)
-    data_dict["phase"].append(phase[:-2])
-    data_dict["idx"].append(int(phase[-1]))  # idx of the phase within the run
-
-    # channel psd
-    for ch, value in zip(ch_names, data):
-        data_dict[ch].append(value)
+    for k, epoch in enumerate(data):
+        data_dict["participant"].append(participant)
+        data_dict["session"].append(session)
+        data_dict["run"].append(run)
+        data_dict["idx"].append(k + 1)  # idx of the phase within the run
+        # channel psd
+        for ch, value in zip(ch_names, epoch):
+            data_dict[ch].append(value)
 
     # sanity check
     entries = len(data_dict["participant"])
@@ -300,6 +330,8 @@ def _compute_bandpower_rs(
     fname: Path,
     fmin: float,
     fmax: float,
+    duration: float,
+    overlap: float,
 ) -> Tuple[int, int, NDArray[float], NDArray[float], List[str]]:
     """Compute the absolute and relative band power of a resting-state."""
     logger.info("Processing: %s", fname)
@@ -319,9 +351,18 @@ def _compute_bandpower_rs(
     tmin = sample_min / raw.info["sfreq"]
     tmax = tmin + EVENTS_DURATION_MAPPING[EVENTS["resting-state"]]
     raw.crop(tmin, tmax, include_tmax=True)
+    # convert durations to samples
+    n_fft = int(duration * raw.info["sfreq"])
+    n_overlap = int(overlap * raw.info["sfreq"])
     # compute psd
     spectrum = raw.compute_psd(
-        method="multitaper", adaptive=True, max_iter=5000
+        method="welch",
+        n_fft=n_fft,
+        n_overlap=n_overlap,
+        tmin=1,
+        tmax=raw.times[-1] - 1,
+        fmin=1.0,
+        fmax=40.0,
     )
     # compute band power
     freq_res = spectrum.freqs[1] - spectrum.freqs[0]

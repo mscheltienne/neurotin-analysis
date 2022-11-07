@@ -125,6 +125,7 @@ def plot_itc_subject(
     assert (regular_only or transfer_only) or (
         not regular_only and not transfer_only
     )
+    _check_type(resolutions, (None, tuple), "resolutions")
     if resolutions is not None:
         assert len(resolutions) == 2
         assert all(0 < r for r in resolutions)
@@ -198,7 +199,6 @@ def plot_tfr_session(
     _check_value(method, METHODS, "method")
     _check_type(groupby, ("int",), "groupby")
     _check_value(groupby, (1, 3, 5), "groupby")
-    _check_type(resolutions, (None, tuple), "resolutions")
 
     # figure out where to look for the tfr and create figure
     if groupby == 1:
