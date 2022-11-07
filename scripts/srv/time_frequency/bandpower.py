@@ -6,8 +6,8 @@ from neurotin.time_frequency import (
 )
 
 #%% constants
-duration = 4.0
-overlap = 0.0
+duration = 2.0
+overlap = 1.9
 frequencies = dict(alpha=(8.0, 13.0), delta=(1.0, 4.0))
 n_jobs = 20
 
@@ -26,10 +26,10 @@ for band, (fmin, fmax) in frequencies.items():
         regular_only,
         transfer_only,
         PARTICIPANTS,
-        duration,
-        overlap,
         fmin,
         fmax,
+        duration,
+        overlap,
         n_jobs,
     )
     df_abs.to_pickle(
@@ -54,10 +54,10 @@ for band, (fmin, fmax) in frequencies.items():
         regular_only,
         transfer_only,
         PARTICIPANTS,
-        duration,
-        overlap,
         fmin,
         fmax,
+        duration,
+        overlap,
         n_jobs,
     )
     df_abs.to_pickle(
@@ -81,10 +81,10 @@ for band, (fmin, fmax) in frequencies.items():
         regular_only,
         transfer_only,
         PARTICIPANTS,
-        duration,
-        overlap,
         fmin,
         fmax,
+        duration,
+        overlap,
         n_jobs,
     )
     df_abs.to_pickle(
