@@ -253,6 +253,8 @@ def compute_bandpower_rs(
     participants: Union[int, List[int], Tuple[int, ...]],
     fmin: float,
     fmax: float,
+    duration: float = 2,
+    overlap: float = 1.9,
     n_jobs: int = 1,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Compute the absolute and relative band power of a resting-state.
@@ -267,6 +269,10 @@ def compute_bandpower_rs(
         Min frequency of interest.
     fmax : float
         Max frequency of interest.
+    duration : float
+        Duration of a welch's segment in seconds.
+    overlap : float
+        Overlap between 2 welch's segment in seconds.
     n_jobs : int
         Number of parallel jobs used. Must not exceed the core count. Can be -1
         to use all cores.
@@ -283,6 +289,13 @@ def compute_bandpower_rs(
     participants = _check_participants(participants)
     _check_type(fmin, ("numeric",), item_name="fmin")
     _check_type(fmax, ("numeric",), item_name="fmax")
+    assert 0 < fmin
+    assert 0 < fmax
+    _check_type(duration, ("numeric",), item_name="duration")
+    _check_type(overlap, ("numeric",), item_name="overlap")
+    assert 0 < duration
+    assert 0 < overlap
+    assert overlap < duration
     n_jobs = _check_n_jobs(n_jobs)
 
     files = list_rs_pp(
@@ -295,7 +308,9 @@ def compute_bandpower_rs(
     for files_dict in files.values():
         for elt in files_dict.values():
             flatten_files.extend(elt)
-    input_pool = [(file, fmin, fmax) for file in flatten_files]
+    input_pool = [
+        (file, fmin, fmax, duration, overlap) for file in flatten_files
+    ]
     assert 0 < len(input_pool)  # sanity check
 
     # compute psds
