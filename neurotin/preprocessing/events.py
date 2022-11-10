@@ -321,6 +321,7 @@ def find_crop_tmin_tmax(raw: BaseRaw) -> Tuple[float, float]:
     Notes
     -----
     raw.crop(tmin, tmax, include_tmax=True)
+    Does not take into account raw.first_samp.
     """
     events = mne.find_events(raw, stim_channel="TRIGGER")
     unique_events = list(set(event[2] for event in events))
