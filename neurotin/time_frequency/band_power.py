@@ -5,13 +5,11 @@ from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from mne import find_events
 from mne.io import read_raw_fif
 from numpy.typing import NDArray
 from scipy.integrate import simpson
 
 from .. import logger
-from ..config.events import EVENTS, EVENTS_DURATION_MAPPING
 from ..utils._checks import (
     _check_n_jobs,
     _check_participants,
@@ -358,14 +356,6 @@ def _compute_bandpower_rs(
     session = re.findall(pattern, str(fname))
     assert len(session) == 1
     session = int(session[0])
-    # crop between start and stop
-    events = find_events(raw, stim_channel="TRIGGER")
-    sample_min, _, _ = events[
-        np.where([ev[2] == EVENTS["resting-state"] for ev in events])
-    ][0]
-    tmin = sample_min / raw.info["sfreq"]
-    tmax = tmin + EVENTS_DURATION_MAPPING[EVENTS["resting-state"]]
-    raw.crop(tmin, tmax, include_tmax=True)
     # convert durations to samples
     n_fft = int(duration * raw.info["sfreq"])
     n_overlap = int(overlap * raw.info["sfreq"])
