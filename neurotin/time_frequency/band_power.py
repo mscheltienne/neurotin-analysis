@@ -181,6 +181,9 @@ def _compute_bandpower_onrun(
         raw.apply_function(
             lambda x: (x.T * weights).T, picks=picks, channel_wise=False
         )
+    # note: weights are completely useless now that the rest and regulation
+    # phase are divided for baseline correction. The weight factor cancels
+    # itself out in the division.
 
     # create regulation / non-regulation epochs
     epochs = make_epochs(raw)
