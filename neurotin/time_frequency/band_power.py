@@ -1,10 +1,11 @@
 import multiprocessing as mp
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from mne import pick_types
 from mne.io import read_raw_fif
 from numpy.typing import NDArray
 from scipy.integrate import simpson
@@ -15,6 +16,7 @@ from ..utils._checks import (
     _check_participants,
     _check_path,
     _check_type,
+    _check_value,
 )
 from ..utils._docs import fill_doc
 from ..utils.selection import list_rs_pp, list_runs_pp
@@ -33,6 +35,8 @@ def compute_bandpower_onrun(
     fmax: float,
     duration: float = 2,
     overlap: float = 1.9,
+    folder_weights: Optional[Union[str, Path]] = None,
+    weights: Optional[str] = None,
     n_jobs: int = 1,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Compute the absolute and relative band power of an online recording.
@@ -53,6 +57,10 @@ def compute_bandpower_onrun(
         Duration of a welch's segment in seconds.
     overlap : float
         Overlap between 2 welch's segment in seconds.
+    folder_weights : path-like | None
+        Folder containing the subject and group level electrode weights.
+    weights : str | None
+        Either "group" or "subject" for group or subject level weights.
     %(n_jobs)s
 
     Returns
@@ -74,6 +82,13 @@ def compute_bandpower_onrun(
     assert 0 < duration
     assert 0 < overlap
     assert overlap < duration
+    _check_type(weights, (str, None), "weights")
+    if folder_weights is not None:
+        folder_weights = _check_path(
+            folder_weights, "folder_weights", must_exist=True
+        )
+        assert weights is not None
+        _check_value(weights, ("group", "subject"), "weights")
     n_jobs = _check_n_jobs(n_jobs)
 
     # create input_pool
@@ -90,7 +105,8 @@ def compute_bandpower_onrun(
         for elt in files_dict.values():
             flatten_files.extend(elt)
     input_pool = [
-        (file, fmin, fmax, duration, overlap) for file in flatten_files
+        (file, fmin, fmax, duration, overlap, folder_weights, weights)
+        for file in flatten_files
     ]
     assert 0 < len(input_pool)  # sanity check
 
@@ -132,6 +148,8 @@ def _compute_bandpower_onrun(
     fmax: float,
     duration: float,
     overlap: float,
+    folder_weights: Optional[Path],
+    weights: Optional[str],
 ) -> Tuple[int, int, int, NDArray[float], NDArray[float], List[str]]:
     """Compute the absolute and relative band power of an online recording."""
     logger.info("Processing: %s", fname)
@@ -149,6 +167,20 @@ def _compute_bandpower_onrun(
     # convert durations to samples
     n_fft = int(duration * raw.info["sfreq"])
     n_overlap = int(overlap * raw.info["sfreq"])
+
+    # load and apply weights if needed
+    if weights is not None:
+        if weights == "group":
+            weights = "avg.pcl"
+        elif weights == "subject":
+            weights = f"{str(participant).zfill(3)}.pcl"
+        weights = pd.read_pickle(folder_weights / weights)
+
+        picks = [raw.ch_names[k] for k in pick_types(raw.info, eeg=True)]
+        weights = [weights[ch] for ch in picks]
+        raw.apply_function(
+            lambda x: (x.T * weights).T, picks=picks, channel_wise=False
+        )
 
     # create regulation / non-regulation epochs
     epochs = make_epochs(raw)

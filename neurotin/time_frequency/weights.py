@@ -56,7 +56,7 @@ def apply_group_avg_weights(
     Parameters
     ----------
     %(df_bp)s
-    weights : dict | None
+    weights : Series | None
         Weights used during the online neurofeedback (1 per channel, bads
         included).
     folder : path-like | None
