@@ -1,5 +1,10 @@
 from neurotin.config import PARTICIPANTS
-from neurotin.config.srv import BP_FOLDER, DATA_FOLDER, DATA_PP_FOLDER, MODEL_FOLDER
+from neurotin.config.srv import (
+    BP_FOLDER,
+    DATA_FOLDER,
+    DATA_PP_FOLDER,
+    MODEL_FOLDER,
+)
 from neurotin.time_frequency import compute_bandpower_onrun
 
 #%% constants
