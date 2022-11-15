@@ -222,7 +222,7 @@ def _compute_bandpower_onrun(
     psd = spectrum_rest.get_data(fmin=fmin, fmax=fmax)
     psd_full = spectrum_rest.get_data(fmin=1.0, fmax=40.0)
     bp_abs_rest = simpson(psd, dx=freq_res, axis=-1)
-    bp_rel_rest = bp_abs_reg / simpson(psd_full, dx=freq_res, axis=-1)
+    bp_rel_rest = bp_abs_rest / simpson(psd_full, dx=freq_res, axis=-1)
     del psd_full
     del psd
 
