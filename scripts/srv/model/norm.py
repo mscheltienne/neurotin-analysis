@@ -10,7 +10,7 @@ from neurotin.model import (
 )
 
 
-makedirs(MODEL_FOLDER / "norm")
+makedirs(MODEL_FOLDER / "norm", exist_ok=True)
 dfs = create_weight_dataframe(DATA_FOLDER, PARTICIPANTS)
 
 #%% Individual plots
