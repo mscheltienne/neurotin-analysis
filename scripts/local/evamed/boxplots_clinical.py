@@ -1,6 +1,7 @@
 import seaborn as sns
 from matplotlib import pyplot as plt
 
+from neurotin.config import PARTICIPANTS
 from neurotin.evamed.parsers import (
     parse_bdi,
     parse_psqi,
@@ -11,26 +12,26 @@ from neurotin.evamed.parsers import (
 from neurotin.io import read_csv_evamed
 
 # Set participants
-participants = []
+participants = PARTICIPANTS
 # Load clinical dataframes
-fname = r""
+fname = r"/Users/scheltie/Documents/datasets/neurotin/evamed/thi.csv"
 df = read_csv_evamed(fname)
 thi = parse_thi(df, participants)
 thi = thi[thi["visit"].isin(("Baseline", "Post-assessment"))]
 
-fname = r""
+fname = r"/Users/scheltie/Documents/datasets/neurotin/evamed/stai.csv"
 df = read_csv_evamed(fname)
 stai = parse_stai(df, participants)
 
-fname = r""
+fname = r"/Users/scheltie/Documents/datasets/neurotin/evamed/bdi.csv"
 df = read_csv_evamed(fname)
 bdi = parse_bdi(df, participants)
 
-fname = r""
+fname = r"/Users/scheltie/Documents/datasets/neurotin/evamed/psqi.csv"
 df = read_csv_evamed(fname)
 psqi = parse_psqi(df, participants)
 
-fname = r""
+fname = r"/Users/scheltie/Documents/datasets/neurotin/evamed/whodas.csv"
 df = read_csv_evamed(fname)
 whodas = parse_whodas(df, participants)
 
@@ -63,9 +64,9 @@ ax[2].set_xlabel("Visit")
 
 # Titles
 ax[0].set_title("Tinnitus Handicap Inventory (THI)", fontsize=11)
-ax[1].set_title("State-Trai Anxiety Inventory (STAI)", fontsize=11)
+ax[1].set_title("State-Trait Anxiety Inventory (STAI)", fontsize=11)
 ax[2].set_title("Beck Depression Inventory (BDI)", fontsize=11)
-ax[3].set_title("Pttsburgh Sleep Quality Index (PSQI)", fontsize=11)
+ax[3].set_title("Pittsburgh Sleep Quality Index (PSQI)", fontsize=11)
 ax[4].set_title("WHO Disability Assessment (WHODAS)", fontsize=11)
 
 # Spacing
