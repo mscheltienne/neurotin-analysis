@@ -10,7 +10,9 @@ from neurotin.evamed.viz import barplots_difference_between_visits
 from neurotin.io import read_csv_evamed
 
 # Set participants
-participants = PARTICIPANTS
+participants = [68, 60, 57, 63, 75, 61, 83, 76, 77]  # good ones!
+# participants = [62, 69, 72, 82, 78, 79]  # drop only in THI, increase in others
+# participants = [85, 81, 66, 65, 73, 84]  # increase in THI
 # Load clinical dataframes
 fname = r"/Users/scheltie/Documents/datasets/neurotin/evamed/thi.csv"
 df = read_csv_evamed(fname)
@@ -35,5 +37,5 @@ whodas = parse_whodas(df, participants)
 
 # Plots
 f, ax = barplots_difference_between_visits(
-    [thi], ["thi"]
+    [thi, stai, bdi, psqi, whodas], ["thi", "stai", "bdi", "psqi", "whodas"]
 )

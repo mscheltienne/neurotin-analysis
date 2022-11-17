@@ -1,24 +1,25 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from matplotlib.colors import LogNorm
+from matplotlib.colors import Normalize
 from matplotlib.ticker import PercentFormatter
 
-from neurotin.config import PARTICIPANTS
 from neurotin.evamed.parsers import parse_thi
 from neurotin.io import read_csv_evamed
 from neurotin.time_frequency import add_average_column
 from neurotin.utils.align_axes import align_yaxis
 
-PARTICIPANTS = [elt for elt in PARTICIPANTS if elt not in (62, 77)]
-
+PARTICIPANTS = [68, 60, 57, 63, 75, 61, 83, 76]
 
 #%% Load dataframes
 fname = r"/Users/scheltie/Documents/datasets/neurotin/evamed/thi.csv"
 thi = parse_thi(read_csv_evamed(fname), PARTICIPANTS)
 
-fname = '/Users/scheltie/Documents/datasets/neurotin/bandpower/alpha-onrun-regular-abs.pcl'
+fname = '/Users/scheltie/Documents/datasets/neurotin/bandpower/alpha-onrun-full-abs.pcl'
 df = pd.read_pickle(fname)
+# df = df[df["session"].isin((1, 2, 3, 4, 5))]
+# df = df[df["session"].isin((6, 7, 8, 9, 10))]
+df = df[df["session"].isin((11, 12, 13, 14, 15))]
 
 #%% Figure out the order by taking the diff in THI between post and baseline.
 order = list()
@@ -52,26 +53,28 @@ for participant in PARTICIPANTS:
     up_regulation = df_[df_["avg"] > 1]["avg"]
     up_regulations[participant] = (
         up_regulation.size / df_["avg"].size,
-        np.linalg.norm(up_regulation - 1),
+        np.linalg.norm(up_regulation),
     )
 
     # down-regulations
     down_regulation = df_[df_["avg"] < 1]["avg"]
     down_regulations[participant] = (
         down_regulation.size / df_["avg"].size,
-        np.linalg.norm(1 - down_regulation),
+        np.linalg.norm(1 / down_regulation),
     )
 
 #%% Figure out the width limits
-vmin = min(
-    np.percentile([elt[1] for elt in up_regulations.values()], 0),
-    np.percentile([elt[1] for elt in down_regulations.values()], 0)
+vmin = np.percentile(
+    [elt[1] for elt in up_regulations.values()]
+    + [elt[1] for elt in down_regulations.values()],
+    10
 )
-vmax = max(
-    np.percentile([elt[1] for elt in up_regulations.values()], 90),
-    np.percentile([elt[1] for elt in down_regulations.values()], 90)
+vmax = np.percentile(
+    [elt[1] for elt in up_regulations.values()]
+    + [elt[1] for elt in down_regulations.values()],
+    90
 )
-norm = LogNorm(vmin, vmax, clip=True)
+norm = Normalize(vmin, vmax, clip=True)
 
 #%% Figure out the heights and the widths
 up_regulations_heights = list()
@@ -143,4 +146,6 @@ ax1.set_ylabel("Number of up and down regulations")
 ax2.set_ylabel("THI score (baseline, post-assessment)")
 ax1.legend(loc="upper right")
 ax2.legend(loc="lower right")
+ax1.set_title("Session 10 to 15")
 f.tight_layout()
+f.savefig("good-ses-10-15.svg")
