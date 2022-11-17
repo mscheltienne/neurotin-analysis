@@ -9,7 +9,7 @@ from neurotin.config import PARTICIPANTS
 from neurotin.time_frequency import add_average_column
 
 #%% Load dataframes
-fname = '/Users/scheltie/Documents/datasets/neurotin/bandpower/alpha-onrun-full-abs.pcl'
+fname = '/Users/scheltie/Documents/datasets/neurotin/bandpower/delta-onrun-full-abs.pcl'
 df = pd.read_pickle(fname)
 df = add_average_column(df)
 
@@ -62,7 +62,7 @@ for participant in PARTICIPANTS:
     ax.set_xlabel("Session n°")
     ax.set_ylabel("regulation / rest α band power")
     f.tight_layout()
-    f.savefig('/Users/scheltie/Documents/datasets/neurotin/viz/learning-rate/linear fits/alpha/' + str(participant).zfill(3) + ".svg")
+    f.savefig('/Users/scheltie/Documents/datasets/neurotin/viz/learning-rate/linear fits/delta/' + str(participant).zfill(3) + ".svg")
 
 #%% Plot the linear fits ax + b
 plt.close("all")
@@ -70,9 +70,8 @@ plt.close("all")
 # 62 and 77 are dropped
 f, ax = plt.subplots(1, 1, figsize=(10, 5))
 g1 = [68, 60, 57, 63, 75, 61, 83, 76]
-g2 = [69, 72, 82, 78, 79]
-g3 = [85, 81, 66, 65, 73, 84]
-g3 = [85, 81, 66]
+g2 = [69, 72, 78, 79]
+g3 = [81, 66, 65, 73]
 order = g1 + g2 + g3
 
 # prepare data
@@ -104,6 +103,6 @@ ax.bar(
 )
 ax.set_xlabel("Participant n°")
 ax.set_ylabel("Normalize learning rate")
-ax.set_ylim(0, 1.3)
+ax.set_ylim(-0.3, 0.8)
 f.tight_layout()
-f.savefig('/Users/scheltie/Documents/datasets/neurotin/viz/learning-rate/linear fits/alpha/g123.svg')
+f.savefig('/Users/scheltie/Documents/datasets/neurotin/viz/learning-rate/linear fits/delta/g123.svg')
